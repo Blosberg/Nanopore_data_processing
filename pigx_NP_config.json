@@ -1,0 +1,14 @@
+{  
+   "ref": {
+          "Transcriptome"  : "ref/170317_Homo_sapiens.GRCh37.87.chr.gtf",
+          "Genome_DIR"     : "ref/",
+          "Genome_version" : "hg19_canon"
+          },
+
+   "progs": {
+        "minimap": "minimap2/minimap2"
+            },
+
+   "PATHIN"  : "in/",
+   "PATHOUT" : "out/"
+}

@@ -1,0 +1,195 @@
+---
+title:  "Nanopore Report Output"
+author: "B. Osberg"
+date:   "10/16/2017"
+output:  html_document
+---
+
+The following is a nanopore processing output document. 
+
+```{r setup, include=FALSE}
+library(GenomicAlignments)
+library(data.table)
+library(rmarkdown)
+
+source('./Transcripts_funcs.R')
+```
+
+To produce this report, alignment data was taken from the following file:
+
+`r fin_readalignment`
+
+It was then compared to the reference transcriptome database stored in the following file:
+
+`r fin_Transcript`.
+
+<!-------  Load alignment data and reference transcripts: -------> 
+
+```{r import_data, echo=FALSE}
+algn = readGAlignments(fin_readalignment, use.names=TRUE)
+GRalgn = GRanges(algn)
+
+# rtracklayer::export.gff(gtf, 'test.gtf')
+# algn
+gtf = granges(algn)
+gtfl = grglist(algn)
+
+#ref    ==> reference set of transcript ranges
+ref_GR    = rtracklayer::import.gff(fin_Transcript) 
+ref_exons_GR               =  subset(ref_GR,    type == 'exon') 
+ref_exons_by_transcript    =  split(ref_exons_GR, ref_exons_GR$transcript_id )
+
+sample_read_cum_width      = sum(  width(gtfl) )
+ref_transcript_cum_width   = sum( width(ref_exons_by_transcript ) )
+```
+
+<!-------  Determine overlaps between the two: -------> 
+
+```{r pair_sample_w_ref, echo=FALSE}
+# N.B. gtfl contains all possible alignments --some of which are repeated for a single read_id
+# Now check for overlaps with reference transcriptome data:
+olap_pairs  = get_olap_pairs_n_scores( gtfl,
+                                       ref_exons_by_transcript, 
+                                       sample_read_cum_width, 
+                                       ref_transcript_cum_width )
+
+#-- select a unique entry for each read_id that represents the best possible pairing 
+#-- among all pairs of alignments and reference transcripts-- and compile a GRlist of such best matches
+olaps_scordered               = olap_pairs[ order( olap_pairs$score, decreasing=TRUE ) ]
+first_occurance_bool          = !duplicated(olaps_scordered$sample_transcript_id)
+best_pairs                    = olaps_scordered [first_occurance_bool ]
+```
+
+```{r further_data, echo=FALSE}
+#-- Get some supplementary data:
+transcript_overlaps_best              = best_pairs
+transcript_overlaps_best$N_readexons  = elementNROWS( gtfl[ best_pairs$queryHits ] ) 
+transcript_overlaps_best$cum_width    = sum(           width( gtfl[ best_pairs$queryHits ] ) )
+
+Nreads      = length( unique( names(gtfl) )  )
+Nread_noref = Nreads -  nrow(transcript_overlaps_best )
+#=======================================================================
+# the fraction of reads that overlap with transcripts:
+# take the number of unique occurances of hits for the overlap check, and divide by the number of unique reads:
+reads_hitting_transcripts = length( unique(transcript_overlaps_best$queryHits) )
+
+# total number of reads that aligned somewhere
+tot_reads = length( unique(names(algn) ) )
+
+# the fraction of successfully-aligned reads that overlapped at least partially with a transcript from the reference data
+overlap_frac = reads_hitting_transcripts/tot_reads
+```
+
+<!---- ======================================================================= ----> 
+## Correspondence 
+
+Considering correspondence between alignment data and reference transcriptome, of the `r tot_reads` reads collected, `r reads_hitting_transcripts` showed overlaps with the reference transcriptome --i.e. `r 100*signif(overlap_frac, digits = 3)`%. Below is a plot of the reads and their 'scordered' overlaps (ordered by score == 'scordered') with known transcripts from the reference database
+
+```{r alignment_ref_overlaps, echo=FALSE}
+plot(   c(transcript_overlaps_best$score, rep(0,Nread_noref) ), 
+        xlab= "index", 
+        ylab="overlap score" , 
+        main="Read transcript overlap \n with reference (scordered)" )
+```
+
+<!---- collect info on number of exons in each transcript: ----> 
+## Exon number:
+We consider the number of distinct exons from each read, and how this complexity impacts the score of the consistency between these reads and the reference trancsriptome.
+
+Below is a barplot of the distribution of exon numbers among the read transcripts, followed by plot of the mean overlap score for each group against exon number.
+
+
+```{r exon_num_dist, echo=FALSE}
+M=max(transcript_overlaps_best$N_readexons)
+histcount = matrix(0,M,1)
+mean_score_v_Nex=matrix(0,M,1)
+
+histcount = table( transcript_overlaps_best$N_readexons )
+  
+for ( i in c(1:M) )
+  {
+  
+  mean_score_v_Nex[i]  = mean( 
+                             transcript_overlaps_best$score[ which (
+                                     transcript_overlaps_best$N_readexons == i ) ] )
+  }
+
+
+barplot( log10( table( transcript_overlaps_best$N_readexons ) ) , 
+         xlab = "number of exons", 
+         ylab=expression('Log'[10]*'[freq.]') 
+         )
+
+plot( 
+      mean_score_v_Nex , 
+      ylim = c(0,1),
+      xlab = "number of exons", 
+      ylab = "mean overlap score",
+      main = "score vs. number of exons"
+    ) 
+```         
+
+
+<!----------------------------------------------------------------------->
+## Novel Transcripts
+
+No reference set can account for all possible transcripts throughout the genome. Thus, we consider reads that had no overlap with the reference database (i.e. 'novel'), and the frequency with which such regions were observed. A novel region with only a few reads may be dismissed as an aberration, whereas a novel region that is associated with many different reads is likely to indicate a more important transcript that the reference has omitted.
+
+
+```{r Novel_transcript_info, echo=FALSE}
+#-- find the reads that have no hits with existing transcripts
+reads_no_reftrans_hits =  which( is.na(match( names(gtfl), transcript_overlaps_best$sample_transcript_id)) )
+
+#-- take the subset of reads that had no hits:
+gtfl_norefhit= gtfl[reads_no_reftrans_hits]
+
+#-- reduce:
+gtfl_norefhit_reduced = reduce( unlist( gtfl_norefhit) )
+
+#-- look for histogram of overlaps:
+hitcount_pairs = findOverlaps( gtfl_norefhit_reduced, gtfl_norefhit) 
+
+#--count how many times each reduced GRange was hit:
+gtfl_norefhit_reduced$hits = table( queryHits(hitcount_pairs) )
+
+maxindex = length(gtfl_norefhit_reduced)
+#-- filter only the ranges with significant coverage:
+gtfl_norefhit_reduced_sighit =  gtfl_norefhit_reduced[ which(gtfl_norefhit_reduced$hits > readcov_THRESH )   ]
+
+#-- take the subset with significant hits:
+gtfl_NOVEL_reduced =gtfl_norefhit_reduced[ which(gtfl_norefhit_reduced$hits > readcov_THRESH ) ]
+
+#-- now take the overlaps of the original GRanges list (without hits) against the reduced set
+novel_pairs = findOverlaps( gtfl_norefhit , gtfl_NOVEL_reduced )
+
+```
+
+Below is a plot of the observed number of hits across the regions that were not represented in the reference transcriptome. 
+The red line delineates read hits that are considered significant enough to be treated as 'novel' transcripts, using a significance threshold of `r readcov_THRESH`.
+
+```{r unreffed_reads_significance, echo=FALSE}
+
+plot(gtfl_norefhit_reduced$hits, 
+     ylim=c(0,yplotmax), 
+     axes=FALSE, 
+     ylab="coverage", 
+     xlab="index")
+# points(maxindex,yplotmax, axes=TRUE)
+lines( c(1,15091),c(readcov_THRESH,readcov_THRESH), 
+       col="red", 
+       lwd=2 )
+
+```
+
+<!----------- COLLECT FINAL NOVEL TRANSCRIPTS GRLIST --------------------->
+
+These novel and significant transcripts are summarized in the following set of GRanges:
+```{r Final_novels, echo=TRUE}
+gtfl_NOVEL  = gtfl_norefhit[ queryHits( novel_pairs ) ]
+```
+
+In total, there were `r length( reduce(unlist(gtfl_NOVEL) ) )` such locii identified from `r length( unique(names(gtfl_NOVEL) ))` distinct reads. [n.b. Altuna: do you want  more info on that here? slack me]
+
+```{r print_novels_to_screen, echo=TRUE}
+gtfl_NOVEL
+```
