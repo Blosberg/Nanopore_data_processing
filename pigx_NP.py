@@ -83,17 +83,17 @@ rule align:
  
  
 # #------------------------------------------------------
-# rule minimizer:
-#     input:
-#         config['ref']['Genome_DIR']+config['ref']['Genome_version']+".fa"
-#     output:
-#         config['ref']['Genome_DIR']+config['ref']['Genome_version']+".mmi" 
-#     params:
-#         options = " -d splice "
-#     log:
-#         config['ref']['Genome_DIR']+config['ref']['Genome_version']+"_mmi2_minimizer_creation.log"
-#     message: """--- creating minimizer index of reference genoem."""
-#     shell:
-#         "{minimap} {params.options}  {output} {input} 2> {log}"
-# 
-# 
+rule minimizer:
+    input:
+        config['ref']['Genome_DIR']+config['ref']['Genome_version']+".fa"
+    output:
+        mmiref = config['ref']['Genome_DIR']+config['ref']['Genome_version']+".mmi" 
+    params:
+        options = " -d  "
+    log:
+        config['ref']['Genome_DIR']+config['ref']['Genome_version']+"_mmi2_minimizer_creation.log"
+    message: """--- creating minimizer index of reference genome for minimap2."""
+    shell:
+        "{MM2} {params.options}  {output} {input} 2> {log}"
+
+

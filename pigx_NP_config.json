@@ -1,7 +1,7 @@
 {  
    "ref": {
           "Transcriptome"  : "ref/170317_Homo_sapiens.GRCh37.87.chr.gtf",
-          "Genome_DIR"     : "ref/",
+          "Genome_DIR"     : "/data/akalin/Base/Genomes/hg19_canon/",
           "Genome_version" : "hg19_canon"
           },
 
