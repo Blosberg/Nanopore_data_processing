@@ -12,21 +12,25 @@ library(GenomicAlignments)
 library(data.table)
 library(rmarkdown)
 
+# ---- next 3 lines valid only for laptop.
+# setwd("/Users/blosberg/postdoc_work/Nanopore/pigx_nanopore/")
+# fin_readalignment="Input/barcode05_trimmed_aligned_spliceaware_mm2.sorted.bam"
+# fin_Transcript="ref/170317_Homo_sapiens.GRCh37.87.chr.gtf"
+
 source('./Transcripts_funcs.R')
+
 ```
 
 To produce this report, alignment data was taken from the following file:
 
 `r fin_readalignment`
 
-It was then compared to the reference transcriptome database stored in the following file:
-
-`r fin_Transcript`.
+and aligned against the genome `r Genome_version`. The mapping quality, $MAPQ$ is defined as $-10 \ {\rm log}_{10}\left[ {\rm Prob \{\, mapping\, position\, wrong\} } \right]$, with higher values implying greater confidence in the correct alignment. This quantity has a lower bound of 0, and is rounded to the nearest integer; computation allows for this quantity to be theoretically as high as 255, though all realistic data will have $MAPQ$ values significantly lower than this. A histogram of the $MAPQ$ values obtained from the present data set is provided below. 
 
 <!-------  Load alignment data and reference transcripts: -------> 
 
 ```{r import_data, echo=FALSE}
-algn = readGAlignments(fin_readalignment, use.names=TRUE)
+algn = readGAlignments(fin_readalignment, use.names=TRUE, param=ScanBamParam(what="mapq"))
 GRalgn = GRanges(algn)
 
 # rtracklayer::export.gff(gtf, 'test.gtf')
@@ -41,9 +45,20 @@ ref_exons_by_transcript    =  split(ref_exons_GR, ref_exons_GR$transcript_id )
 
 sample_read_cum_width      = sum(  width(gtfl) )
 ref_transcript_cum_width   = sum( width(ref_exons_by_transcript ) )
-```
 
-<!-------  Determine overlaps between the two: -------> 
+maxfreq = max(table(GRalgn$mapq) )
+hist(GRalgn$mapq, max(GRalgn$mapq)+1, main = "Mapping Quality Histogram", xlab = "MAPQ")
+lines( c(half_prob,half_prob), c(0,maxfreq) , col="red", lwd=2)
+legend( "topright" ,legend="50% confident alignment",col="red", lwd=2 )
+
+```
+Note that a $MAPQ$ value of $0$ implies a low-confidence alignment. Reads without any alignment at all were omitted from further analysis. Aligned reads were then compared to the reference transcriptome database stored in the following file:
+
+`r fin_Transcript`.
+
+<!---- ======================================================================= ----> 
+## Correspondence with reference transcriptome:
+
 
 ```{r pair_sample_w_ref, echo=FALSE}
 # N.B. gtfl contains all possible alignments --some of which are repeated for a single read_id
@@ -66,6 +81,9 @@ transcript_overlaps_best              = best_pairs
 transcript_overlaps_best$N_readexons  = elementNROWS( gtfl[ best_pairs$queryHits ] ) 
 transcript_overlaps_best$cum_width    = sum(           width( gtfl[ best_pairs$queryHits ] ) )
 
+GR_original_matches                   = match(transcript_overlaps_best$sample_transcript_id, names(GRalgn))
+transcript_overlaps_best$mapq         = GRalgn[GR_original_matches]$mapq
+
 Nreads      = length( unique( names(gtfl) )  )
 Nread_noref = Nreads -  nrow(transcript_overlaps_best )
 #=======================================================================
@@ -78,14 +96,25 @@ tot_reads = length( unique(names(algn) ) )
 
 # the fraction of successfully-aligned reads that overlapped at least partially with a transcript from the reference data
 overlap_frac = reads_hitting_transcripts/tot_reads
+
+
 ```
 
-<!---- ======================================================================= ----> 
-## Correspondence 
+Considering correspondence between alignment data and reference transcriptome, of the `r tot_reads` reads collected, `r reads_hitting_transcripts` showed overlaps with the reference transcriptome --i.e. `r 100*signif(overlap_frac, digits = 3)`%. For these reads, we define an overlap score as follows: assuming the cumulative read length (across all exons) from sample read $i$ is $Ls_i$, and the cumulative length of the reference transcript is $Lr_j$, while the cumulative length shared by both objects in common is $Lc$, the overlap  is given by
 
-Considering correspondence between alignment data and reference transcriptome, of the `r tot_reads` reads collected, `r reads_hitting_transcripts` showed overlaps with the reference transcriptome --i.e. `r 100*signif(overlap_frac, digits = 3)`%. Below is a plot of the reads and their 'scordered' overlaps (ordered by score == 'scordered') with known transcripts from the reference database
+$$ \langle Ls_i | Lr_j \rangle = \frac{2 Lc}{Ls_i+Lr_j}.$$
+The score of each read $Ls_i$ is then the best possible overlap that can be obtained upon comparison to all possible reference transcripts $Lr_j$; sample reads with no overlap have score $0$, while sample reads corresponding perfectly to a reference transcriptome can have a score as high as $1$.
+
+
+Below is a histogram of mapping qualities for the subset of the reads with non-zero score,  and their 'scordered' overlaps (ordered by score == 'scordered') with known transcripts from the reference database
 
 ```{r alignment_ref_overlaps, echo=FALSE}
+
+hist(transcript_overlaps_best$mapq, max(transcript_overlaps_best$mapq)+1, main = "Mapping Quality \n(reads on reference transcriptome)", xlab = "MAPQ")
+maxfreq    = max(table(transcript_overlaps_best$mapq) )
+lines( c(half_prob,half_prob), c(0,maxfreq) , col="red", lwd=2)
+legend( "topright" ,legend="50% confident alignment",col="red", lwd=2 )
+
 plot(   c(transcript_overlaps_best$score, rep(0,Nread_noref) ), 
         xlab= "index", 
         ylab="overlap score" , 
@@ -104,6 +133,9 @@ M=max(transcript_overlaps_best$N_readexons)
 histcount = matrix(0,M,1)
 mean_score_v_Nex=matrix(0,M,1)
 
+meanmapq_v_Nex=matrix(0,M,1) #-- mean mapping quality as a funtion of exon number
+fracmapq_v_Nex=matrix(0,M,1) #-- fraction of reads above 50% alignment confidence (as a function of # exons.)
+
 histcount = table( transcript_overlaps_best$N_readexons )
   
 for ( i in c(1:M) )
@@ -112,20 +144,46 @@ for ( i in c(1:M) )
   mean_score_v_Nex[i]  = mean( 
                              transcript_overlaps_best$score[ which (
                                      transcript_overlaps_best$N_readexons == i ) ] )
+
+    
+  meanmapq_v_Nex[i]  =  mean( transcript_overlaps_best$mapq[ which(transcript_overlaps_best$N_readexons == i ) ] )
+
+  #take fraction of reads of Nexon==i that have mapping quality >50% divided by the total number of such reads
+  fracmapq_v_Nex[i]  = ( length( which( transcript_overlaps_best$mapq[ which(transcript_overlaps_best$N_readexons == i )  ] > half_prob) ) )  / length( which(transcript_overlaps_best$N_readexons == i ) ) 
+  
   }
 
-
+# par(mfrow=c(2,1)) 
 barplot( log10( table( transcript_overlaps_best$N_readexons ) ) , 
-         xlab = "number of exons", 
+         xlab = "", 
          ylab=expression('Log'[10]*'[freq.]') 
          )
 
+par(mfrow=c(1,1)) 
+# plot( meanmapq_v_Nex , 
+#       ylim = c(0, max(meanmapq_v_Nex) ),
+#       xlab = "number of exons", 
+#       ylab = "mean MAPQ",
+#       main = "mapping quality"
+#     ) 
+plot(fracmapq_v_Nex, 
+     ylim = c(0, 1),
+     col  ="red", 
+     lwd=2,
+     xlab = "number of exons",
+     ylab = "mapped to ref. genome with > 50% confidence"
+     )
+legend( "bottomright" ,legend=" >50% confidence",col="red", lwd=2 )
+```
+
+Again, as a function of number of exons, we consider the 
+```{r exon_num_dist, echo=FALSE}
 plot( 
       mean_score_v_Nex , 
       ylim = c(0,1),
       xlab = "number of exons", 
-      ylab = "mean overlap score",
-      main = "score vs. number of exons"
+      ylab = "Transcriptome overlap score",
+      main = "olap score vs. number of exons"
     ) 
 ```         
 
