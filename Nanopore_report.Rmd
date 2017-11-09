@@ -48,10 +48,14 @@ ref_transcript_cum_width   = sum( width(ref_exons_by_transcript ) )
 
 maxfreq = max(table(GRalgn$mapq) )
 hist(GRalgn$mapq, max(GRalgn$mapq)+1, main = "Mapping Quality Histogram", xlab = "MAPQ")
+half_prob=3.01 # -- This is the MAPQ value corresponding to 50% chance of being wrong: i.e. -10*log_{10}(0.5)
+
 lines( c(half_prob,half_prob), c(0,maxfreq) , col="red", lwd=2)
 legend( "topright" ,legend="50% confident alignment",col="red", lwd=2 )
 
 ```
+
+
 Note that a $MAPQ$ value of $0$ implies a low-confidence alignment. Reads without any alignment at all were omitted from further analysis. Aligned reads were then compared to the reference transcriptome database stored in the following file:
 
 `r fin_Transcript`.
@@ -177,7 +181,7 @@ legend( "bottomright" ,legend=" >50% confidence",col="red", lwd=2 )
 ```
 
 Again, as a function of number of exons, we consider the 
-```{r exon_num_dist, echo=FALSE}
+```{r exon_num_and_scores, echo=FALSE}
 plot( 
       mean_score_v_Nex , 
       ylim = c(0,1),
@@ -222,6 +226,7 @@ novel_pairs = findOverlaps( gtfl_norefhit , gtfl_NOVEL_reduced )
 
 ```
 
+N.B. THE METHODOLOGY FOR THIS SECTION NEEDS TO BE GENERALIZED: PLOT BELOW IS NOT STABLE.
 Below is a plot of the observed number of hits across the regions that were not represented in the reference transcriptome. 
 The red line delineates read hits that are considered significant enough to be treated as 'novel' transcripts, using a significance threshold of `r readcov_THRESH`.
 
@@ -246,8 +251,7 @@ These novel and significant transcripts are summarized in the following set of G
 gtfl_NOVEL  = gtfl_norefhit[ queryHits( novel_pairs ) ]
 ```
 
-In total, there were `r length( reduce(unlist(gtfl_NOVEL) ) )` such locii identified from `r length( unique(names(gtfl_NOVEL) ))` distinct reads. [n.b. Altuna: do you want  more info on that here? slack me]
-
+In total, there were `r length( reduce(unlist(gtfl_NOVEL) ) )` such locii identified from `r length( unique(names(gtfl_NOVEL) ))` distinct reads. 
 ```{r print_novels_to_screen, echo=TRUE}
 gtfl_NOVEL
 ```

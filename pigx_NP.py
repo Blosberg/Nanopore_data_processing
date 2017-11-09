@@ -15,6 +15,8 @@ DIR_REPORT   = config["PATHOUT"]+"04_report/"
 
 OUTPUT_FILES = [ expand ( DIR_REPORT+sample+"_report.html",) for sample in config["SAMPLES"] ] 
 
+GENOME_VERSION = config["ref"]["Genome_version"]
+
 # print("OUTPUT_FILES=")
 # for x in OUTPUT_FILES: 
 #    print( x)
@@ -44,7 +46,7 @@ rule make_report:
         DIR_REPORT+"finale_report_{sample}.log"
     message: """--- producing final report."""
 
-    shell:  ' Rscript -e  \'{params}  fin_Transcript    = "{input.transcriptome}"; fin_readalignment = "{input.aligned_reads}"; Genome_version=config["ref"]["Genome_version"] ; rmarkdown::render("Nanopore_report.Rmd", output_file = "{output}" ) \'  '
+    shell:  ' Rscript -e  \'{params}  fin_Transcript    = "{input.transcriptome}"; fin_readalignment = "{input.aligned_reads}"; Genome_version="{GENOME_VERSION}" ; rmarkdown::render("Nanopore_report.Rmd", output_file = "{output}" ) \'  '
 
 #------------------------------------------------------
 rule convert_sort:
