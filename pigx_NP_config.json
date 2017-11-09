@@ -1,10 +1,10 @@
 {  
   "PATHIN"  : "in/",
-  "PATHOUT" : "out/",
+  "PATHOUT" : "out/landthaler_HEK293/",
 
   "SAMPLES" : {
-          HEK293_alba2.0.2,
-          HEK293_alba2.1.2 
+          "HEK293_alba2.0.2",
+          "HEK293_alba2.1.2" 
           },
 
   "ref": {

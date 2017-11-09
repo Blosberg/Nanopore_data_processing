@@ -13,7 +13,7 @@ DIR_SORTED   = config["PATHOUT"]+"03_sortedbam/"
 DIR_REPORT   = config["PATHOUT"]+"04_report/"
 
 
-OUTPUT_FILES = [ expand ( config["PATHOUT"]+sample+"_report.html",) for sample in config["SAMPLES"] ] 
+OUTPUT_FILES = [ expand ( DIR_REPORT+sample+"_report.html",) for sample in config["SAMPLES"] ] 
 
 # print("OUTPUT_FILES=")
 # for x in OUTPUT_FILES: 
