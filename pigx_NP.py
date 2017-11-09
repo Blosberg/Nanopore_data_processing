@@ -13,15 +13,22 @@ DIR_SORTED   = config["PATHOUT"]+"03_sortedbam/"
 DIR_REPORT   = config["PATHOUT"]+"04_report/"
 
 
-# =============================config["PATHOUT"]+=================================================================================
+OUTPUT_FILES = [ expand ( config["PATHOUT"]+sample+"_report.html",) for sample in config["SAMPLES"] ] 
+
+# print("OUTPUT_FILES=")
+# for x in OUTPUT_FILES: 
+#    print( x)
+# 
+# exit()
+# ==============================================================================================================
 #
 #                                         BEGIN RULES    
 #
-# ===============================================================================================================
+# ==============================================================================================================
 
 rule all:
     input:
-        DIR_REPORT+"barcode05_trimmed_report.html"
+        [ OUTPUT_FILES ]
 
 #------------------------------------------------------
 rule make_report:
