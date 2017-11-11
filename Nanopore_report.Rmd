@@ -84,7 +84,7 @@ Aligned reads were then compared to the reference transcriptome database stored 
 <!---- ======================================================================= ----> 
 ## Correspondence with reference transcriptome:
 
-@@
+
 ```{r pair_sample_w_ref, echo=FALSE}
 # N.B. GRLalgn contains all possible alignments --some of which are repeated for a single read_id
 # Now check for overlaps with reference transcriptome data:
