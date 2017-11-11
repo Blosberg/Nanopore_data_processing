@@ -12,3 +12,5 @@ $ snakemake --snakefile pigx_NP.py
 Requires: GLIB_2.14, otherwise returns the following error:
 minimap2/minimap2: /lib64/libc.so.6: version `GLIBC_2.14' not found (required by minimap2/minimap2)
 
+the number of mismatches is determined by taking the NM take from minimap2's output and subtracting the "gap" values: thus, mismatches = NM-I-D  , where I and D are taken from the CIGAR string of the read.
+

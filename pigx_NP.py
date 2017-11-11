@@ -40,7 +40,7 @@ rule make_report:
     output:
         DIR_REPORT+"{sample}_report.html"
     params:
-        " readcov_THRESH = 100;   ",
+        " readcov_THRESH = 10;   ",
         " yplotmax = 10000; "
     log:
         DIR_REPORT+"finale_report_{sample}.log"
