@@ -14,3 +14,6 @@ minimap2/minimap2: /lib64/libc.so.6: version `GLIBC_2.14' not found (required by
 
 the number of mismatches is determined by taking the NM take from minimap2's output and subtracting the "gap" values: thus, mismatches = NM-I-D  , where I and D are taken from the CIGAR string of the read.
 
+Remember that you have to install it from the local machine, so if you get errors like "cannot execute binary", then try `$make clean` and then `$make`.
+
+you also have to `$ unset PYTHONPATH` to make sure that you're doing everything in python 3 (in which snakemake is written). this needs to be done if you have an environment that uses python2 packages (such as ont-tombo).
