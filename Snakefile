@@ -2,7 +2,7 @@
 import os
 
 # set config file
-configfile: "./pigx_NP_config.json"
+configfile: "./config.json"
 
 MM2=config["progs"]["minimap"]
 RefTranscriptome = config["ref"]["Transcriptome"]
