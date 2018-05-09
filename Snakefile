@@ -4,17 +4,21 @@ import os
 # set config file
 configfile: "./config.json"
 
+BWA=config["progs"]["BWA"]
 MM2=config["progs"]["minimap"]
 RefTranscriptome = config["ref"]["Transcriptome"]
+GENOME_VERSION = config["ref"]["Genome_version"]
+
+
 
 DIR_ALIGNED  = config["PATHOUT"]+"01_aligned/"
 DIR_FILTERED = config["PATHOUT"]+"02_filtered/"
 DIR_SORTED   = config["PATHOUT"]+"03_sortedbam/"
 DIR_REPORT   = config["PATHOUT"]+"04_report/"
 
-GENOME_VERSION = config["ref"]["Genome_version"]
+OUTPUT_FILES =  [[ expand ( DIR_REPORT + config["SAMPLES"][sample]+"_report.html",) for sample in config["SAMPLES"] ], 
+                           os.path.join( config['ref']['Genome_DIR'] , config['ref']['Genome_version']+ ".fa.bwt" ) ]
 
-OUTPUT_FILES =  [ expand ( DIR_REPORT + config["SAMPLES"][sample]+"_report.html",) for sample in config["SAMPLES"] ]
 
 # print("OUTPUT_FILES=")
 # for x in OUTPUT_FILES: 
@@ -101,5 +105,22 @@ rule minimizer:
     message: """--- creating minimizer index of reference genome for minimap2."""
     shell:
         "{MM2} {params.options}  {output} {input} 2> {log}"
+
+#------------------------------------------------------
+# Create version of reference genome for fast alignment later:
+
+rule bwa_index:
+    input:
+        refgenome_fasta  = os.path.join(config['ref']['Genome_DIR'] , config['ref']['Genome_version']+ ".fa" )
+    output:
+        bwt  = os.path.join(config['ref']['Genome_DIR'] , config['ref']['Genome_version']+ ".fa.bwt"),
+        pac  = os.path.join(config['ref']['Genome_DIR'] , config['ref']['Genome_version']+ ".fa.pac")
+    params:
+        options  = " index  "
+    log:
+        logfile  = os.path.join( config['ref']['Genome_DIR'], config['ref']['Genome_version'], "_bwa_indexing.log")
+    message: """--- creating bwa index of reference genome. ---  """
+    shell:
+        "{BWA} {params.options}  {input} > {log.logfile}"
 
 

@@ -17,3 +17,5 @@ the number of mismatches is determined by taking the NM take from minimap2's out
 Remember that you have to install it from the local machine, so if you get errors like "cannot execute binary", then try `$make clean` and then `$make`.
 
 you also have to `$ unset PYTHONPATH` to make sure that you're doing everything in python 3 (in which snakemake is written). this needs to be done if you have an environment that uses python2 packages (such as ont-tombo).
+
+

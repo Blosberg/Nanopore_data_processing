@@ -1,9 +1,9 @@
 {  
   "PATHIN"  : "/scratch/AG_Akalin/bosberg/nanopore/data/20180417_1233_polyA_RNA/fastq/pass/",
-  "PATHOUT" : "/scratch/AG_Akalin/bosberg/nanopore/pipeline_output/20180417_1233_polyA_RNA/from_fastq/",
+  "PATHOUT" : "/scratch/AG_Akalin/bosberg/nanopore/pipeline_output/20180417_1233_polyA_RNA/",
 
   "SAMPLES" : {
-          "0": "fastq_runid_ec9bd1f6f626d73709089ba0bfc63929581e9ede_0"
+          "allreads": "fastq_runid_ec9bd1f"
           },
 
   "ref": {
@@ -13,6 +13,7 @@
           },
 
    "progs": {
-        "minimap": "minimap2/minimap2"
+        "minimap": "minimap2/minimap2",
+        "BWA":     "bwa"
             }
 }
