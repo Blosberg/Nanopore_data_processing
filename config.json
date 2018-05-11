@@ -13,7 +13,8 @@
           },
 
    "progs": {
-        "minimap": "minimap2/minimap2",
-        "BWA":     "bwa"
+        "minimap":    "deps/minimap2/minimap2",
+        "nanopolish": "deps/nanopolish/nanopolish",
+	"BWA":        "deps/bwa/bwa"
             }
 }
