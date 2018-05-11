@@ -1,9 +1,30 @@
 {  
-  "PATHIN"  : "/scratch/AG_Akalin/bosberg/nanopore/data/20180417_1233_polyA_RNA/fastq/pass/",
+  "PATHIN"  : "/scratch/AG_Akalin/bosberg/nanopore/data/20180417_1233_polyA_RNA/",
   "PATHOUT" : "/scratch/AG_Akalin/bosberg/nanopore/pipeline_output/20180417_1233_polyA_RNA/",
 
+  "RUN_ID"  : "fastq_runid_ec9bd1f6f626d73709089ba0bfc63929581e9ede",
+
   "SAMPLES" : {
-          "allreads": "fastq_runid_ec9bd1f"
+          "0": "0",
+	  "1": "1",
+	  "2": "2",
+	  "3": "3",
+	  "4": "4",
+	  "5": "5",
+	  "6": "6",
+	  "7": "7",
+	  "8": "8",
+	  "9": "9",
+	  "10": "10",
+	  "12": "11",
+	  "12": "12",
+	  "13": "13",
+	  "14": "14",
+	  "15": "15",
+	  "16": "16",
+	  "17": "17",
+	  "18": "18",
+	  "19": "19"
           },
 
   "ref": {
@@ -13,8 +34,9 @@
           },
 
    "progs": {
-        "minimap":    "deps/minimap2/minimap2",
-        "nanopolish": "deps/nanopolish/nanopolish",
-	"BWA":        "deps/bwa/bwa"
+        "minimap":    "./deps/minimap2/minimap2",
+        "nanopolish": "./deps/nanopolish/nanopolish",
+	"BWA":        "./deps/bwa/bwa",
+        "SAMTOOLS":   "samtools"
             }
 }
