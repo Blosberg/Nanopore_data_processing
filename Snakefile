@@ -33,7 +33,9 @@ rule all:
     input:
         [ OUTPUT_FILES ]
 #------------------------------------------------------
+
 rule make_report:
+# build the final output report in html format
     input:
         aligned_reads = os.path.join( DIR_SORTED, "{sample}.sorted.bam"),
         transcriptome = RefTranscriptome
@@ -49,7 +51,9 @@ rule make_report:
     shell:  ' Rscript -e  \'{params}  fin_Transcript    = "{input.transcriptome}"; fin_readalignment = "{input.aligned_reads}"; Genome_version="{GENOME_VERSION}" ; rmarkdown::render("Nanopore_report.Rmd", output_file = "{output}" ) \'  '
 
 #------------------------------------------------------
+
 rule convert_sort:
+# convert from sam to bam format and sort by position
     input:
         aligned     = os.path.join( DIR_FILTERED, "{sample}.0filtered.sam")
     output:
@@ -62,7 +66,9 @@ rule convert_sort:
     shell:
         'samtools view  -Sb  {input} | samtools sort > {output} && samtools index {output} 2> {log.logfile}'
 #------------------------------------------------------
+
 rule filter_nonaligned:
+# Check for alignment filter in sam file: if != 4 then remove this read
     input:
         aligned  = os.path.join( DIR_ALIGNED, "{sample}.sam" ) 
     output:
@@ -75,7 +81,9 @@ rule filter_nonaligned:
  
  
 #------------------------------------------------------
+
 rule align:
+# use minimap2 to align the fastq reads to the reference genome
     input:
         mmiref   = os.path.join( config['ref']['Genome_DIR'] , config['ref']['Genome_version']+ ".mmi" ),
         sample   = os.path.join( config['PATHIN'], "{sample}.fastq" )
@@ -91,9 +99,9 @@ rule align:
  
  
 #------------------------------------------------------
-# Create version of reference genome for fast alignment later:
 
 rule minimizer:
+# Create indexed version of reference genome for fast alignment with minimap2 later:
     input:
         refgenome_fasta  = os.path.join(config['ref']['Genome_DIR'] , config['ref']['Genome_version']+ ".fa" )
     output:
@@ -107,9 +115,9 @@ rule minimizer:
         "{MM2} {params.options}  {output} {input} 2> {log}"
 
 #------------------------------------------------------
-# Create version of reference genome for fast alignment later:
 
 rule bwa_index:
+# Create indexed version of reference genome for fast alignment with bwa later:
     input:
         refgenome_fasta  = os.path.join(config['ref']['Genome_DIR'] , config['ref']['Genome_version']+ ".fa" )
     output:
