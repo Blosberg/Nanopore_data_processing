@@ -68,11 +68,7 @@ rule make_report:
     message: """--- producing final report."""
 
     shell: """  
-        Rscript -e  \'{params}  
-        fin_Transcript    = "{input.transcriptome}";
-        fin_readalignment = "{input.aligned_reads}";
-        Genome_version="{GENOME_VERSION}" ; 
-        rmarkdown::render("Nanopore_report.Rmd", output_file = "{output}" ) \'  '
+        Rscript -e  '{params} fin_Transcript    = "{input.transcriptome}";   fin_readalignment = "{input.aligned_reads}";    Genome_version="{GENOME_VERSION}" ;  rmarkdown::render("Nanopore_report.Rmd", output_file = "{output}" ) '  
         """
  
 #------------------------------------------------------
