@@ -26,33 +26,55 @@ Sample_indices_str     = [ str(item) for item in Sample_indices_int  ]
 
 Ealign_FILES_list = list( chain( *[ expand ( os.path.join( DIR_EVENTALIGN, 'Ealign_'+sample+'.cvs' ), ) for sample in Sample_indices_str ] ) )
  
-#                   [
-#                    expand ( os.path.join( DIR_REPORT,  config["SAMPLES"][sample]+"_report.html"), ) for sample in config["SAMPLES"],
-#                   ]
-# print( Ealign_FILES_list )
-# Ealign_FILES_ss  = ' '.join(Ealign_FILES_list) 
 
+bami_FILES_list = list( chain( *[ expand ( os.path.join( DIR_SORTED_MINIMAPPED, 'run_'+config["RUN_ID"]+ '_'+chunk+'.sorted.bam' ), ) for chunk in Sample_indices_str ] ) )
+
+# import rule definitions for the post-base-calling rules
+include : 'rules_basecalled.py'
 
 OUTPUT_FILES=  [
                os.path.join( DIR_EVENTALIGN, 'E_aligned_all.cvs'),
-               # expand ( os.path.join( DIR_REPORT,  config["SAMPLES"][sample]+"_report.html"), ) for sample in config["SAMPLES"]
- 
+               os.path.join( DIR_REPORT, "run_" + config["RUN_ID"]+"_report.html")
                ]
-# os.path.join( config['PATHIN'], 'fastq', 'pass', config['RUN_ID']+'_'+sample+'.fastq.index'), )
+
 # print("OUTPUT_FILES=")
 # for x in OUTPUT_FILES: 
 # IPython.embed()
 # 
-#=========================================================================================================
+#=========================================================================
 #
-#                                         BEGIN RULES    
+#                         BEGIN RULES    
 #
-#=========================================================================================================
+#=========================================================================
 
 rule all:
     input:
         [ OUTPUT_FILES ]
 
+#------------------------------------------------------
+
+rule make_report:
+# build the final output report in html format
+    input:
+        aligned_reads = os.path.join( DIR_SORTED_MINIMAPPED, "run_{sample}.all.sorted.bam"),
+        transcriptome = RefTranscriptome
+    output:
+        os.path.join( DIR_REPORT, "run_{sample}_report.html")
+    params:
+        " readcov_THRESH = 10;   ",
+        " yplotmax = 10000; "
+    log:
+        logfile = os.path.join( DIR_REPORT, "finale_report_{sample}.log")
+    message: """--- producing final report."""
+
+    shell: """  
+        Rscript -e  \'{params}  
+        fin_Transcript    = "{input.transcriptome}";
+        fin_readalignment = "{input.aligned_reads}";
+        Genome_version="{GENOME_VERSION}" ; 
+        rmarkdown::render("Nanopore_report.Rmd", output_file = "{output}" ) \'  '
+        """
+ 
 #------------------------------------------------------
 
 rule consolidate_alignments:
@@ -69,10 +91,10 @@ rule consolidate_alignments:
 rule np_event_align:
 # Align the events to the reference genome
     input:
-        sortedbam             = os.path.join( DIR_SORTED_ALIGNED_BWA, config['RUN_ID']+'_{sample}.bwaligned.sorted.bam'),
-        NOTCALLED_indexedbam  = os.path.join( DIR_SORTED_ALIGNED_BWA, config['RUN_ID']+'_{sample}.bwaligned.sorted.bam.bai'),
-        fastq_file            = os.path.join( config['PATHIN'], 'fastq', 'pass', config['RUN_ID']+'_{sample}.fastq'),
-        NOTCALLED_fastq_npi   = os.path.join( config['PATHIN'], 'fastq', 'pass', config['RUN_ID']+'_{sample}.fastq.index'),
+        sortedbam             = os.path.join( DIR_SORTED_ALIGNED_BWA, "fastq_runid_"+config['RUN_ID']+'_{sample}.bwaligned.sorted.bam'),
+        NOTCALLED_indexedbam  = os.path.join( DIR_SORTED_ALIGNED_BWA, "fastq_runid_"+config['RUN_ID']+'_{sample}.bwaligned.sorted.bam.bai'),
+        fastq_file            = os.path.join( config['PATHIN'], 'fastq', 'pass', "fastq_runid_"+config['RUN_ID']+'_{sample}.fastq'),
+        NOTCALLED_fastq_npi   = os.path.join( config['PATHIN'], 'fastq', 'pass', "fastq_runid_"+config['RUN_ID']+'_{sample}.fastq.index'),
         refgenome_fasta  = os.path.join(config['ref']['Genome_DIR'] , config['ref']['Genome_version']+ ".fa" ),
         NOTCALLED_bwt    = os.path.join(config['ref']['Genome_DIR'] , config['ref']['Genome_version']+ ".fa.bwt"),
         NOTCALLED_pac    = os.path.join(config['ref']['Genome_DIR'] , config['ref']['Genome_version']+ ".fa.pac")
@@ -96,9 +118,9 @@ rule np_event_align:
 rule index_sortedbam:
 # Index the sorted bam file
     input:
-        sortedbam  = os.path.join( DIR_SORTED_ALIGNED_BWA, config['RUN_ID']+'_{sample}.bwaligned.sorted.bam')
+        sortedbam  = os.path.join( DIR_SORTED_ALIGNED_BWA, "fastq_runid_"+config['RUN_ID']+'_{sample}.bwaligned.sorted.bam')
     output:
-        indexedbam  = os.path.join( DIR_SORTED_ALIGNED_BWA, config['RUN_ID']+'_{sample}.bwaligned.sorted.bam.bai')
+        indexedbam  = os.path.join( DIR_SORTED_ALIGNED_BWA, "fastq_runid_"+config['RUN_ID']+'_{sample}.bwaligned.sorted.bam.bai')
     log:
         logfile  = os.path.join( DIR_SORTED_ALIGNED_BWA, 'index_{sample}_bwaMemOnt2d.log')
     message: """---- index the bam files for sample {wildcards.sample} ----"""
@@ -112,13 +134,13 @@ rule align_bwa_mem_ont2d:
     input:
         refg_fasta = os.path.join(config['ref']['Genome_DIR'] , config['ref']['Genome_version']+ ".fa" ),
         refg_bwt   = os.path.join(config['ref']['Genome_DIR'] , config['ref']['Genome_version']+ ".fa.bwt"),
-        reads      = os.path.join( config['PATHIN'], 'fastq', 'pass', config['RUN_ID']+'_{sample}.fastq'),
-        npi        = os.path.join( config['PATHIN'], 'fastq', 'pass', config['RUN_ID']+'_{sample}.fastq.index')
+        reads      = os.path.join( config['PATHIN'], 'fastq', 'pass', "fastq_runid_"+config['RUN_ID']+'_{sample}.fastq'),
+        npi        = os.path.join( config['PATHIN'], 'fastq', 'pass', "fastq_runid_"+config['RUN_ID']+'_{sample}.fastq.index')
     output:
-        sortedbam  = os.path.join( DIR_SORTED_ALIGNED_BWA, config['RUN_ID']+'_{sample}.bwaligned.sorted.bam')
+        sortedbam  = os.path.join( DIR_SORTED_ALIGNED_BWA, "fastq_runid_"+config['RUN_ID']+'_{sample}.bwaligned.sorted.bam')
     params:
         options    = " mem -x ont2d ",
-        tempfile   = os.path.join( DIR_SORTED_ALIGNED_BWA, config['RUN_ID']+'_{sample}.bwaligniment.log')
+        tempfile   = os.path.join( DIR_SORTED_ALIGNED_BWA, "fastq_runid_"+config['RUN_ID']+'_{sample}.bwaligniment.log')
     log:
         logfile  = os.path.join( DIR_SORTED_ALIGNED_BWA, 'alignment_{sample}_bwaMemOnt2d.log')
     message: """---- Align the reads from sample {wildcards.sample} to the reference ----"""
@@ -127,67 +149,20 @@ rule align_bwa_mem_ont2d:
 
 #------------------------------------------------------
 
-rule convert_sort_minimap:
-# convert from sam to bam format and sort by position
-    input:
-        aligned     = os.path.join( DIR_FILTERED_MINIMAP, "{sample}.0filtered.sam")
-    output:
-        sortedbam   = os.path.join( DIR_SORTED_MINIMAPPED, "{sample}.sorted.bam")
-    params:
-        options = "-ax splice "
-    log:
-        logfile = os.path.join( DIR_SORTED_MINIMAPPED, "{sample}.sortbam.log")
-    message: """ --- converting, sorting, and indexing bam file. --- """
-    shell:
-        'samtools view  -Sb  {input} | samtools sort > {output} && samtools index {output} 2> {log.logfile}'
-
-#------------------------------------------------------
-
-rule filter_nonaligned_minimap:
-# Check for alignment filter in sam file: if != 4 then remove this read
-    input:
-        aligned  = os.path.join( DIR_ALIGNED_MINIMAP, "{sample}.sam" )
-    output:
-        aligned  = os.path.join( DIR_FILTERED_MINIMAP, "{sample}.0filtered.sam" )
-    log:
-        log      = os.path.join( DIR_FILTERED_MINIMAP, "{sample}_0filtering.log" )
-    message: """--- filtering unaligned reads from alignment data ---"""
-    shell:
-        " cat {input} | perl -lane 'print if $F[1] ne 4'  >  {output}   2> {log}"
-
-#------------------------------------------------------
-
-rule align_minimap:
-# use minimap2 to align the fastq reads to the reference genome
-    input:
-        mmiref   = os.path.join( config['ref']['Genome_DIR'] , config['ref']['Genome_version']+ ".mmi" ),
-        sample   = os.path.join( config['PATHIN'], "{sample}.fastq" )
-    output:
-        aligned  = os.path.join( DIR_ALIGNED_MINIMAP, "{sample}.sam" )
-    params:
-        options  = " -ax splice "
-    log:
-        log      = os.path.join( DIR_ALIGNED_MINIMAP, "{sample}_alignment.log")
-    message: """--- aligning fastq reads to indexed reference"""
-    shell:
-        "{MM2} {params} {input.mmiref} {input.sample} > {output}  2> {log}"
-
-#------------------------------------------------------
-
 rule np_index:
 # Index the reads and the fast5 files themselves
     input:
         fast5_folder = os.path.join( config['PATHIN'], 'fast5', 'pass', '{sample}' ),
-        fastq_file   = os.path.join( config['PATHIN'], 'fastq', 'pass', config['RUN_ID']+'_{sample}.fastq') 
+        fastq_file   = os.path.join( config['PATHIN'], 'fastq', 'pass', "fastq_runid_"+config['RUN_ID']+'_{sample}.fastq') 
     output:
-        npi    = os.path.join( config['PATHIN'], 'fastq', 'pass', config['RUN_ID']+'_{sample}.fastq.index'), 
-        fai    = os.path.join( config['PATHIN'], 'fastq', 'pass', config['RUN_ID']+'_{sample}.fastq.index.fai'),
-        gzi    = os.path.join( config['PATHIN'], 'fastq', 'pass', config['RUN_ID']+'_{sample}.fastq.index.gzi'),  
-        readdb = os.path.join( config['PATHIN'], 'fastq', 'pass', config['RUN_ID']+'_{sample}.fastq.index.readdb')
+        npi    = os.path.join( config['PATHIN'], 'fastq', 'pass', "fastq_runid_"+config['RUN_ID']+'_{sample}.fastq.index'), 
+        fai    = os.path.join( config['PATHIN'], 'fastq', 'pass', "fastq_runid_"+config['RUN_ID']+'_{sample}.fastq.index.fai'),
+        gzi    = os.path.join( config['PATHIN'], 'fastq', 'pass', "fastq_runid_"+config['RUN_ID']+'_{sample}.fastq.index.gzi'),  
+        readdb = os.path.join( config['PATHIN'], 'fastq', 'pass', "fastq_runid_"+config['RUN_ID']+'_{sample}.fastq.index.readdb')
     params:
         options    = " index -d "
     log:
-        logfile  = os.path.join( config['PATHIN'], 'fastq', 'pass', config['RUN_ID']+'_{sample}_npi.log' )
+        logfile  = os.path.join( config['PATHIN'], 'fastq', 'pass', "fastq_runid_"+config['RUN_ID']+'_{sample}_npi.log' )
     message: """---- index the reads from sample {wildcards.sample} against the fast5 files from the same. ----"""
     shell:
         " nice -19 {nanopolish} {params.options} {input.fast5_folder} {input.fastq_file} 2> {log.logfile} "
@@ -208,3 +183,4 @@ rule bwa_index:
     message: """---- creating bwa index of the reference genome. ----"""
     shell:
         "{BWA} {params.options}  {input} > {log.logfile}"
+
