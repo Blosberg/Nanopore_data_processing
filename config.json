@@ -1,10 +1,10 @@
 {  
-  "PATHIN"  : "/scratch/AG_Akalin/bosberg/nanopore/data/20180417_1233_polyA_RNA/fastq/pass/",
+  "PATHIN"  : "/scratch/AG_Akalin/bosberg/nanopore/data/20180417_1233_polyA_RNA/",
   "PATHOUT" : "/scratch/AG_Akalin/bosberg/nanopore/pipeline_output/20180417_1233_polyA_RNA/",
 
-  "SAMPLES" : {
-          "allreads": "fastq_runid_ec9bd1f"
-          },
+  "RUN_ID"  : "ec9bd1f6f626d73709089ba0bfc63929581e9ede",
+
+  "MAXSAMPLEi": 19, 
 
   "ref": {
           "Transcriptome"  : "/scratch/AG_Akalin/refGenomes/hg19_canon/170317_Homo_sapiens.GRCh37.87.chr.gtf",
@@ -13,8 +13,9 @@
           },
 
    "progs": {
-        "minimap":    "deps/minimap2/minimap2",
-        "nanopolish": "deps/nanopolish/nanopolish",
-	"BWA":        "deps/bwa/bwa"
+        "minimap":    "./deps/minimap2/minimap2",
+        "nanopolish": "./deps/nanopolish/nanopolish",
+	"BWA":        "./deps/bwa/bwa",
+        "SAMTOOLS":   "samtools"
             }
 }
