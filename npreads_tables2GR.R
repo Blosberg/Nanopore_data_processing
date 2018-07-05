@@ -5,7 +5,6 @@
 ## Collect arguments
 args <- commandArgs(TRUE)
 
-
 ## Default setting when no arguments passed
 if(length(args) < 1) {
   args <- c("--help")
@@ -30,53 +29,33 @@ if("--help" %in% args) {
 
 ## Parse arguments (we expect the form --arg=value)
 parseArgs <- function(x) strsplit(sub("^--", "", x), "=")
-
 argsDF    <- as.data.frame(do.call("rbind", parseArgs(args)))
 argsL     <- as.list(as.character(argsDF$V2))
 
 names(argsL) <- argsDF$V1
 
-## catch output and messages into log file
-out <- file(argsL$logFile, open = "wt")
-sink(out,type = "output")
-sink(out, type = "message")
-
-
+# catch output and messages into log file
+# out <- file(argsL$logFile, open = "wt")
+# sink(out, type = "output")
+# sink(out, type = "message")
 
 # Run Functions -----------------------------------------------------------
 
 # e.g. (replace this list with actual arguments)
-Rfuncs_file     <- argsL$Rfuncs_file 
-Event_file_list <- argsL$Event_file_list
-output          <- argsL$output
-
-# assembly  <- argsL$assembly
-# mincov    <- as.numeric(argsL$mincov)
-# minqual   <- as.numeric(argsL$minqual)
-# rdsfile   <- argsL$rds
-
-print(paste( "funcs_file = ", funcs_file) )
-print(paste( "output     = ", output) )
-print(paste( "Event_file_list = ", Event_file_list) )
-
-print("===== terminating =========")
-
-quit()
-
+Rfuncs_file  <- argsL$Rfuncs_file 
+output       <- argsL$output
+logfile      <- argsL$logFile
+Ealign_files <- unlist( strsplit(argsL$Ealign_files,",")  )
 
 #===============================================================
-library(GenomicRanges)
-suppressPackageStartupMessages(library(dplyr))
-
-# include various functions for processing the signal data.
-# funcs_file="./signal_funcs.R"
+suppressPackageStartupMessages( library(GenomicRanges) )
+suppressPackageStartupMessages( library(dplyr)         )
 source(Rfuncs_file)
 
-# Event_folder = "/scratch/AG_Akalin/bosberg/nanopore/pipeline_output/20180417_1233_polyA_RNA/05_BWA_eventalign"
+dat_all         = get_event_dat( Ealign_files )
 
-dat_all         = get_event_dat( Event_file_list)
-read_list_final = unique( dat_all$read_index )
-Nreads          = length( read_list_final )
+read_list_final = unique( dat_all$read_index  )
+Nreads          = length( read_list_final     )
 
 if( !( identical( as.numeric(c(1:Nreads)) , as.numeric(read_list_final) )  ))
   { print(paste("ERROR: final read list is not step-wise increasing"))}

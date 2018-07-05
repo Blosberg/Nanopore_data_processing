@@ -38,7 +38,7 @@ Sample_indices_str     = [ str(item) for item in Sample_indices_int  ]
 
 Ealign_FILES_list = list( chain( *[ expand ( os.path.join( DIR_EVENTALIGN, 'Ealign_'+chunk+'.cvs' ), ) for chunk in Sample_indices_str ] ) )
 
-Ealign_FILES_quoted   = "\"" + "\",\"".join( Ealign_FILES_list ) + "\""
+Ealign_FILES_quoted   = ",".join( Ealign_FILES_list )  
  
 bami_FILES_list = list( chain( *[ expand ( os.path.join( DIR_SORTED_MINIMAPPED, "read_chunks", 'run_'+config["RUN_ID"]+ '_'+chunk+'.sorted.bam' ), ) for chunk in Sample_indices_str ] ) )
 
@@ -112,7 +112,7 @@ rule create_GR_obj:
                          "--Rfuncs_file={params.Rfuncs_file}",
                          "--output={params.output}",
                          "--logFile={log}",
-                         "--Ealign_files=c({params.Ealign_files})"]
+                         "--Ealign_files={params.Ealign_files}"]
 )
 
 #------------------------------------------------------

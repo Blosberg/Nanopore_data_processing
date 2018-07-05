@@ -42,34 +42,36 @@ get_event_dat  <-  function( Event_file_list = stop("Datin must be provided")
   dat_all = data.frame( row.names = colnames)
   readcount_offset = 0;
   
-  for ( fin in Event_file_list) {
-    
+  for ( i in c(1:length(Event_file_list) ) )  {
+  
     # Event_file      = paste0(    "Ealign_", as.character(i),".cvs")
-    # fin             = file.path( Event_folder, Event_file)
+    fin               = as.character( file.path(  Event_file_list[i] ) )
 
-    print( paste( "---Reading csv file from ", fin) )
+    print( paste( "---Reading csv file from: ", fin ) )
     
-    dat_temp        = read.csv(  file             = fin, 
-                                 sep              = '\t', 
-                                 stringsAsFactors = FALSE, 
-                                 header           = TRUE
-    )
+    dat_temp        = read.csv(  file = fin, 
+                                 sep  = '\t', 
+                                 stringsAsFactors=FALSE, 
+                                 header = TRUE
+                              ) #--- read in the current "chunk" of np data
     
-    dat_temp$read_index <- dat_temp$read_index + readcount_offset
+    dat_temp$read_index <- dat_temp$read_index + readcount_offset  #--- offset the read_index values to ensure uniqueness
     
-    dat_all             <-   rbind(dat_all, dat_temp )
-    readcount_offset    <- ( max( dat_all$read_index)  +1     )
+    dat_all           =    rbind(dat_all, dat_temp )               #--- compile the chunks together
+    readcount_offset  =  ( max( dat_all$read_index)  +1  )         #--- re-calculate the necessary offset
     
   }
   
   Nreads = length(unique(dat_all$read_index))
   
   # cast the read_indices as factors (to make unique values sequentially increasing), and then 
-  # cast them back into integers
+  # cast them back into integers (since some read_indices have been removed for quality/alignment/etc. reasons
   dat_all$read_index <- as.numeric( as.factor( dat_all$read_index))
+  
   
   return(dat_all)
 }
+
 
 # -------------------------------------------------------------------------------
 plot_signal <-  function( Datin = stop("Datin must be provided") )
