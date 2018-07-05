@@ -6,7 +6,7 @@ import os
 configfile: "./config.json"
 
 #------------------------------------------------------
-# Dependencies:
+# --- Dependencies:
 
 BWA        = config["progs"]["BWA"]
 MM2        = config["progs"]["minimap"]
@@ -14,20 +14,22 @@ SAMTOOLS   = config["progs"]["SAMTOOLS"]
 nanopolish = config["progs"]["nanopolish"]
 
 RefTranscriptome = config["ref"]["Transcriptome"]
-GENOME_VERSION = config["ref"]["Genome_version"]
+GENOME_VERSION   = config["ref"]["Genome_version"]
 
 #------------------------------------------------------
-# define output directories
+# --- define output directories
 
 DIR_ALIGNED_MINIMAP    = config["PATHOUT"]+"01_MM_aligned/"
 DIR_FILTERED_MINIMAP   = config["PATHOUT"]+"02_MM_filtered/"
 DIR_SORTED_MINIMAPPED  = config["PATHOUT"]+"03_MM_sortedbam/"
 DIR_SORTED_ALIGNED_BWA = config["PATHOUT"]+"04_BWA_sortedbam/"
 DIR_EVENTALIGN         = config["PATHOUT"]+"05_BWA_eventalign/"
-DIR_REPORT             = config["PATHOUT"]+"06_report/"
+DIR_GR                 = config["PATHOUT"]+"06_GRobjects"
+DIR_REPORT             = config["PATHOUT"]+"07_report/"
+
 
 #------------------------------------------------------
-# --- enumerate the list of "chunk" files for each of the 
+# --- enumerate "chunk" files list  
 # blocks that the minion divides the ouput into 
 # (usually 4000 reads per chunk) 
 # This is done for both event alignments and bam files:
@@ -41,13 +43,15 @@ bami_FILES_list = list( chain( *[ expand ( os.path.join( DIR_SORTED_MINIMAPPED, 
 #------------------------------------------------------
 # import rule definitions for the post-base-calling rules
 
-include : 'rules_basecalled.py'
+include : 'scripts/rules_basecalled.py'
+include   : os.path.join( config["scripts"]["script_folder"], config["scripts"]["pyfunc_defs"] )
 
 #------------------------------------------------------
 # Define output files:
 
 OUTPUT_FILES=  [
-               os.path.join( DIR_EVENTALIGN, 'E_aligned_all.cvs'),
+               # os.path.join( DIR_EVENTALIGN, 'E_aligned_all.cvs'),
+               os.path.join( DIR_GR, "{sample}_GR.RData"),
                os.path.join( DIR_REPORT, "run_" + config["RUN_ID"]+"_report.html")
                ]
 
@@ -57,7 +61,7 @@ OUTPUT_FILES=  [
 # 
 #=========================================================================
 #
-#                         BEGIN RULES    
+#   BEGIN RULES    
 #
 #=========================================================================
 
@@ -84,18 +88,42 @@ rule make_report:
     shell: """  
         Rscript -e  '{params} fin_Transcript    = "{input.transcriptome}";   fin_readalignment = "{input.aligned_reads}";    Genome_version="{GENOME_VERSION}" ;  rmarkdown::render("Nanopore_report.Rmd", output_file = "{output}" ) '  
         """
- 
+
 #------------------------------------------------------
+# TODO: work on this
 
-rule consolidate_alignments:
-# Pool the alignment files into a single table (with just one header) to gather all the statistics from
+rule create_GR_obj:
+# produce GRanges object of reads saved to file in .RData format 
     input:
-        Ealign_FILES_list
-    output: 
-        os.path.join( DIR_EVENTALIGN, 'E_aligned_all.cvs') 
+        table_files  = Ealign_FILES_list
+    output:
+        GRobj        = os.path.join( DIR_GR, "{sample}_GR.RData")
+    params:
+        Rfuncs_file  = os.path.join( config[ "scripts"]["script_folder"], config[ "scripts"]["Rfuncs_file"] ) 
+        output       = os.path.join( DIR_GR, "{sample}_GR.RData")
+        Ealign_files = Ealign_FILES_list
+    log:
+        os.path.join( DIR_GR, "{prefix}_meth_calls.log")
+    message: fmt("Extract methylation calls from bam file.")
     shell:
-        " head -1 {Ealign_FILES_list[0]} > '{output}' && tail -q -n +2 {Ealign_FILES_list} >> '{output}' "
+        nice('Rscript', ["./npreads_tables2GR.R",
+                         "--Rfuncs_file={params.Rfuncs_file}",
+                         "--output={params.output}",
+                         "--logFile={log}",
+                         "--Ealign_files=c({params.Ealign_files})"]
+)
 
+#------------------------------------------------------
+# CHANGE OF PLANS: DON'T DO THIS. (IT PRODUCES REDUNDANT READIDs) 
+# rule consolidate_alignments:
+# # Pool the alignment files into a single table (with just one header) to gather all the statistics from
+#     input:
+#         Ealign_FILES_list
+#     output: 
+#         os.path.join( DIR_EVENTALIGN, 'E_aligned_all.cvs') 
+#     shell:
+#         " head -1 {Ealign_FILES_list[0]} > '{output}' && tail -q -n +2 {Ealign_FILES_list} >> '{output}' "
+# 
 #------------------------------------------------------
 
 rule np_event_align:

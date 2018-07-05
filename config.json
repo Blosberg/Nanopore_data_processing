@@ -17,5 +17,13 @@
         "nanopolish": "./deps/nanopolish/nanopolish",
 	"BWA":        "./deps/bwa/bwa",
         "SAMTOOLS":   "samtools"
+            },
+   "scripts": {
+        "script_folder": "/Users/lana/postdoc_MDC/projects/nanopore/scripts/",
+        "Rfuncs_file":   "Rfuncs_file",
+        "pyfunc_defs":   "npreads_tables2GR_funcs.R"
+            },
+   "execution":{
+        "nice": "19"
             }
 }
