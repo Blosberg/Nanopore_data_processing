@@ -19,9 +19,10 @@
         "SAMTOOLS":   "samtools"
             },
    "scripts": {
-        "script_folder": "/Users/lana/postdoc_MDC/projects/nanopore/scripts/",
-        "Rfuncs_file":   "Rfuncs_file",
-        "pyfunc_defs":   "npreads_tables2GR_funcs.R"
+        "script_folder":    "/home/bosberg/projects/nanopore/scripts/",
+        "Rfuncs_file":      "npreads_tables2GR_funcs.R",
+        "pyfunc_defs":      "func_defs.py",
+        "rules_basecalled": "rules_basecalled.py"
             },
    "execution":{
         "nice": "19"

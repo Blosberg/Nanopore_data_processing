@@ -37,21 +37,23 @@ Sample_indices_int     = range(config["MAXSAMPLEi"] +1)
 Sample_indices_str     = [ str(item) for item in Sample_indices_int  ]
 
 Ealign_FILES_list = list( chain( *[ expand ( os.path.join( DIR_EVENTALIGN, 'Ealign_'+chunk+'.cvs' ), ) for chunk in Sample_indices_str ] ) )
+
+Ealign_FILES_quoted   = "\"" + "\",\"".join( Ealign_FILES_list ) + "\""
  
 bami_FILES_list = list( chain( *[ expand ( os.path.join( DIR_SORTED_MINIMAPPED, "read_chunks", 'run_'+config["RUN_ID"]+ '_'+chunk+'.sorted.bam' ), ) for chunk in Sample_indices_str ] ) )
 
 #------------------------------------------------------
 # import rule definitions for the post-base-calling rules
 
-include : 'scripts/rules_basecalled.py'
 include   : os.path.join( config["scripts"]["script_folder"], config["scripts"]["pyfunc_defs"] )
+include   : os.path.join( config["scripts"]["script_folder"], config["scripts"]["rules_basecalled"] )
 
 #------------------------------------------------------
 # Define output files:
 
 OUTPUT_FILES=  [
                # os.path.join( DIR_EVENTALIGN, 'E_aligned_all.cvs'),
-               os.path.join( DIR_GR, "{sample}_GR.RData"),
+               os.path.join( DIR_GR, config["RUN_ID"]+"_GR.RData"),
                os.path.join( DIR_REPORT, "run_" + config["RUN_ID"]+"_report.html")
                ]
 
@@ -99,12 +101,12 @@ rule create_GR_obj:
     output:
         GRobj        = os.path.join( DIR_GR, "{sample}_GR.RData")
     params:
-        Rfuncs_file  = os.path.join( config[ "scripts"]["script_folder"], config[ "scripts"]["Rfuncs_file"] ) 
-        output       = os.path.join( DIR_GR, "{sample}_GR.RData")
-        Ealign_files = Ealign_FILES_list
+        Rfuncs_file  = os.path.join( config[ "scripts"]["script_folder"], config[ "scripts"]["Rfuncs_file"] ), 
+        output       = os.path.join( DIR_GR, "{sample}_GR.RData"),
+        Ealign_files = Ealign_FILES_quoted 
     log:
-        os.path.join( DIR_GR, "{prefix}_meth_calls.log")
-    message: fmt("Extract methylation calls from bam file.")
+        os.path.join( DIR_GR, "{sample}_GR_conversion.log")
+    message: fmt("Convert aligned NP reads to GRanges object")
     shell:
         nice('Rscript', ["./npreads_tables2GR.R",
                          "--Rfuncs_file={params.Rfuncs_file}",
