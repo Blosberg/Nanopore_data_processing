@@ -108,7 +108,7 @@ rule create_GR_obj:
         os.path.join( DIR_GR, "{sample}_GR_conversion.log")
     message: fmt("Convert aligned NP reads to GRanges object")
     shell:
-        nice('Rscript', ["./npreads_tables2GR.R",
+        nice('Rscript', ["./scripts/npreads_tables2GR.R",
                          "--Rfuncs_file={params.Rfuncs_file}",
                          "--output={params.output}",
                          "--logFile={log}",

@@ -93,10 +93,10 @@ if( dim(Unk)[1] > 0 )
 
 reads_GR = GRanges( seqnames   = dat_win_finite_stranded$contig, 
                     strand     = dat_win_finite_stranded$strand, 
-                    IRanges(   start  =  dat_win_finite_stranded$position, 
-                               end    =  dat_win_finite_stranded$position ),
+                    IRanges(   start  =  dat_win_finite_stranded$position+1,
+                               end    =  dat_win_finite_stranded$position+5 ), # --- nopolish provides position before beginning of 5bp window.
                     
-                    reference_kmer =  dat_win_finite_stranded$reference_kmer,
+                    reference_kmer = dat_win_finite_stranded$reference_kmer,
                     read_index     = dat_win_finite_stranded$read_index,
                     event_index    = dat_win_finite_stranded$event_index,
                     event_mean     = dat_win_finite_stranded$event_level_mean,
