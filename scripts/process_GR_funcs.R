@@ -18,63 +18,13 @@ return( result )
 }
 
 # ==================================================================
-
-get_refgen_seqs <-  function(  refgen     = stop("seq  must be provided"),
-                               ROI_GR     = stop("Region of interest must be provided in GRanges format"), 
-                               lead       = 0,
-                               trail      = 0,
-                               RNAstrand  = FALSE
-                               )
-{ 
-if ( as.character(strand(ROI_GR) ) == "+")
-  {
-
-  lo_end   <- start(ROI_GR) - lead;
-  hi_end   <- end(ROI_GR)   + trail;
-  flipseq = FALSE;
-
-  }else if( as.character(strand(ROI_GR) )  == "-") {
-
-  lo_end   <- start(ROI_GR) - trail;
-  hi_end   <- end(ROI_GR)   + lead;    # it will be flipped later.
-  flipseq = TRUE;
-
-  } else {
-  stop("undefined strand in get_refgen_seqs");
-  }
-
-result = eval ( 
-               parse( 
-                      text=paste0(
-                                   "refgen$",seqnames(ROI_GR),"[",as.character(lo_end),":",as.character(hi_end),"]" 
-                                  ) 
-                      ) 
-               )
-
-# ------------------------------ 
-if ( flipseq )
-  { # --- if the read is from the - strand, then reverse and compliment it
-  result = chartr("ATGC","TACG", stringi::stri_reverse( result ) )
-  }
-
-if( RNAstrand )
-  {
-  result = sub( "T", "U", result )
-  }
-
-return( result )
-
-}
-
-# ==================================================================
-
-
+# --- plot the data in the list obtained from the previous function ^
 plot_seq_spec_comparison  <- function( seq_spec_list,
                                        mincurrent = 50,
                                        maxcurrent = 150,
                                        res = 1 )
 {
-  
+
   temp1 = seq_spec_list$SOI_seq_GR[  seq_spec_list$SOI_seq_GR$event_mean  > mincurrent ]
   temp1 = temp1[ temp1$event_mean < maxcurrent ]
   
@@ -117,7 +67,7 @@ hist( temp1$event_mean,
  #         box.lwd=1
  #        )
 
- legend( maxcurrent - (0.4*(maxcurrent-mincurrent)), 0.07, # places a legend at the appropriate place c("Health","Defense"), # puts text in the legend 
+ legend( maxcurrent - (0.4*(maxcurrent-mincurrent)), -0.01, # places a legend at the appropriate place c("Health","Defense"), # puts text in the legend 
          lty=c(1,1), # gives the legend appropriate symbols (lines)
          legend =c("putative", "control"),        
          lwd=c(2.5,2.5),col=c("red","blue")) # g
@@ -126,4 +76,53 @@ hist( temp1$event_mean,
  
 return(0);
 
+}
+
+# ==================================================================
+# --- get arbitrary sequences from an established reference
+
+get_refgen_seqs <-  function(  refgen     = stop("seq  must be provided"),
+                               ROI_GR     = stop("Region of interest must be provided in GRanges format"), 
+                               lead       = 0,
+                               trail      = 0,
+                               RNAstrand  = FALSE
+)
+{ 
+  if ( as.character(strand(ROI_GR) ) == "+")
+  {
+    
+    lo_end   <- start(ROI_GR) - lead;
+    hi_end   <- end(ROI_GR)   + trail;
+    flipseq = FALSE;
+    
+  }else if( as.character(strand(ROI_GR) )  == "-") {
+    
+    lo_end   <- start(ROI_GR) - trail;
+    hi_end   <- end(ROI_GR)   + lead;    # it will be flipped later.
+    flipseq = TRUE;
+    
+  } else {
+    stop("undefined strand in get_refgen_seqs");
+  }
+  
+  result = eval ( 
+    parse( 
+      text=paste0(
+        "refgen$",seqnames(ROI_GR),"[",as.character(lo_end),":",as.character(hi_end),"]" 
+      ) 
+    ) 
+  )
+  
+  # ------------------------------ 
+  if ( flipseq )
+  { # --- if the read is from the - strand, then reverse and compliment it
+    result = chartr("ATGC","TACG", stringi::stri_reverse( result ) )
+  }
+  
+  if( RNAstrand )
+  {
+    result = sub( "T", "U", result )
+  }
+  
+  return( result )
 }
