@@ -19,10 +19,12 @@ return( result )
 
 # ==================================================================
 # --- plot the data in the list obtained from the previous function ^
-plot_seq_spec_comparison  <- function( seq_spec_list,
-                                       mincurrent = 50,
-                                       maxcurrent = 150,
-                                       res = 1 )
+plot_seq_spec_comparison  <- function( seq_spec_list = stop("seq_list  must be provided"),
+                                       pore_model    = NULL,
+                                       mincurrent    = 50,
+                                       maxcurrent    = 150,
+                                       res           = 1,
+                                       scale         = FALSE )
 {
 
   temp1 = seq_spec_list$SOI_seq_GR[  seq_spec_list$SOI_seq_GR$event_mean  > mincurrent ]
@@ -38,8 +40,20 @@ breakset = seq(from = mincurrent,
                to   = maxcurrent, 
                by   = res ) 
 
+if( scale ) # scale by (difference from model_mean)/model_stddev
+  {
+  stat_params = pore_model[ seq_spec_list$seq, ]
+  if (length(stat_params) != 2)
+    {
+    stop("Failed to obtain statistical parameters from pore_model reference")  
+    }
+  breakset          <- ((breakset-stat_params[1])/stat_params[2] );
+  temp1$event_mean  <- ((temp1$event_mean-stat_params[1])/stat_params[2] );
+  temp2$event_mean  <- ((temp2$event_mean-stat_params[1])/stat_params[2] );
+  }
 
-hist( temp2$event_mean,
+# plot control first in blue, so it appears behind the SOI
+hist( temp2$event_mean, 
       freq = FALSE,
       lty="blank",
       col=rgb( 0.0, 0.0, 1, 0.5 ), 
@@ -52,6 +66,7 @@ hist( temp2$event_mean,
       xlab = "current [pA]",
       ylab = "prob" )
 
+# plot SOI on top in red
 hist( temp1$event_mean, 
       freq = FALSE,                   # we want probabilities 
       lty="blank",

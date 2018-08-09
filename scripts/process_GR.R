@@ -79,15 +79,20 @@ CITS_m6amotif_part <- seq_spec_compare ( seq        = m6A_motif,
                                          control_GR = reads_cits_nonmod 
                                          )
 
-plot_seq_spec_comparison ( CIMS_part,
+plot_seq_spec_comparison ( CIMS_m6amotif_part,
+                           pore_model = pore_model,
                            mincurrent = 100,
                            maxcurrent = 140,
-                           res = 0.5 )
+                           res = 0.5, 
+                           scale=TRUE )
 
-plot_seq_spec_comparison  ( CITS_part,
+plot_seq_spec_comparison  ( CITS_m6amotif_part,
+                            pore_model = pore_model,
                             mincurrent = 100,
                             maxcurrent = 140,
-                            res = 0.5 )    
+                            res = 0.5,
+                            scale=TRUE )    
+
 # ===================================================================
 # now generalize the above to arbitrary sequence:
 
@@ -99,7 +104,7 @@ get_refgen_seqs (  refgen = hg19_ref,
                    trail      = 2,
                    RNAstrand  = FALSE
 )
-  
+  x
 # so now do it in a batch.
 CITs_sequences = sapply( 1:length(CITS_put), function(x) get_refgen_seqs( refgen = hg19_ref, 
                                                                 ROI_GR = CITS_put[x], 
@@ -114,7 +119,21 @@ CIMs_sequences = sapply( 1:length(CIMS_put), function(x) get_refgen_seqs( refgen
                                                                           RNAstrand=FALSE)  
 )
 
+#====
 
+CIMS_put_df = as.data.frame(CIMS_put) 
+short_df=CIMS_put_df[1:10,]
+
+command = paste0("hg19_ref$", short_df$seqnames,"[" , as.character(short_df$start),"]" )
+
+
+allAtest= apply( c(1: length(command)), FUN=function(x) as.character( eval(parse(text=command[x])) ) )
+                 )
+command
+test=c(1:5)
+apply(X, c(2:4), function(x) x^2 )
+
+#===
 
 m6A_motif_subset  = dat_win_finite[ which( dat_win_finite$reference_kmer == m6A_motif),  ]
 
