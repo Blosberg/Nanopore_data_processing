@@ -3,7 +3,7 @@ rule merge_bam_files:
     input:
         bami      = bami_FILES_list
     output:
-        sortedbam = os.path.join( DIR_SORTED_MINIMAPPED, "run_{sample}.all.sorted.bam")
+        sortedbam = os.path.join( DIR_SORTED_MINIMAPPED, "run_{sample}.sorted.bam")
     log:
         logfile   = os.path.join( DIR_SORTED_MINIMAPPED, "{sample}.sortbam.log")
     message: 
@@ -14,6 +14,7 @@ rule merge_bam_files:
 #------------------------------------------------------
 # bami_files = ['os.path.join( DIR_SORTED_MINIMAPPED, 'run_' + config["RUN_ID"]_0.cvs', {1..}]
 
+# THIS SHOULD BE THE LEAF NODE WHEN TARGET=.BAM
 rule convert_sort_minimap:
 # convert from sam to bam format and sort by position
     input:

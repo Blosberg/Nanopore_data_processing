@@ -29,18 +29,53 @@ DIR_REPORT             = config["PATHOUT"]+"07_report/"
 
 
 #------------------------------------------------------
-# --- enumerate "chunk" files list  
-# blocks that the minion divides the ouput into 
-# (usually 4000 reads per chunk) 
-# This is done for both event alignments and bam files:
-Sample_indices_int     = range(config["MAXSAMPLEi"] +1) 
-Sample_indices_str     = [ str(item) for item in Sample_indices_int  ]
+# define file lists based on input formatting.
 
-Ealign_FILES_list = list( chain( *[ expand ( os.path.join( DIR_EVENTALIGN, 'Ealign_'+chunk+'.cvs' ), ) for chunk in Sample_indices_str ] ) )
+if ( config["intype"] == "RAW_minION"): 
+   # --- enumerate "chunk" files list  
+   # blocks that the minion divides the ouput into 
+   # (usually 4000 reads per chunk) 
+   # This is done for both event alignments and bam files:
+   Sample_indices_int     = range(config["MAXSAMPLEi"] +1) 
+   Sample_indices_str     = [ str(item) for item in Sample_indices_int  ]
+   
+   Ealign_FILES_list = list( chain( *[ expand ( os.path.join( DIR_EVENTALIGN, 'Ealign_'+chunk+'.cvs' ), ) for chunk in Sample_indices_str ] ) )
+   
+   Ealign_FILES_quoted   = ",".join( Ealign_FILES_list )  
+    
+   bami_FILES_list = list( chain( *[ expand ( os.path.join( DIR_SORTED_MINIMAPPED, "read_chunks", 'run_'+config["RUN_ID"]+ '_'+chunk+'.sorted.bam' ), ) for chunk in Sample_indices_str ] ) )
+  
+elif( config["intype"] == "fastq"):
+   # Do some other stuff
+   print("Haven't covered this case yet. @@@TODO: Code this.")
 
-Ealign_FILES_quoted   = ",".join( Ealign_FILES_list )  
- 
-bami_FILES_list = list( chain( *[ expand ( os.path.join( DIR_SORTED_MINIMAPPED, "read_chunks", 'run_'+config["RUN_ID"]+ '_'+chunk+'.sorted.bam' ), ) for chunk in Sample_indices_str ] ) )
+else: 
+   print("Unrecognized input data format. Terminating.")
+   exit(1)
+
+#------------------------------------------------------
+# Define output (target) files:
+
+if ( config["target_out"] == "report" ):
+   OUTPUT_FILES=  [
+                  # os.path.join( DIR_EVENTALIGN, 'E_aligned_all.cvs'),
+                  os.path.join( DIR_REPORT, "run_" + config["RUN_ID"]+"_report.html")
+                  ]
+
+elif ( config["target_out"] == "GR" ):
+   OUTPUT_FILES=  [
+                  # os.path.join( DIR_EVENTALIGN, 'E_aligned_all.cvs'),
+                  os.path.join( DIR_GR, config["RUN_ID"]+"_GR.RData"),
+                  ]
+### @@@TODO: make report depend on GRdata, and then allow for three target options: "bam", "GR", and "report", in that order of hierarchy.
+elif ( config["target_out"] == "bam" ):
+   OUTPUT_FILES=  [
+                  os.path.join( DIR_SORTED_MINIMAPPED, "run_"+config["RUN_ID"]+".sorted.bam"),
+                  ]
+else:
+   print("Unrecognized target output file format. Terminating.")
+   exit(1)
+
 
 #------------------------------------------------------
 # import rule definitions for the post-base-calling rules
@@ -48,17 +83,11 @@ bami_FILES_list = list( chain( *[ expand ( os.path.join( DIR_SORTED_MINIMAPPED, 
 include   : os.path.join( config["scripts"]["script_folder"], config["scripts"]["pyfunc_defs"] )
 include   : os.path.join( config["scripts"]["script_folder"], config["scripts"]["rules_basecalled"] )
 
-#------------------------------------------------------
-# Define output files:
-
-OUTPUT_FILES=  [
-               # os.path.join( DIR_EVENTALIGN, 'E_aligned_all.cvs'),
-               os.path.join( DIR_GR, config["RUN_ID"]+"_GR.RData"),
-               os.path.join( DIR_REPORT, "run_" + config["RUN_ID"]+"_report.html")
-               ]
-
-# print("OUTPUT_FILES=")
-# for x in OUTPUT_FILES: 
+ 
+print("OUTPUT_FILES=")
+for x in OUTPUT_FILES: 
+  print(x)
+print("\n finished outputting output files \n\n ")
 # IPython.embed()
 # 
 #=========================================================================
@@ -76,8 +105,9 @@ rule all:
 rule make_report:
 # build the final output report in html format
     input:
-        aligned_reads = os.path.join( DIR_SORTED_MINIMAPPED, "run_{sample}.all.sorted.bam"),
-        transcriptome = RefTranscriptome
+        aligned_reads = os.path.join( DIR_SORTED_MINIMAPPED, "run_{sample}.sorted.bam"),
+        transcriptome = RefTranscriptome,
+        GRobj         = os.path.join( DIR_GR, "{sample}_GR.RData")
     output:
         os.path.join( DIR_REPORT, "run_{sample}_report.html")
     params:
@@ -87,9 +117,11 @@ rule make_report:
         logfile = os.path.join( DIR_REPORT, "finale_report_{sample}.log")
     message: """--- producing final report."""
 
-    shell: """  
-        Rscript -e  '{params} fin_Transcript    = "{input.transcriptome}";   fin_readalignment = "{input.aligned_reads}";    Genome_version="{GENOME_VERSION}" ;  rmarkdown::render("Nanopore_report.Rmd", output_file = "{output}" ) '  
-        """
+    shell: 
+        " Rscript -e  '{params} fin_Transcript    = \"{input.transcriptome}\";"
+        " fin_readalignment = \"{input.aligned_reads}\"; "
+        " Genome_version=\"{GENOME_VERSION}\"; " 
+        " rmarkdown::render(\"Nanopore_report.Rmd\", output_file = \"{output}\" ) ' "  
 
 #------------------------------------------------------
 # TODO: work on this
@@ -115,19 +147,6 @@ rule create_GR_obj:
                          "--Ealign_files={params.Ealign_files}"]
 )
 
-#------------------------------------------------------
-# CHANGE OF PLANS: DON'T DO THIS. (IT PRODUCES REDUNDANT READIDs) 
-# rule consolidate_alignments:
-# # Pool the alignment files into a single table (with just one header) to gather all the statistics from
-#     input:
-#         Ealign_FILES_list
-#     output: 
-#         os.path.join( DIR_EVENTALIGN, 'E_aligned_all.cvs') 
-#     shell:
-#         " head -1 {Ealign_FILES_list[0]} > '{output}' && tail -q -n +2 {Ealign_FILES_list} >> '{output}' "
-# 
-#------------------------------------------------------
-
 rule np_event_align:
 # Align the events to the reference genome
     input:
@@ -151,8 +170,6 @@ rule np_event_align:
 
 # rule quickcheck:
 # TODO:
-
-
 #------------------------------------------------------
 
 rule index_sortedbam:

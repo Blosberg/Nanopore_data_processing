@@ -5,6 +5,13 @@ Processing nanopore data into human-readable output.
 This script takes fastq data as raw input and outputs a report in html format.
 To run it, first edit the config file: `config.json` and supply the Transcriptome file (with full path) against which you wish to compare the nanopore RNA data, as well as the genome location, genome version and path to input and output folders.
 
+## config file
+in the config file there are three variables to define:
+target_out can be one of three values: "bam, "GR", or "report", in that order of hierarchy.
+"bam": the script will stop when it has generated bam files
+"GR": the script will create the bam file and GRanges object with alignments (including current statistics)
+"report": both of the previous + the final html report 
+
 From that point, run the following:
 
 `$ snakemake `  

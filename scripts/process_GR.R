@@ -124,15 +124,14 @@ CIMs_sequences = sapply( 1:length(CIMS_put), function(x) get_refgen_seqs( refgen
 CIMS_put_df = as.data.frame(CIMS_put) 
 short_df=CIMS_put_df[1:10,]
 
-command = paste0("hg19_ref$", short_df$seqnames,"[" , as.character(short_df$start),"]" )
+command = cbind("hg19_ref$", paste0(short_df$seqnames,"[" , as.character(short_df$start),"]" ))
+# collect "command strings", using the values from the database
 
+apply( command, 1, function(x) eval( paste0(command[x,1], command[x,2])) )
+# execute those strings as commands, and do it for each of the putative positions
 
 allAtest= apply( c(1: length(command)), FUN=function(x) as.character( eval(parse(text=command[x])) ) )
                  )
-command
-test=c(1:5)
-apply(X, c(2:4), function(x) x^2 )
-
 #===
 
 m6A_motif_subset  = dat_win_finite[ which( dat_win_finite$reference_kmer == m6A_motif),  ]

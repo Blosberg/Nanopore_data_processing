@@ -4,6 +4,8 @@
 
   "RUN_ID"  : "ec9bd1f6f626d73709089ba0bfc63929581e9ede",
 
+  "intype": "RAW_minION",
+  "target_out": "report",
   "MAXSAMPLEi": 19, 
 
   "ref": {

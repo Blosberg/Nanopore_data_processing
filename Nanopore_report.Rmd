@@ -8,22 +8,24 @@ output:  html_document
 The following is a nanopore processing output document. 
 
 ```{r setup, include=FALSE}
+# source("https://bioconductor.org/biocLite.R")
+# biocLite("GenomicAlignments")
+# BiocManager::install("GenomicAlignments")
 library(GenomicAlignments)
 library(data.table)
 library(rmarkdown)
+library(rtracklayer)
 
 # ---- next 3 lines valid only for laptop.
 # setwd("/Users/blosberg/postdoc_work/Nanopore/pigx_nanopore/")
 # fin_readalignment="Input/barcode05_trimmed_aligned_spliceaware_mm2.sorted.bam"
 # fin_Transcript="ref/170317_Homo_sapiens.GRCh37.87.chr.gtf"
 
-source('./Transcripts_funcs.R')
+source('./scripts/Transcripts_funcs.R')
 
 ```
 
-To produce this report, alignment data was taken from the following file:
-
-`r fin_readalignment`
+To produce this report, alignment data was taken from the following file: `r fin_readalignment`
 
 and aligned against the genome `r Genome_version`. The mapping quality, $MAPQ$ is defined as $-10 \ {\rm log}_{10}\left[ {\rm Prob \{\, mapping\, position\, wrong\} } \right]$, with higher values implying greater confidence in the correct alignment. This quantity has a lower bound of 0, and is rounded to the nearest integer; computation allows for this quantity to be theoretically as high as 255, though all realistic data will have $MAPQ$ values significantly lower than this. A histogram of the $MAPQ$ values obtained from the present data set is provided below. 
 
@@ -35,9 +37,11 @@ algn_cigartable = cigarOpTable(cigar(algn))
 gap_index = which(colnames( algn_cigartable ) =="D" )
 gap_indices = c( which( colnames( algn_cigartable ) =="I" ), which(colnames( algn_cigartable ) =="D")  )
 
+GRalgn  = as(algn, 'GRanges')
+GRLalgn = as(algn, 'GRangesList')
 
-GRalgn   = GRanges(algn)
-GRLalgn  = GRangesList(algn)
+# GRalgn   = granges(algn)
+# GRLalgn  = grglist(algn)
 
 GRalgn$num_mismatches = GRalgn$NM  - ( algn_cigartable[ , gap_indices[1]] +algn_cigartable[ , gap_indices[2]])
 
