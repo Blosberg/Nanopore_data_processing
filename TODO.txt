@@ -1,0 +1,8 @@
+Todo: 
+
+* Resolve cases for input (either minION raw, or fastq) and output “target” (i.e. bam, report, etc.)
+
+* Incorporate statistics from Granges data into report.
+
+
+
