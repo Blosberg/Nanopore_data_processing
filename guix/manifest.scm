@@ -1,0 +1,17 @@
+(define packages (list "vim"
+"git"
+"python2-ont-tombo"
+"snakemake"
+"samtools"
+"bwa"
+"htslib"
+"python2-ipython"
+"nss-certs"
+"r-minimal"
+"r-genomicalignments"
+"r-rmarkdown"
+"r-data-table"
+"glibc-locales"
+"r-rtracklayer"
+))
+(specifications->manifest packages)

@@ -1,0 +1,15 @@
+packages are installed like this: 
+/gnu/remote/bin/guixr  package -p ${GUIX_PROFILE}  --install [package to be installed] 
+
+and I did that with these packages:
+
+vim
+git
+python2-ont-tombo
+snakemake
+samtools
+bwa
+htslib
+python2-ipython
+
+nss-certs
