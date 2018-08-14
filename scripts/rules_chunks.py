@@ -1,3 +1,4 @@
+
 rule merge_bam_files:
 # combine the ~4000 reads from each iteration of the NP data into a single bam file
     input:
@@ -12,7 +13,6 @@ rule merge_bam_files:
         '{SAMTOOLS} merge {output} {input} '
 
 #------------------------------------------------------
-# bami_files = ['os.path.join( DIR_SORTED_MINIMAPPED, 'run_' + config["RUN_ID"]_0.cvs', {1..}]
 
 # THIS SHOULD BE THE LEAF NODE WHEN TARGET=.BAM
 rule convert_sort_minimap:
