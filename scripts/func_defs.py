@@ -15,4 +15,14 @@ def fmt(message):
     """Format the MESSAGE string."""
     return "----------  " + message + "  ----------"
 
+def getPathCase( mainpath, subd1, subd2, filename, intype ):
+    # Returns a path dependent on the input data type:
+    if ( intype == "raw_minION" ):
+       result = os.path.join( mainpath, subd1, subd2, filename )
+    elif( intype == "fastq" ):
+        result = os.path.join( mainpath, filename ), 
+    else:
+        print("ERROR: Unrecognized intype in getPathCase")
+        exit(1) 
+    return( result ) 
 

@@ -1,30 +1,14 @@
-rule merge_bam_files:
-# combine the ~4000 reads from each iteration of the NP data into a single bam file
-    input:
-        bami      = bami_FILES_list
-    output:
-        sortedbam = os.path.join( DIR_SORTED_MINIMAPPED, "run_{sample}.sorted.bam")
-    log:
-        logfile   = os.path.join( DIR_SORTED_MINIMAPPED, "{sample}.sortbam.log")
-    message: 
-        """ --- combining bam files from post-mapping fastq data. --- """
-    shell:
-        '{SAMTOOLS} merge {output} {input} '
-
-#------------------------------------------------------
-# bami_files = ['os.path.join( DIR_SORTED_MINIMAPPED, 'run_' + config["RUN_ID"]_0.cvs', {1..}]
-
 # THIS SHOULD BE THE LEAF NODE WHEN TARGET=.BAM
 rule convert_sort_minimap:
 # convert from sam to bam format and sort by position
     input:
-        aligned     = os.path.join( DIR_FILTERED_MINIMAP, "run_{sample}_{index}.0filtered.sam")
+        aligned     = os.path.join( DIR_FILTERED_MINIMAP, "run_{sample}.0filtered.sam")
     output:
-        sortedbam   = os.path.join( DIR_SORTED_MINIMAPPED, "read_chunks", "run_{sample}_{index}.sorted.bam")
+        sortedbam   = os.path.join( DIR_SORTED_MINIMAPPED, "run_{sample}.sorted.bam")
     params:
         options = "-ax splice "
     log:
-        logfile = os.path.join( DIR_SORTED_MINIMAPPED, "read_chunks", "run_{sample}_{index}.sortbam.log")
+        logfile = os.path.join( DIR_SORTED_MINIMAPPED, "read_chunks", "run_{sample}.sortbam.log")
     message: 
         """ --- converting, sorting, and indexing bam file. --- """
     shell:
@@ -35,11 +19,11 @@ rule convert_sort_minimap:
 rule filter_nonaligned_minimap:
 # Check for alignment filter in sam file: if != 4 then remove this read
     input:
-        aligned  = os.path.join( DIR_ALIGNED_MINIMAP, "run_{sample}_{index}.sam" )
+        aligned  = os.path.join( DIR_ALIGNED_MINIMAP, "run_{sample}.sam" )
     output:
-        aligned  = os.path.join( DIR_FILTERED_MINIMAP, "run_{sample}_{index}.0filtered.sam" )
+        aligned  = os.path.join( DIR_FILTERED_MINIMAP, "run_{sample}.0filtered.sam" )
     log:
-        log      = os.path.join( DIR_FILTERED_MINIMAP, "run_{sample}_0filtering.log" )
+        log      = os.path.join( DIR_FILTERED_MINIMAP, "run_{sample}.0filtering.log" )
     message: 
         """--- filtering unaligned reads from alignment data ---"""
     shell:
@@ -51,9 +35,9 @@ rule align_minimap:
 # use minimap2 to align the fastq reads to the reference genome
     input:
         mmiref   = os.path.join( config['ref']['Genome_DIR'] , config['ref']['Genome_version']+ ".mmi" ),
-        sample   = os.path.join( config['PATHIN'], "fastq", "pass", "fastq_runid_{sample}_{index}.fastq" )
+        sample   = getPathCase( config['PATHIN'], "fastq", "pass", "{sample}.fq.gz", intype )
     output:
-        aligned  = os.path.join( DIR_ALIGNED_MINIMAP, "run_{sample}_{index}.sam" )
+        aligned  = os.path.join( DIR_ALIGNED_MINIMAP, "run_{sample}.sam" )
     params:
         options  = " -ax splice "
     log:
@@ -79,5 +63,4 @@ rule minimizer:
         """--- creating minimizer index of reference genome for minimap2."""
     shell:
         "{MM2} {params.options}  {output} {input} 2> {log}"
-
 
