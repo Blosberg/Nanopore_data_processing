@@ -69,7 +69,7 @@ maxfreq = max(table(GRalgn$mapq) )
 ```
 
 
-<!---- ======================================================================= ----> 
+<!---- ========================================================= ----> 
 ## Correspondence with reference transcriptome:
 
 We first consider the mapping of base-called NP data with the reference genome. The mapping quality, $MAPQ$ is defined as $-10 \ {\rm log}_{10}\left[ {\rm Prob \{\, mapping\, position\, wrong\} } \right]$, with higher values implying greater confidence in the correct alignment. This quantity has a lower bound of 0, and is rounded to the nearest integer; computation allows for this quantity to be theoretically as high as 255, though all realistic data will have $MAPQ$ values significantly lower than this. A histogram of the $MAPQ$ values obtained from the present data set is provided below. 

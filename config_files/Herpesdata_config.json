@@ -6,15 +6,13 @@
 
   "samplelist": {
                 "NHDF1": { 
-                    "RUN_ID"    : "NHDF_i",
-                    "MAXSAMPLEi":  1, 
-                    "fastq"     : "NHDF_18hpi_i_pass.fq.gz"
-                          },
+                    "RUN_ID"    : "NHDF_18hpi_i_pass",
+                    "MAXSAMPLEi":  1
+                           },
                 "NHDF2": { 
-                    "RUN_ID"    : "NHDF_ii",
-                    "MAXSAMPLEi":  1, 
-                    "fastq"     : "NHDF_18hpi_ii_pass.fq.gz"
-                          }
+                    "RUN_ID"    : "NHDF_18hpi_ii_pass",
+                    "MAXSAMPLEi":  1
+                           }
                 },
 
   "target_out": "report",

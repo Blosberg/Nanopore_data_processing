@@ -1,23 +1,14 @@
 {  
-  "PATHIN"  : "/scratch/AG_Akalin/bosberg/nanopore/data/EW_Herpes_data/",
-  "PATHOUT" : "/scratch/AG_Akalin/bosberg/nanopore/pipeline_output/EW_Herpes_data/",
+  "PATHIN"  : "/scratch/AG_Akalin/bosberg/nanopore/data/20180417_1233_polyA_RNA/",
+  "PATHOUT" : "/scratch/AG_Akalin/bosberg/nanopore/pipeline_output/20180417_1233_polyA_RNA/",
 
-  "intype":     "fastq",
+  "intype": "RAW_minION",
 
   "samplelist": {
-                "NHDF1": { 
-                    "RUN_ID"    : "NHDF_i",
-                    "MAXSAMPLEi":  1, 
-                    "fastq"     : "NHDF_18hpi_i_pass.fq.gz"
-                          },
-                "NHDF2": { 
-                    "RUN_ID"    : "NHDF_ii",
-                    "MAXSAMPLEi":  1, 
-                    "fastq"     : "NHDF_18hpi_ii_pass.fq.gz"
-                          }
+               "RUN_ID"  : "ec9bd1f6f626d73709089ba0bfc63929581e9ede",
+               "MAXSAMPLEi": 19 
                 },
 
-  "target_out": "report",
 
   "ref": {
           "Transcriptome"  : "/scratch/AG_Akalin/refGenomes/hg19_canon/170317_Homo_sapiens.GRCh37.87.chr.gtf",
@@ -35,8 +26,7 @@
         "script_folder":    "/home/bosberg/projects/nanopore/scripts/",
         "Rfuncs_file":      "npreads_tables2GR_funcs.R",
         "pyfunc_defs":      "func_defs.py",
-        "rules_chunks":     "rules_chunks.py",
-        "rules_wholefastq": "rules_wholefastq.py"
+        "rules_basecalled": "rules_basecalled.py"
             },
    "execution":{
         "nice": "19"

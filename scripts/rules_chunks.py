@@ -92,7 +92,7 @@ rule filter_nonaligned_minimap:
 rule align_minimap:
 # use minimap2 to align the fastq reads to the reference genome
     input:
-        mmiref   = os.path.join( config['ref']['Genome_DIR'] , config['ref']['Genome_version']+ ".mmi" ),
+        mmiref   = os.path.join( DIR_REFGEMONE , config['ref']['Genome_version']+ ".mmi" ),
         sample   = os.path.join( config['PATHIN'], "fastq", "pass", "fastq_runid_{sample}_{index}.fastq" )
     output:
         aligned  = os.path.join( DIR_ALIGNED_MINIMAP, "run_{sample}_{index}.sam" )
@@ -110,13 +110,13 @@ rule align_minimap:
 rule minimizer:
 # Create indexed version of reference genome for fast alignment with minimap2 later:
     input:
-        refgenome_fasta  = os.path.join(config['ref']['Genome_DIR'] , config['ref']['Genome_version']+ ".fa" )
+        refgenome_fasta  = os.path.join(DIR_REFGEMONE , config['ref']['Genome_version']+ ".fa" )
     output:
-        refgenome_mmiref = os.path.join(config['ref']['Genome_DIR'] , config['ref']['Genome_version']+ ".mmi")
+        refgenome_mmiref = os.path.join(DIR_REFGEMONE , config['ref']['Genome_version']+ ".mmi")
     params:
         options = " -d  "
     log:
-        os.path.join( config['ref']['Genome_DIR'], config['ref']['Genome_version'], "_mmi2_minimizer_creation.log")
+        os.path.join( DIR_REFGEMONE, config['ref']['Genome_version'], "_mmi2_minimizer_creation.log")
     message: 
         """--- creating minimizer index of reference genome for minimap2."""
     shell:

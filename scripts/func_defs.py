@@ -1,3 +1,8 @@
+def bail(msg):
+    """Print the error message to stderr and exit."""
+    print(msg, file=sys.stderr)
+    exit(1)
+
 # Generate a command line string that can be passed to snakemake's
 # "shell".  The string is prefixed with an invocation of "nice".
 def tool(name):
@@ -25,4 +30,17 @@ def getPathCase( mainpath, subd1, subd2, filename, intype ):
         print("ERROR: Unrecognized intype in getPathCase")
         exit(1) 
     return( result ) 
+
+
+def makelink(src, target):
+    if not os.path.isfile(src):
+        bail("Refusing to link non-existent file %s" % src)
+    elif not os.path.isdir(os.path.dirname(target)):
+        bail("%s or subdirectory does not exist for linking  " % target)
+    else:
+        try:
+            os.symlink(src, target)
+        except FileExistsError:
+            pass
+
 
