@@ -21,13 +21,25 @@ library(rtracklayer)
 # fin_readalignment="Input/barcode05_trimmed_aligned_spliceaware_mm2.sorted.bam"
 # fin_Transcript="ref/170317_Homo_sapiens.GRCh37.87.chr.gtf"
 
-source('./scripts/Transcripts_funcs.R')
+GRobj_empty=( file.info(fin_GRobj)$size == 0 )
+
+source('./Transcripts_funcs.R')
+
 
 ```
 
 To produce this report, alignment data was taken from the following file: `r fin_readalignment`
+and aligned against the genome `r Genome_version`. 
+Aligned reads were then compared to the reference transcriptome database stored in the following file: `r fin_Transcript`.
 
-and aligned against the genome `r Genome_version`. The mapping quality, $MAPQ$ is defined as $-10 \ {\rm log}_{10}\left[ {\rm Prob \{\, mapping\, position\, wrong\} } \right]$, with higher values implying greater confidence in the correct alignment. This quantity has a lower bound of 0, and is rounded to the nearest integer; computation allows for this quantity to be theoretically as high as 255, though all realistic data will have $MAPQ$ values significantly lower than this. A histogram of the $MAPQ$ values obtained from the present data set is provided below. 
+
+```{r paragraph_GRobj_empty, eval=GRobj_empty }
+cat('This pipeline has the capability to analyze raw current data from the nanopore device, however, for the present data set, the pipeline was unable to find any file containing current data; as such, these results will be omitted from the report.')
+```
+```{r paragraph_GRobj_notempty, eval=!GRobj_empty }
+cat('Raw current data from the nanopore device was imported from the following GRanges object file: ') 
+`r fin_GRobj`
+```
 
 <!-------  Load alignment data and reference transcripts: -------> 
 
@@ -54,20 +66,18 @@ sample_read_cum_width      = sum(  width( GRLalgn ) )
 ref_transcript_cum_width   = sum(  width( ref_exons_by_transcript ) )
 
 maxfreq = max(table(GRalgn$mapq) )
-hist( GRalgn$mapq, max(GRalgn$mapq)+1, main = "Mapping Quality Histogram", xlab = "MAPQ")
-hist( GRalgn$num_mismatches, xlab = "number of mismatches", ylab=" frequency", main ="mismatches") 
-
- half_prob=-10*log10(0.5) # -- This is the MAPQ value corresponding to 50% chance of being wrong: i.e. -10*log_{10}(0.5)
-
-lines( c(half_prob,half_prob), c(0,maxfreq) , col="red", lwd=2)
-legend( "topright" ,legend="50% confident alignment",col="red", lwd=2 )
-
 ```
 
 
-Note that a $MAPQ$ value of $0$ implies a low-confidence alignment. Reads without any alignment at all were omitted from further analysis. We now partition the histogram of mismatches into the sets of reads that were below and above the mapping quality threshold `r half_prob` indicated above.
+<!---- ======================================================================= ----> 
+## Correspondence with reference transcriptome:
+
+We first consider the mapping of base-called NP data with the reference genome. The mapping quality, $MAPQ$ is defined as $-10 \ {\rm log}_{10}\left[ {\rm Prob \{\, mapping\, position\, wrong\} } \right]$, with higher values implying greater confidence in the correct alignment. This quantity has a lower bound of 0, and is rounded to the nearest integer; computation allows for this quantity to be theoretically as high as 255, though all realistic data will have $MAPQ$ values significantly lower than this. A histogram of the $MAPQ$ values obtained from the present data set is provided below. 
+
 
 ```{r mismatches_below_above, echo=FALSE}
+
+half_prob=-10*log10(0.5) # -- This is the MAPQ value corresponding to 50% chance of being wrong: i.e. -10*log_{10}(0.5)
 
 below_thresh=which( GRalgn$mapq < half_prob)
 above_thresh=which( GRalgn$mapq >= half_prob )
@@ -79,15 +89,18 @@ hist( (algn_cigartable[below_thresh,1]-GRalgn[below_thresh]$num_mismatches ) /al
 
 hist( (algn_cigartable[above_thresh,1]-GRalgn[above_thresh]$num_mismatches ) /algn_cigartable[above_thresh,1],  xlab = "percentage of accurate calls", freq=FALSE, main="accuracy -mapping above threshold" )
 
+
+hist( GRalgn$mapq, max(GRalgn$mapq)+1, main = "Mapping Quality Histogram", xlab = "MAPQ")
+hist( GRalgn$num_mismatches, xlab = "number of mismatches", ylab=" frequency", main ="mismatches") 
+
+
+lines( c(half_prob,half_prob), c(0,maxfreq) , col="red", lwd=2)
+legend( "topright" ,legend="50% confident alignment",col="red", lwd=2 )
+
 ```
 
-Aligned reads were then compared to the reference transcriptome database stored in the following file:
 
-`r fin_Transcript`.
-
-<!---- ======================================================================= ----> 
-## Correspondence with reference transcriptome:
-
+Note that a $MAPQ$ value of $0$ implies a low-confidence alignment. Reads without any alignment at all were omitted from further analysis. We now partition the histogram of mismatches into the sets of reads that were below and above the mapping quality threshold `r half_prob` indicated above.
 
 ```{r pair_sample_w_ref, echo=FALSE}
 # N.B. GRLalgn contains all possible alignments --some of which are repeated for a single read_id

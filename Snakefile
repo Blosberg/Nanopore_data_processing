@@ -16,7 +16,7 @@ nanopolish = config["progs"]["nanopolish"]
 
 RefTranscriptome = config["ref"]["Transcriptome"]
 GENOME_VERSION   = config["ref"]["Genome_version"]
-
+RmdReportScript  = "scripts/Nanopore_report.Rmd"
 intype = config["intype"]
 
 #------------------------------------------------------
@@ -35,20 +35,6 @@ DIR_REPORT             = config["PATHOUT"]+"07_report/"
 # define file lists based on input formatting.
 
 if ( intype == "RAW_minION"): 
-   # --- enumerate "chunk" files list  
-   # blocks that the minion divides the ouput into 
-   # (usually 4000 reads per chunk) 
-   # This is done for both event alignments and bam files:
-
-   Sample_indices_int     = range(config["MAXSAMPLEi"] +1) 
-   Sample_indices_str     = [ str(item) for item in Sample_indices_int  ]
-   
-   Ealign_FILES_list = list( chain( *[ expand ( os.path.join( DIR_EVENTALIGN, 'Ealign_'+chunk+'.cvs' ), ) for chunk in Sample_indices_str ] ) )
-   
-   Ealign_FILES_quoted   = ",".join( Ealign_FILES_list )  
-    
-   bami_FILES_list = list( chain( *[ expand ( os.path.join( DIR_SORTED_MINIMAPPED, "read_chunks", 'run_'+config["RUN_ID"]+ '_'+chunk+'.sorted.bam' ), ) for chunk in Sample_indices_str ] ) )
-
    # the snakemake rules defined in the following included script assume that the minION
    # output has been "chunked" into sequential files, and will have to be reassembled. 
    include   : os.path.join( config["scripts"]["script_folder"], config["scripts"]["rules_chunks"] )
@@ -56,8 +42,6 @@ if ( intype == "RAW_minION"):
 elif( intype == "fastq"):
    # Do some other stuff
    include   : os.path.join( config["scripts"]["script_folder"], config["scripts"]["rules_wholefastq"] )
-   Ealign_FILES_list   = os.path.join( DIR_EVENTALIGN, 'Ealign_full.cvs' )
-   Ealign_FILES_quoted = Ealign_FILES_list 
 
 else: 
    print("Unrecognized input data format. Terminating.")
@@ -69,26 +53,28 @@ else:
 if ( config["target_out"] == "report" ):
    OUTPUT_FILES=  [
                   # os.path.join( DIR_EVENTALIGN, 'E_aligned_all.cvs'),
-                  os.path.join( DIR_REPORT, "run_"+config["samplelist"][sample]["RUN_ID"]+"_report.html") for sample in config["samplelist"]
+                  os.path.join( DIR_REPORT, ""+config["samplelist"][sample]["RUN_ID"]+"_report.html") for sample in config["samplelist"]
                   ]
 elif ( config["target_out"] == "GR" ):
    OUTPUT_FILES=  [
                   # os.path.join( DIR_EVENTALIGN, 'E_aligned_all.cvs'),
-                  os.path.join( DIR_GR, "run_"+config["samplelist"][sample]["RUN_ID"]+"_GR.RData")  for sample in config["samplelist"]
+                  os.path.join( DIR_GR, config["samplelist"][sample]["RUN_ID"]+"_GR.RData")  for sample in config["samplelist"]
                   ]
 elif ( config["target_out"] == "bam" ):
    OUTPUT_FILES=  [
-                  os.path.join( DIR_SORTED_MINIMAPPED, "run_"+config["samplelist"][sample]["RUN_ID"]+".sorted.bam") for sample in config["samplelist"]
+                  os.path.join( DIR_SORTED_MINIMAPPED, config["samplelist"][sample]["RUN_ID"]+".sorted.bam") for sample in config["samplelist"]
                   ]
 else:
    print("Unrecognized target output file format: ", config["target_out"], " ... Terminating.")
    exit(1)
 
 #------------------------------------------------------
-# print("OUTPUT_FILES=")
-# for x in OUTPUT_FILES: 
-#   print(x)
-# print("\n finished outputting output files \n\n ")
+print("intype = " + config["intype"])
+print("target out = " + config["target_out"])
+print("OUTPUT_FILES=")
+for x in OUTPUT_FILES: 
+  print(x)
+print("\n finished outputting output files \n\n ")
 # IPython.embed()
 # 
 #=========================================================================
@@ -106,11 +92,11 @@ rule all:
 rule make_report:
 # build the final output report in html format
     input:
-        aligned_reads = os.path.join( DIR_SORTED_MINIMAPPED, "run_{sample}.sorted.bam"),
+        aligned_reads = os.path.join( DIR_SORTED_MINIMAPPED, "{sample}.sorted.bam"),
         transcriptome = RefTranscriptome,
         GRobj         = os.path.join( DIR_GR, "{sample}_GR.RData")
     output:
-        os.path.join( DIR_REPORT, "run_{sample}_report.html")
+        os.path.join( DIR_REPORT, "{sample}_report.html")
     params:
         " readcov_THRESH = 10;   ",
         " yplotmax = 10000; "
@@ -119,36 +105,14 @@ rule make_report:
     message: """--- producing final report."""
 
     shell: 
-        " Rscript -e  '{params} fin_Transcript    = \"{input.transcriptome}\";"
+        " Rscript -e  '{params} "
         " fin_readalignment = \"{input.aligned_reads}\"; "
+        " fin_Transcript = \"{input.transcriptome}\";"
+        " fin_GRobj      = \"{input.GRobj}\";"
         " Genome_version=\"{GENOME_VERSION}\"; " 
-        " rmarkdown::render(\"Nanopore_report.Rmd\", output_file = \"{output}\" ) ' "  
+        " rmarkdown::render(\"{RmdReportScript}\", output_file = \"{output}\" ) ' "  
 
 #------------------------------------------------------
-# TODO: work on this
-
-rule create_GR_obj:
-# produce GRanges object of reads saved to file in .RData format 
-    input:
-        table_files  = Ealign_FILES_list
-    output:
-        GRobj        = os.path.join( DIR_GR, "{sample}_GR.RData")
-    params:
-        Rfuncs_file  = os.path.join( config[ "scripts"]["script_folder"], config[ "scripts"]["Rfuncs_file"] ), 
-        output       = os.path.join( DIR_GR, "{sample}_GR.RData"),
-        Ealign_files = Ealign_FILES_quoted 
-    log:
-        os.path.join( DIR_GR, "{sample}_GR_conversion.log")
-    message: fmt("Convert aligned NP reads to GRanges object")
-    shell:
-        nice('Rscript', ["./scripts/npreads_tables2GR.R",
-                         "--Rfuncs_file={params.Rfuncs_file}",
-                         "--output={params.output}",
-                         "--logFile={log}",
-                         "--Ealign_files={params.Ealign_files}"]
-)
-
-# -----------------------------------------------------
 
 rule np_event_align:
 # Align the events to the reference genome the wildcard "chunk" can simply be "full", in cases where there are no chunks
