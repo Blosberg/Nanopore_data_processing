@@ -1,14 +1,19 @@
 {  
   "PATHIN"  : "/scratch/AG_Akalin/bosberg/nanopore/data/20180417_1233_polyA_RNA/",
-  "PATHOUT" : "/scratch/AG_Akalin/bosberg/nanopore/pipeline_output/20180417_1233_polyA_RNA/",
+	"PATHOUT" : "/scratch/AG_Akalin/bosberg/nanopore/pipeline_output/20180417_1233_polyA_RNA/",
 
-  "intype": "RAW_minION",
+  "intype":     "raw_minION",
 
   "samplelist": {
-               "RUN_ID"  : "ec9bd1f6f626d73709089ba0bfc63929581e9ede",
-               "MAXSAMPLEi": 19 
+                "ec9bd1f6": { 
+                    "RUN_ID"    : "ec9bd1f6",
+                    "MAXSAMPLEi":  19, 
+                    "fastq_prefix": "fastq_runid_ec9bd1f6f626d73709089ba0bfc63929581e9ede_",
+                    "fastq_suffix": ".fastq"
+                          }
                 },
 
+  "target_out": "bam",
 
   "ref": {
           "Transcriptome"  : "/scratch/AG_Akalin/refGenomes/hg19_canon/170317_Homo_sapiens.GRCh37.87.chr.gtf",
@@ -26,7 +31,8 @@
         "script_folder":    "/home/bosberg/projects/nanopore/scripts/",
         "Rfuncs_file":      "npreads_tables2GR_funcs.R",
         "pyfunc_defs":      "func_defs.py",
-        "rules_basecalled": "rules_basecalled.py"
+        "rules_chunks":     "rules_chunks.py",
+        "rules_wholefastq": "rules_wholefastq.py"
             },
    "execution":{
         "nice": "19"

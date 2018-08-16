@@ -1,25 +1,19 @@
 {  
-  "PATHIN"  : "/scratch/AG_Akalin/bosberg/nanopore/data/EW_Herpes_data/",
-  "PATHOUT" : "/scratch/AG_Akalin/bosberg/nanopore/pipeline_output/EW_Herpes_data/",
+  "PATHIN"  : "/scratch/AG_Akalin/bosberg/nanopore/data/20180417_1233_polyA_RNA/",
+	"PATHOUT" : "/scratch/AG_Akalin/bosberg/nanopore/pipeline_output/20180417_1233_polyA_RNA/",
 
-  "intype":     "fastq",
+  "intype":     "raw_minION",
 
   "samplelist": {
-                "NHDF1": { 
-                    "RUN_ID"      : "NHDF_i",
-                    "MAXSAMPLEi"  :  1, 
-                    "fastq_prefix": "NHDF_18hpi_i_pass",
-                    "fastq_suffix": ".fq.gz"
-                          },
-                "NHDF2": { 
-                    "RUN_ID"       : "NHDF_ii",
-                    "MAXSAMPLEi"   :  1, 
-                    "fastq_prefix" : "NHDF_18hpi_ii_pass",
-                    "fastq_suffix": ".fq.gz"
+                "ec9bd1f6": { 
+                    "RUN_ID"    : "ec9bd1f6",
+                    "MAXSAMPLEi":  19, 
+                    "fastq_prefix": "fastq_runid_ec9bd1f6f626d73709089ba0bfc63929581e9ede_",
+                    "fastq_suffix": ".fastq"
                           }
                 },
 
-  "target_out": "report",
+  "target_out": "bam",
 
   "ref": {
           "Transcriptome"  : "/scratch/AG_Akalin/refGenomes/hg19_canon/170317_Homo_sapiens.GRCh37.87.chr.gtf",

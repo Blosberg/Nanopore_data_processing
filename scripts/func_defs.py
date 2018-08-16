@@ -27,14 +27,14 @@ def getPathCase( mainpath, subd1, subd2, filename, intype ):
     elif( intype == "fastq" ):
         result = os.path.join( mainpath, filename ), 
     else:
-        print("ERROR: Unrecognized intype in getPathCase")
+        print("ERROR: Unrecognized intype: " + intype + " in getPathCase")
         exit(1) 
     return( result ) 
 
 
 def makelink(src, target):
     if not os.path.isfile(src):
-        bail("Refusing to link non-existent file %s" % src)
+        bail("ERROR: Refusing to link non-existent file %s" % src)
     elif not os.path.isdir(os.path.dirname(target)):
         bail("%s or subdirectory does not exist for linking  " % target)
     else:
@@ -44,3 +44,15 @@ def makelink(src, target):
             pass
 
 
+def get_chunkfiles( sample, DIR, prefix_string, suffix_string, quoted):
+ 
+    Sample_indices_int     = range(config["samplelist"][sample]["MAXSAMPLEi"] +1) 
+    Sample_indices_str     = [ str(item) for item in Sample_indices_int  ]
+ 
+
+    FILES_list = list( chain( *[ expand ( os.path.join( DIR, prefix_string + "_" + sample + "_" + chunk + suffix_string ), ) for chunk in Sample_indices_str ] ) )
+
+    if ( quoted ):
+       return( ",".join( FILES_list )  )
+    else:
+       return( FILES_list ) 
