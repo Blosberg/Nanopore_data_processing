@@ -76,7 +76,7 @@ rule align_minimap:
 # use minimap2 to align the fastq reads to the reference genome
     input:
         mmiref   = os.path.join( DIR_REFGEMONE , config['ref']['Genome_version']+ ".mmi" ),
-        sample   = lambda wc: getPathCase( config['PATHIN'], "fastq", "pass", config["samplelist"][sample]["fastq_prefix"] + str(index) +config["samplelist"][sample]["fastq_suffix"], intype )
+        sample   = lambda wc: os.path.join( DIR_SYMLINKS,   config['samplelist'][sample]["RUN_ID"] + "_" + str(index) + config['samplelist'][sample]["fastq_suffix"] )
     output:
         aligned  = os.path.join( DIR_ALIGNED_MINIMAP, "run_{sample}_{index}.sam" )
     params:

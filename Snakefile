@@ -36,9 +36,8 @@ DIR_REPORT             = config["PATHOUT"]+"08_report/"
 DIR_REFGEMONE          = config['ref']['Genome_DIR']
 
 
-
 #------------------------------------------------------
-# define file lists based on input formatting.
+# Create symbolic links to PATHIN so that indexing/etc can be performed in written pathout 
 
 if ( intype == "raw_minION"): 
    # the snakemake rules defined in the following included script assume that the minION
@@ -46,8 +45,8 @@ if ( intype == "raw_minION"):
    include   : os.path.join( config["scripts"]["script_folder"], config["scripts"]["rules_chunks"] )
 
    for sample in config["samplelist"]:
-       for index in range(0, config['samplelist'][sample]["MAXSAMPLEi"] ):
-          linkname = config['samplelist'][sample]["RUN_ID"] + str(index) + config['samplelist'][sample]["fastq_suffix"]
+       for index in range(0, config['samplelist'][sample]["MAXSAMPLEi"] + 1):
+          linkname = config['samplelist'][sample]["RUN_ID"] + "_" + str(index) + config['samplelist'][sample]["fastq_suffix"]
 
           source   = getPathCase( config["PATHIN"], "fastq", "pass",config["samplelist"][sample]["fastq_prefix"] + str(index) +  config["samplelist"][sample]["fastq_suffix"], "raw_minION") 
 
@@ -111,7 +110,7 @@ rule all:
 rule make_report:
 # build the final output report in html format
     input:
-        aligned_reads = os.path.join( DIR_SORTED_MINIMAPPED, "{sample}.sorted.bam"),
+        aligned_reads = os.path.join( DIR_SORTED_MINIMAPPED, "run_{sample}.sorted.bam"),
         transcriptome = RefTranscriptome,
         GRobj         = os.path.join( DIR_GR, "{sample}_GR.RData")
     output:
@@ -138,11 +137,11 @@ rule np_event_align:
     input:
         sortedbam             = os.path.join( DIR_SORTED_ALIGNED_BWA, "chunks", "fastq_run_{sample}_{chunk}.bwaligned.sorted.bam"),
         NOTCALLED_indexedbam  = os.path.join( DIR_SORTED_ALIGNED_BWA, "chunks", "fastq_run_{sample}_{chunk}.bwaligned.sorted.bam.bai"),
-        fastq_file            = os.path.join( DIR_SYMLINKS, "{sample}_{chunk}.fastq"),
-        NOTCALLED_fastq_npi   = os.path.join( DIR_SYMLINKS,"{sample}_{chunk}.fastq.index"),
-        refgenome_fasta  = os.path.join(DIR_REFGEMONE , config['ref']['Genome_version']+ ".fa" ),
-        NOTCALLED_bwt    = os.path.join(DIR_REFGEMONE , config['ref']['Genome_version']+ ".fa.bwt"),
-        NOTCALLED_pac    = os.path.join(DIR_REFGEMONE , config['ref']['Genome_version']+ ".fa.pac")
+        fastq_file            = os.path.join( DIR_SYMLINKS,  "{sample}_{chunk}" +config["samplelist"][sample]["fastq_suffix"]),
+        NOTCALLED_fastq_npi   = os.path.join( DIR_SYMLINKS,  "{sample}_{chunk}" + config["samplelist"][sample]["fastq_suffix"]),
+        refgenome_fasta       = os.path.join( DIR_REFGEMONE, config['ref']['Genome_version']+ ".fa" ),
+        NOTCALLED_bwt         = os.path.join( DIR_REFGEMONE, config['ref']['Genome_version']+ ".fa.bwt"),
+        NOTCALLED_pac         = os.path.join( DIR_REFGEMONE, config['ref']['Genome_version']+ ".fa.pac")
     output:
         Ealigned         = os.path.join( DIR_EVENTALIGN, "csv_chunks", 'Ealign_{sample}_{chunk}.csv' )
     log:
@@ -175,8 +174,8 @@ rule align_bwa_mem_ont2d:
     input:
         refg_fasta = os.path.join(DIR_REFGEMONE , config['ref']['Genome_version']+ ".fa" ),
         refg_bwt   = os.path.join(DIR_REFGEMONE , config['ref']['Genome_version']+ ".fa.bwt"),
-        reads      = os.path.join( DIR_SYMLINKS,  "{sample}_{chunk}.fastq"),
-        npi        = os.path.join( DIR_SYMLINKS,  "{sample}_{chunk}.fastq.index")
+        reads      = os.path.join( DIR_SYMLINKS,  "{sample}_{chunk}" + config["samplelist"][sample]["fastq_suffix"] ),
+        npi        = os.path.join( DIR_SYMLINKS,  "{sample}_{chunk}" + config["samplelist"][sample]["fastq_suffix"] + ".index")
     output:
         sortedbam  = os.path.join( DIR_SORTED_ALIGNED_BWA, "chunks", "fastq_run_{sample}_{chunk}.bwaligned.sorted.bam")
     params:
@@ -194,7 +193,7 @@ rule np_index:
 # Index the reads and the fast5 files themselves
     input:
         fast5_folder = getPathCase( config['PATHIN'], 'fast5', 'pass', '{chunk}', intype ),
-        fastq_file   = os.path.join( DIR_SYMLINKS, '{sample}.fq.gz' ) 
+        fastq_file   = os.path.join( DIR_SYMLINKS, config['samplelist'][sample]["RUN_ID"] + "_" + str(index) + config['samplelist'][sample]["fastq_suffix"] ) 
     output:
         npi    = os.path.join( DIR_SYMLINKS, "{sample}_{chunk}"+config["samplelist"][sample]["fastq_suffix"]+".index"  ), 
         fai    = os.path.join( DIR_SYMLINKS, "{sample}_{chunk}"+config["samplelist"][sample]["fastq_suffix"]+".index.fai" ),
@@ -207,7 +206,7 @@ rule np_index:
     message: """---- index the reads from chunk {wildcards.chunk} against the fast5 files from the same. ----"""
     shell:
         " nice -19 {nanopolish} {params.options} {input.fast5_folder} {input.fastq_file} 2> {log.logfile} "
-#------------------------------------------------------
+ 
 
 rule bwa_index:
 # Create indexed version of reference genome for fast alignment with bwa later:
