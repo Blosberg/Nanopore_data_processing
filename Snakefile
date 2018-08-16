@@ -51,8 +51,8 @@ elif( intype == "fastq"):
 
    for sample in config["samplelist"]:
 
-       linkname = config['samplelist'][sample]["RUN_ID"] + ".fq.gz"
-       makelink( os.path.join(config["PATHIN"], config["samplelist"][sample]["fastq"] ),
+       linkname = config['samplelist'][sample]["RUN_ID"] + config['samplelist'][sample]["fastq_suffix"]
+       makelink( os.path.join(config["PATHIN"], config["samplelist"][sample]["fastq_prefix"] + config["samplelist"][sample]["fastq_suffix"] ),
                  os.path.join( DIR_SYMLINKS, linkname))
 
 else: 
@@ -113,7 +113,7 @@ rule make_report:
         " readcov_THRESH = 10;   ",
         " yplotmax = 10000; "
     log:
-        logfile = os.path.join( DIR_REPORT, "finale_report_{sample}.log")
+        logfile = os.path.join( DIR_REPORT, "final_report_{sample}.log")
     message: """--- producing final report."""
 
     shell: 
