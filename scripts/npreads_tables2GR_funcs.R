@@ -47,8 +47,10 @@ get_event_dat  <-  function( Event_file_list = stop("Datin must be provided")
     # Event_file      = paste0(    "Ealign_", as.character(i),".cvs")
     fin               = as.character( file.path(  Event_file_list[i] ) )
 
-    print( paste( "---Reading csv file from: ", fin ) )
-    
+    write(  paste( "---Reading csv file from: ", fin ), 
+            file   = logfile,
+            append = TRUE )
+
     dat_temp        = read.csv(  file = fin, 
                                  sep  = '\t', 
                                  stringsAsFactors=FALSE, 

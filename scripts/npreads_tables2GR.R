@@ -58,8 +58,10 @@ read_list_final = unique( dat_all$read_index  )
 Nreads          = length( read_list_final     )
 
 if( !( identical( as.numeric(c(1:Nreads)) , as.numeric(read_list_final) )  ))
-  { print(paste("ERROR: final read list is not step-wise increasing"))}
+  {  writeLines("ERROR: final read list is not step-wise increasing", logfile );
+     exit(1)
 
+  }
 
 
 # ========================================================================================
@@ -86,7 +88,8 @@ Crick  = dat_win_finite_stranded[ dat_win_finite_stranded$strand =="-", ];
 Unk    = dat_win_finite_stranded[ dat_win_finite_stranded$strand =="*", ];
 
 if( dim(Unk)[1] > 0 )
-  { stop(paste("ERROR: reads being assigned unknown strand")) }
+  { writeLines("ERROR: reads being assigned unknown strand", logfile );
+    stop(paste("ERROR: reads being assigned unknown strand")) }
 
 # ================================================
 # BUILD GRanges OBJECT TO Process

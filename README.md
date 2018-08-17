@@ -1,9 +1,11 @@
 # Nanopore pipeline:
 
-Processing nanopore data into human-readable output.
+Processing nanopore data directly to reports and figures.
 
-This script takes fastq data as raw input and outputs a report in html format.
-To run it, first edit the config file: `config.json` and supply the Transcriptome file (with full path) against which you wish to compare the nanopore RNA data, as well as the genome location, genome version and path to input and output folders.
+This script access two forms of raw input and outputs a report in html format.
+If the variable "intype", in the config file, is set to "fastq", then we assume a single base-called fastq file for each sample, which is then processed into a report. If this variable is set to "raw_minION", then it is assumed that raw data directly output from the minION device is being used (in which case, the fastq data are typically binned into files of 4000 reads each, and raw-current data is preserved.) In the latter case, analysis of the raw current values (before base-calling by Albacore) is performed.
+
+To run the program, first edit the config file `config.json`, as described below, and supply the Transcriptome file (with full path) against which you wish to compare the nanopore RNA data, as well as the genome location, genome version and path to input and output folders.
 
 ## config file
 in the config file there are three variables to define:
