@@ -11,7 +11,7 @@ rule create_currentGR_obj:
     params:
         Rfuncs_file  = os.path.join( config[ "scripts"]["script_folder"], config[ "scripts"]["Rfuncs_file"] ), 
         output       = os.path.join( DIR_GR, "{sample}_GR.RData"),
-        Ealign_files = lambda wc: get_chunkfiles( wc.sample, DIR_EVENTALIGN, "Ealign", ".csv", True ) 
+        Ealign_files = lambda wc: get_chunkfiles( wc.sample, os.path.join( DIR_EVENTALIGN, "csv_chunks" ), "Ealign", ".csv", True ) 
     log:
         os.path.join( DIR_GR, "{sample}_GR_conversion.log")
     message: fmt("Convert aligned NP reads to GRanges object")

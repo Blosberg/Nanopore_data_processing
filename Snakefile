@@ -32,7 +32,7 @@ DIR_SORTED_MINIMAPPED  = config["PATHOUT"]+"04_MM_sortedbam/"
 DIR_SORTED_ALIGNED_BWA = config["PATHOUT"]+"05_BWA_sortedbam/"
 DIR_EVENTALIGN         = config["PATHOUT"]+"06_BWA_eventalign/"
 DIR_GR                 = config["PATHOUT"]+"07_GRobjects"
-DIR_REPORT             = config["PATHOUT"]+"08_report/"
+DIR_REPORT             = config["PATHOUT"]+"Final_report/"
 DIR_REFGEMONE          = config['ref']['Genome_DIR']
 
 
@@ -87,12 +87,12 @@ else:
    exit(1)
 
 #------------------------------------------------------
-print("intype = " + config["intype"])
-print("target out = " + config["target_out"])
-print("OUTPUT_FILES=")
-for x in OUTPUT_FILES: 
-  print(x)
-print("\n finished outputting output files \n\n ")
+# print("intype = " + config["intype"])
+# print("target out = " + config["target_out"])
+# print("OUTPUT_FILES=")
+# for x in OUTPUT_FILES: 
+#   print(x)
+# print("\n finished outputting output files \n\n ")
 # IPython.embed()
 # 
 #=========================================================================

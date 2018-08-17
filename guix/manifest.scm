@@ -13,6 +13,7 @@
 "r-data-table"
 "glibc-locales"
 "r-rtracklayer"
+"r-dplyr"
 "graphviz"
 ))
 (specifications->manifest packages)

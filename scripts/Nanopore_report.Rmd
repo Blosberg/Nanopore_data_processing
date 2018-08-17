@@ -37,8 +37,7 @@ Aligned reads were then compared to the reference transcriptome database stored 
 cat('This pipeline has the capability to analyze raw current data from the nanopore device, however, for the present data set, the pipeline was unable to find any file containing current data; as such, these results will be omitted from the report.')
 ```
 ```{r paragraph_GRobj_notempty, eval=!GRobj_empty }
-cat('Raw current data from the nanopore device was imported from the following GRanges object file: ') 
-`r fin_GRobj`
+cat(paste('Raw current data from the nanopore device was imported from the following GRanges object file:', fin_GRobj)) 
 ```
 
 <!-------  Load alignment data and reference transcripts: -------> 
