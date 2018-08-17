@@ -138,7 +138,7 @@ rule np_event_align:
         sortedbam             = os.path.join( DIR_SORTED_ALIGNED_BWA, "chunks", "fastq_run_{sample}_{chunk}.bwaligned.sorted.bam"),
         NOTCALLED_indexedbam  = os.path.join( DIR_SORTED_ALIGNED_BWA, "chunks", "fastq_run_{sample}_{chunk}.bwaligned.sorted.bam.bai"),
         fastq_file            = os.path.join( DIR_SYMLINKS,  "{sample}_{chunk}" +config["samplelist"][sample]["fastq_suffix"]),
-        NOTCALLED_fastq_npi   = os.path.join( DIR_SYMLINKS,  "{sample}_{chunk}" + config["samplelist"][sample]["fastq_suffix"]),
+        fastq_npi             = os.path.join( DIR_SYMLINKS,  "{sample}_{chunk}" + config["samplelist"][sample]["fastq_suffix"] + ".index"),
         refgenome_fasta       = os.path.join( DIR_REFGEMONE, config['ref']['Genome_version']+ ".fa" ),
         NOTCALLED_bwt         = os.path.join( DIR_REFGEMONE, config['ref']['Genome_version']+ ".fa.bwt"),
         NOTCALLED_pac         = os.path.join( DIR_REFGEMONE, config['ref']['Genome_version']+ ".fa.pac")
@@ -192,8 +192,8 @@ rule align_bwa_mem_ont2d:
 rule np_index:
 # Index the reads and the fast5 files themselves
     input:
-        fast5_folder = getPathCase( config['PATHIN'], 'fast5', 'pass', '{chunk}', intype ),
-        fastq_file   = os.path.join( DIR_SYMLINKS, config['samplelist'][sample]["RUN_ID"] + "_" + str(index) + config['samplelist'][sample]["fastq_suffix"] ) 
+        fast5_folder = lambda wc: getPathCase( config['PATHIN'], 'fast5', 'pass', wc.chunk, intype ),
+        fastq_file   = lambda wc: os.path.join( DIR_SYMLINKS, config['samplelist'][wc.sample]["RUN_ID"] + "_" + str(wc.chunk) + config['samplelist'][wc.sample]["fastq_suffix"] ) 
     output:
         npi    = os.path.join( DIR_SYMLINKS, "{sample}_{chunk}"+config["samplelist"][sample]["fastq_suffix"]+".index"  ), 
         fai    = os.path.join( DIR_SYMLINKS, "{sample}_{chunk}"+config["samplelist"][sample]["fastq_suffix"]+".index.fai" ),
@@ -202,7 +202,7 @@ rule np_index:
     params:
         options    = " index -d "
     log:
-        logfile  = os.path.join( DIR_SYMLINKS,  "{sample}_{chunk}_npi.log", intype  )
+        logfile  = os.path.join( DIR_SYMLINKS,  "{sample}_{chunk}_npi.log" )
     message: """---- index the reads from chunk {wildcards.chunk} against the fast5 files from the same. ----"""
     shell:
         " nice -19 {nanopolish} {params.options} {input.fast5_folder} {input.fastq_file} 2> {log.logfile} "
