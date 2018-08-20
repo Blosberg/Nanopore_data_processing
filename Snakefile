@@ -16,7 +16,7 @@ nanopolish = config["progs"]["nanopolish"]
 
 RefTranscriptome = config["ref"]["Transcriptome"]
 GENOME_VERSION   = config["ref"]["Genome_version"]
-RmdReportScript  = "scripts/Nanopore_report.Rmd"
+RmdReportScript  = os.path.join(config["scripts"]["script_folder"],"final_report","Nanopore_report.Rmd")
 intype = config["intype"]
 
 #------------------------------------------------------

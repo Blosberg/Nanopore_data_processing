@@ -34,11 +34,11 @@
         "SAMTOOLS":   "samtools"
             },
    "scripts": {
-        "script_folder":    "/home/bosberg/projects/nanopore/scripts/",
-        "Rfuncs_file":      "npreads_tables2GR_funcs.R",
-        "pyfunc_defs":      "func_defs.py",
-        "rules_chunks":     "rules_chunks.py",
-        "rules_wholefastq": "rules_wholefastq.py"
+        "script_folder":            "/home/bosberg/projects/nanopore/scripts/",
+        "Rfuncs_tableGRconv_file":  "07_GRobjects/npreads_tables2GR_funcs.R",
+        "pyfunc_defs":              "00_SM/func_defs.py",
+        "rules_chunks":             "00_SM/rules_chunks.py",
+        "rules_wholefastq":         "00_SM/rules_wholefastq.py"
             },
    "execution":{
         "nice": "19"

@@ -16,7 +16,7 @@ if("--help" %in% args) {
       Render to report
       
       Arguments:
-      Rfuncs_file --script with function definitions used here.
+      Rfuncs_tableGRconv_file --script with function definitions used here.
       output      --filename for the output GRanges .RData 
       Ealign_files -- array of files to use as input
       logFile      -- filename to pipe output to 
@@ -42,15 +42,15 @@ names(argsL) <- argsDF$V1
 # Run Functions -----------------------------------------------------------
 
 # e.g. (replace this list with actual arguments)
-Rfuncs_file  <- argsL$Rfuncs_file 
-output       <- argsL$output
-logfile      <- argsL$logFile
-Ealign_files <- unlist( strsplit(argsL$Ealign_files,",")  )
+Rfuncs_tableGRconv_file  <- argsL$Rfuncs_tableGRconv_file 
+output                   <- argsL$output
+logfile                  <- argsL$logFile
+Ealign_files             <- unlist( strsplit(argsL$Ealign_files,",")  )
 
 #===============================================================
 suppressPackageStartupMessages( library(GenomicRanges) )
 suppressPackageStartupMessages( library(dplyr)         )
-source(Rfuncs_file)
+source(Rfuncs_tableGRconv_file)
 
 dat_all         = get_event_dat( Ealign_files )
 

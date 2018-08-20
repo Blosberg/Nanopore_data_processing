@@ -9,15 +9,15 @@ rule create_currentGR_obj:
     output:
         GRobj        = os.path.join( DIR_GR, "{sample}_GR.RData")
     params:
-        Rfuncs_file  = os.path.join( config[ "scripts"]["script_folder"], config[ "scripts"]["Rfuncs_file"] ), 
+        Rfuncs_tableGRconv_file  = os.path.join( config[ "scripts"]["script_folder"], config[ "scripts"]["Rfuncs_tableGRconv_file"] ), 
         output       = os.path.join( DIR_GR, "{sample}_GR.RData"),
         Ealign_files = lambda wc: get_chunkfiles( wc.sample, os.path.join( DIR_EVENTALIGN, "csv_chunks" ), "Ealign", ".csv", True ) 
     log:
         os.path.join( DIR_GR, "{sample}_GR_conversion.log")
     message: fmt("Convert aligned NP reads to GRanges object")
     shell:
-        nice('Rscript', ["./scripts/npreads_tables2GR.R",
-                         "--Rfuncs_file={params.Rfuncs_file}",
+        nice('Rscript', ["./scripts/07_GRobjects/npreads_tables2GR.R",
+                         "--Rfuncs_tableGRconv_file={params.Rfuncs_tableGRconv_file}",
                          "--output={params.output}",
                          "--logFile={log}",
                          "--Ealign_files={params.Ealign_files}"] )
