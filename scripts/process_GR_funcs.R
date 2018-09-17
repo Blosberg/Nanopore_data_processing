@@ -36,24 +36,24 @@ plot_seq_spec_comparison  <- function( seq_spec_list = stop("seq_list  must be p
   # current_window = c( mincurrent, maxcurrent )
   # par( mfrow = c(2,1) ) # === putting things into the same window now.
   
-breakset = seq(from = mincurrent, 
-               to   = maxcurrent, 
-               by   = res ) 
+  breakset = seq( from = mincurrent, 
+                to   = maxcurrent, 
+                by   = res ) 
 
-if( scale ) # scale by (difference from model_mean)/model_stddev
+  if( scale ) # scale by (difference from model_mean)/model_stddev
   {
-  stat_params = pore_model[ seq_spec_list$seq, ]
-  if (length(stat_params) != 2)
-    {
-    stop("Failed to obtain statistical parameters from pore_model reference")  
+    stat_params = unlist( pore_model[ seq_spec_list$seq, ] )
+    if (length(stat_params) != 2)
+      {
+      stop("Failed to obtain statistical parameters from pore_model reference")  
+      }
+    breakset          <- ((breakset-stat_params[1])/stat_params[2] );
+    temp1$event_mean  <- ((temp1$event_mean-stat_params[1])/stat_params[2] );
+    temp2$event_mean  <- ((temp2$event_mean-stat_params[1])/stat_params[2] );
     }
-  breakset          <- ((breakset-stat_params[1])/stat_params[2] );
-  temp1$event_mean  <- ((temp1$event_mean-stat_params[1])/stat_params[2] );
-  temp2$event_mean  <- ((temp2$event_mean-stat_params[1])/stat_params[2] );
-  }
 
-# plot control first in blue, so it appears behind the SOI
-hist( temp2$event_mean, 
+  # plot control first in blue, so it appears behind the SOI
+  hist( temp2$event_mean, 
       freq = FALSE,
       lty="blank",
       col=rgb( 0.0, 0.0, 1, 0.5 ), 
@@ -66,14 +66,14 @@ hist( temp2$event_mean,
       xlab = "current [pA]",
       ylab = "prob" )
 
-# plot SOI on top in red
-hist( temp1$event_mean, 
+  # plot SOI on top in red
+  hist( temp1$event_mean, 
       freq = FALSE,                   # we want probabilities 
       lty="blank",
       col=rgb( 1, 0.0, 0.0, 0.5 ),  
       breaks = breakset, 
       add=T)
-# --------
+  # --------
  # legend( 120, 0.08,
  #         inset  = 0.2, 
  #         legend = c("putative", "control"),
@@ -87,10 +87,7 @@ hist( temp1$event_mean,
          legend =c("putative", "control"),        
          lwd=c(2.5,2.5),col=c("red","blue")) # g
  
- 
- 
 return(0);
-
 }
 
 # ==================================================================
@@ -121,12 +118,12 @@ get_refgen_seqs <-  function(  refgen     = stop("seq  must be provided"),
   }
   
   result = eval ( 
-    parse( 
-      text=paste0(
-        "refgen$",seqnames(ROI_GR),"[",as.character(lo_end),":",as.character(hi_end),"]" 
-      ) 
-    ) 
-  )
+                parse( 
+                     text=paste0(
+                                "refgen$",seqnames(ROI_GR),"[",as.character(lo_end),":",as.character(hi_end),"]" 
+                                ) 
+                    ) 
+                )
   
   # ------------------------------ 
   if ( flipseq )
@@ -140,4 +137,89 @@ get_refgen_seqs <-  function(  refgen     = stop("seq  must be provided"),
   }
   
   return( result )
+}
+
+
+# ==================================================================
+# --- Go through a set of read sequences and reverse the order 
+# --- (and kmer) of only the ones aligned to the reverse strand
+
+strand_align <- function( GRin = stop("GRobj must be provided"),
+                          k = 6)
+{ # k is the length of the kmer sequence (minION devices spit out k=5, but we can extend that further.)
+  temp = GRin[strand(GRin)=="-"]
+  
+  GRin[ strand(GRin)=="-"]  <- strand_reversal( temp )
+  
+  return(GRin)
+}
+# ==================================================================
+# --- reverse the strand of a given read
+
+strand_reversal  <- function( range_in = stop("range to be flipped must be provided"),
+                              k = 5 )
+{
+  temp                <- range_in
+  temp$reference_kmer <- reverse( chartr("ATGC","TACG", range_in$reference_kmer ) )
+  
+  if( !is.null( temp$modposition) ) # i.e. check if the metadata column exists.
+    { 
+    temp$modposition    <- (k+1) -range_in$modposition
+    }
+  
+  return(temp)
+}
+
+# ==================================================================
+# --- get list (separated by position of modification) of differences 
+# --- between current with modified base vs. control. Each list entry 
+# --- tabulates
+
+
+get_moddiff_vs_modpos_seq <- function ( GRmod      = stop("GRmod must be provided"), 
+                                        GRcontrol  = stop("GRcontrol must be provided"), 
+                                        k=5,
+                                        sigthresh = 5 )
+{
+  # --- temporary kludge fix for strand alignment. Figure out a more efficient way to get both strands.
+  GRcontrol <- GRcontrol[strand(GRcontrol)=="+"]
+  
+  SEQHITS = sort( unique(GRmod$reference_kmer) )
+  Nunique_sequences = length( SEQHITS )
+
+  i=1
+  result = matrix(0,Nunique_sequences, 3  )
+  row.names(result) <- SEQHITS
+  
+  GRmodL_modpos_split <- split(GRmod, GRmod$modposition)
+  GRcontrolL_seqsplit <- split(GRcontrol, GRcontrol$reference_kmer)
+  
+  difflist = list()
+  
+  for ( i in c (1:k))
+    {
+    temp = split( GRmodL_modpos_split[[i]], GRmodL_modpos_split[[i]]$reference_kmer)
+    
+    m=1;n=1;
+    temp2=GRangesList()
+    for ( m in c (1:length(temp)))
+      {
+      if ( length( temp[[m]] ) > sigthresh )
+        {
+        temp2[[n]] <- temp[[m]]
+        names(temp2)[n]<- names(temp)[m]
+        n <- (n+1)
+        }
+      }  
+    
+    
+    difflist[[i]]   <- lapply( c(1:length(temp2)), function(x)  
+                               ( (mean(temp2[[x]]$event_mean) - 
+                                    mean(GRcontrolL_seqsplit[[ names(temp2)[x] ]]$event_mean))
+     #                            /(pore_model_list[[ names(temp2)[x]  ]]$std_dev)  )
+                              )
+                            ) 
+  }
+
+  return(difflist)
 }

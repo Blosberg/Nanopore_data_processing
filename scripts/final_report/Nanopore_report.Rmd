@@ -23,7 +23,7 @@ library(rtracklayer)
 
 GRobj_empty=( file.info(fin_GRobj)$size == 0 )
 
-source('./Transcripts_funcs.R')
+source('../Transcripts_funcs.R')
 
 
 ```
@@ -266,13 +266,14 @@ N.B. THE METHODOLOGY FOR THIS SECTION NEEDS TO BE GENERALIZED: need to come up w
 Below is a plot of the observed number of hits across the regions that were not represented in the reference transcriptome. 
 The red line delineates read hits that are considered significant enough to be treated as 'novel' transcripts, using a significance threshold of `r readcov_THRESH`.
 
-```{r unreffed_reads_significance, echo=FALSE}
+```{r unreffed_reads_significance, echo=FALSE, eval= length(algn_norefhit_reduced) > 0 }
 
 yplotmax = max(algn_norefhit_reduced$hits)
-plot( algn_norefhit_reduced$hits, 
-      ylim=c(0,yplotmax), 
-      axes=FALSE, 
-      ylab="coverage", 
+plot( algn_norefhit_reduced$hits,
+      xlim=c(1,length(algn_norefhit_reduced$hits)),
+      ylim=c(1,yplotmax),
+      axes=FALSE,
+      ylab="coverage",
       xlab="index")
 # points(maxindex,yplotmax, axes=TRUE)
 lines( c(1, length( algn_norefhit_reduced)),c(readcov_THRESH,readcov_THRESH), 

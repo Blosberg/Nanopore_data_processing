@@ -1,5 +1,6 @@
 #!/usr/bin/env python3.5
 import os
+
 # import IPython; 
 
 # set config file
@@ -17,7 +18,9 @@ nanopolish = config["progs"]["nanopolish"]
 RefTranscriptome = config["ref"]["Transcriptome"]
 GENOME_VERSION   = config["ref"]["Genome_version"]
 RmdReportScript  = os.path.join(config["scripts"]["script_folder"],"final_report","Nanopore_report.Rmd")
-intype = config["intype"]
+intype           = config["intype"]
+
+
 
 #------------------------------------------------------
 # --- define output directories
@@ -33,10 +36,25 @@ DIR_SORTED_ALIGNED_BWA = config["PATHOUT"]+"05_BWA_sortedbam/"
 DIR_EVENTALIGN         = config["PATHOUT"]+"06_BWA_eventalign/"
 DIR_GR                 = config["PATHOUT"]+"07_GRobjects"
 DIR_REPORT             = config["PATHOUT"]+"Final_report/"
-DIR_REFGEMONE          = config['ref']['Genome_DIR']
+DIR_REFGENOME          = config['ref']['Genome_DIR']
+
 
 
 #------------------------------------------------------
+
+if ( not os.access(DIR_REFGENOME, os.W_OK) ):
+   print("Write access to refgenome folder is denied. Checking if necessary indexing files already exist: ... ")
+
+
+   if( not os.path.isfile( os.path.join(DIR_REFGENOME , config['ref']['Genome_version']+ ".fa.bwt") ) or not os.path.isfile( os.path.join(DIR_REFGENOME , config['ref']['Genome_version']+ ".fa.pac") ) ): 
+      bail("bwa index file not found, and cannot be created. Aborting.")
+
+   elif( not os.path.isfile(os.path.join(DIR_REFGENOME , config['ref']['Genome_version']+ ".mmi")) ):  
+      bail("minimap index files not found, and cannot be created. Aborting")
+
+   else:
+      print("Refgenome index files are present. Continuing... ")
+
 # Create symbolic links to PATHIN so that indexing/etc can be performed in written pathout 
 
 if ( intype == "raw_minION"): 
@@ -139,9 +157,9 @@ rule np_event_align:
         NOTCALLED_indexedbam  = os.path.join( DIR_SORTED_ALIGNED_BWA, "chunks", "fastq_run_{sample}_{chunk}.bwaligned.sorted.bam.bai"),
         fastq_file            = os.path.join( DIR_SYMLINKS,  "{sample}_{chunk}" +config["samplelist"][sample]["fastq_suffix"]),
         fastq_npi             = os.path.join( DIR_SYMLINKS,  "{sample}_{chunk}" + config["samplelist"][sample]["fastq_suffix"] + ".index"),
-        refgenome_fasta       = os.path.join( DIR_REFGEMONE, config['ref']['Genome_version']+ ".fa" ),
-        NOTCALLED_bwt         = os.path.join( DIR_REFGEMONE, config['ref']['Genome_version']+ ".fa.bwt"),
-        NOTCALLED_pac         = os.path.join( DIR_REFGEMONE, config['ref']['Genome_version']+ ".fa.pac")
+        refgenome_fasta       = os.path.join( DIR_REFGENOME, config['ref']['Genome_version']+ ".fa" ),
+        NOTCALLED_bwt         = os.path.join( DIR_REFGENOME, config['ref']['Genome_version']+ ".fa.bwt"),
+        NOTCALLED_pac         = os.path.join( DIR_REFGENOME, config['ref']['Genome_version']+ ".fa.pac")
     output:
         Ealigned         = os.path.join( DIR_EVENTALIGN, "csv_chunks", 'Ealign_{sample}_{chunk}.csv' )
     log:
@@ -172,8 +190,8 @@ rule index_sortedbam:
 rule align_bwa_mem_ont2d:
 # Align the reads to the reference
     input:
-        refg_fasta = os.path.join(DIR_REFGEMONE , config['ref']['Genome_version']+ ".fa" ),
-        refg_bwt   = os.path.join(DIR_REFGEMONE , config['ref']['Genome_version']+ ".fa.bwt"),
+        refg_fasta = os.path.join(DIR_REFGENOME , config['ref']['Genome_version']+ ".fa" ),
+        refg_bwt   = os.path.join(DIR_REFGENOME , config['ref']['Genome_version']+ ".fa.bwt"),
         reads      = os.path.join( DIR_SYMLINKS,  "{sample}_{chunk}" + config["samplelist"][sample]["fastq_suffix"] ),
         npi        = os.path.join( DIR_SYMLINKS,  "{sample}_{chunk}" + config["samplelist"][sample]["fastq_suffix"] + ".index")
     output:
@@ -211,14 +229,14 @@ rule np_index:
 rule bwa_index:
 # Create indexed version of reference genome for fast alignment with bwa later:
     input:
-        refgenome_fasta  = os.path.join(DIR_REFGEMONE , config['ref']['Genome_version']+ ".fa" )
+        refgenome_fasta  = os.path.join(DIR_REFGENOME , config['ref']['Genome_version']+ ".fa" )
     output:
-        bwt      = os.path.join(DIR_REFGEMONE , config['ref']['Genome_version']+ ".fa.bwt"),
-        pac      = os.path.join(DIR_REFGEMONE , config['ref']['Genome_version']+ ".fa.pac")
+        bwt      = os.path.join(DIR_REFGENOME , config['ref']['Genome_version']+ ".fa.bwt"),
+        pac      = os.path.join(DIR_REFGENOME , config['ref']['Genome_version']+ ".fa.pac")
     params:
         options  = " index  "
     log:
-        logfile  = os.path.join( DIR_REFGEMONE, config['ref']['Genome_version'], "_bwa_indexing.log")
+        logfile  = os.path.join( DIR_REFGENOME, config['ref']['Genome_version'], "_bwa_indexing.log")
     message: 
         """---- creating bwa index of the reference genome. ----"""
     shell:

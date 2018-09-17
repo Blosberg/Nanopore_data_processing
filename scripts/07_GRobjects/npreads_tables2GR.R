@@ -105,6 +105,7 @@ reads_GR = GRanges( seqnames   = dat_win_finite_stranded$contig,
                     event_mean     = dat_win_finite_stranded$event_level_mean,
                     event_stdv     = dat_win_finite_stranded$event_stdv,
                     event_length   = dat_win_finite_stranded$event_length,
+                    model_kmer     = dat_win_finite_stranded$model_kmer,
                     model_mean     = dat_win_finite_stranded$model_mean,
                     model_stdv     = dat_win_finite_stranded$model_stdv
 )

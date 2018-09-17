@@ -1,6 +1,6 @@
-def bail(msg):
+def bail( msg ):
     """Print the error message to stderr and exit."""
-    print(msg, file=sys.stderr)
+    print("ERROR: " + msg + "... exiting.", file=sys.stderr)
     exit(1)
 
 # Generate a command line string that can be passed to snakemake's

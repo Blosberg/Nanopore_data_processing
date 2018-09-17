@@ -1,6 +1,6 @@
 # library(Biostrings)
 # read.DNAStringSet
-# rm(list=ls()) # CLEAN UP EVERYTHING
+#rm(list=ls()) # CLEAN UP EVERYTHING
 # library("Biostrings")
 # hg19_canon_ref = readDNAStringSet("/scratch/AG_Akalin/refGenomes/hg19_canon/hg19_canon.fa")
 # negstrand_reads <- reads_GR[ strand( reads_GR)=="-",]
@@ -12,19 +12,17 @@
 # @@@ TODO: make these arguments come from the command-line
 # e.g. [hard-coded for now]
 
-DIR_GR="/home/bosberg/projects/nanopore/pipeline_out/20180417_1233_polyA_RNA/06_GRobjects/"
-file_GR="ec9bd1f6f626d73709089ba0bfc63929581e9ede_GR.RData"
+DIR_GR="/home/bosberg/projects/nanopore/pipeline_out/20180417_1233_polyA_RNA/07_GRobjects/"
+file_GR="ec9bd1f6_GR.RData"
 load( file.path( DIR_GR, file_GR ) )
+
+hg19_ref <- readDNAStringSet("/scratch/AG_Akalin/refGenomes/hg19_canon/hg19_canon.fa")
+
+# ======= LOAD PUTATIVE MODIFICATION LOCATIONS: =========
 
 put_path="/scratch/AG_Akalin/bosberg/nanopore/ref/Linder_2015_nature_supp/"
 CITS_filename="put_m6A_locs_CITS.csv"
 CIMS_filename="put_m6A_locs_CIMS.csv"
-
-
-hg19_ref <- readDNAStringSet("/scratch/AG_Akalin/refGenomes/hg19_canon/hg19_canon.fa")
-
-
-# ======= LOAD PUTATIVE MODIFICATION LOCATIONS: =========
 
 CITS_rawdat=read.csv( file.path( put_path, CITS_filename ), sep = "\t", header = TRUE )
 CIMS_rawdat=read.csv( file.path( put_path, CIMS_filename ), sep = "\t", header = TRUE )
@@ -40,53 +38,92 @@ CITS_put =  GRanges( seqnames = CITS_rawdat$Chr ,
                      strand   = CITS_rawdat$Strand
                     )
 
-CIMS_put = CIMS_put[ which( seqnames(CIMS_put) != "chrM") ]
-CITS_put = CITS_put[ which( seqnames(CITS_put) != "chrM") ]
+CIMS_put = sort( CIMS_put[ which( seqnames(CIMS_put) != "chrM") ] ) # 9411 locations
+CITS_put = sort( CITS_put[ which( seqnames(CITS_put) != "chrM") ] ) # 6543 locations
 
 #  ================================================
-# write something specific for the m6A motif
+# convert GRanges object into something with/without mod.
 
-m6A_motif="GGACT"
 Nreads   = length(reads_GR)
 
 reads_cims_putmod_pairs   = findOverlaps( reads_GR, CIMS_put )
 reads_cims_putmod_indices = which( !is.na( match( c(1:Nreads), queryHits(reads_cims_putmod_pairs)) )  )
 reads_cims_nonmod_indices = which(  is.na( match( c(1:Nreads), queryHits(reads_cims_putmod_pairs)) )  )
+
 reads_cims_putmod         = reads_GR[ reads_cims_putmod_indices ]
 reads_cims_nonmod         = reads_GR[ reads_cims_nonmod_indices ]
 
+
+### @@@ this is more complicated with CIMS where there are repeats
+
+# -------
+
 reads_cits_putmod_pairs   = findOverlaps( reads_GR, CITS_put )
+# find the indices of reads (from 1 to Nreads) that have at least one match in queryHits
 reads_cits_putmod_indices = which( !is.na( match( c(1:Nreads), queryHits(reads_cits_putmod_pairs)) )  )
+
+# Likewise, find the indices that have zero matches
 reads_cits_nonmod_indices = which(  is.na( match( c(1:Nreads), queryHits(reads_cits_putmod_pairs)) )  )
+
 reads_cits_putmod         = reads_GR[ reads_cits_putmod_indices ]
 reads_cits_nonmod         = reads_GR[ reads_cits_nonmod_indices ]
 
-plot_compare_motif(seq = m6A_motif, 
-                   Gro1= reads_cits_putmod, 
-                   Gro2= reads_cits_nonmod,
-                   mincurrent  = 110,
-                   maxcurrent  = 140)
 
-CIMS_m6amotif_part <- seq_spec_compare ( seq        = m6A_motif,
-                                         criterion  = "CIMS",
-                                         SOI_GR     = reads_cims_putmod, 
-                                         control_GR = reads_cims_nonmod 
-                                        )
+modPairs = findOverlaps(reads_cits_putmod, CITS_put )
+if (  !identical( queryHits( modPairs), c(1:length(modPairs)) )
+      ){ stop("non-consecutive modcorrespondencePairs") }
 
-CITS_m6amotif_part <- seq_spec_compare ( seq        = m6A_motif,
+# Create a meta-data column tracking the position of the modification within the kmer 
+reads_cits_putmod$modposition   = start( CITS_put[ subjectHits(modPairs) ] ) - start( reads_cits_putmod[queryHits(modPairs)] ) +1
+
+# Now "align" the strands, in the sense that we set reference_kmer to the actual kmer
+# that went through the pore (i.e. take the reverse-compliment for all reads on the "-" strand)
+reads_cits_putmod_strandAligned = strand_align(reads_cits_putmod)
+
+
+# result = eval ( 
+#  parse( 
+#    text=paste0(
+#      "refgen$",seqnames(ROI_GR),"[",as.character(lo_end),":",as.character(hi_end),"]" 
+#    ) 
+#  ) 
+# )
+
+#  ================================================
+# write something specific for the m6A motif
+
+m6A_motif  = "GGACT"
+pore_model = read.csv("scripts/ref/pore_model_table.csv", row.names = 1)
+pore_model_list <- setNames(split(pore_model, seq(nrow(pore_model))), rownames(pore_model))
+
+test  <- seq_spec_compare ( seq        = m6A_motif,
                                          criterion  = "CITS",
                                          SOI_GR     = reads_cits_putmod, 
                                          control_GR = reads_cits_nonmod 
-                                         )
+)
 
-plot_seq_spec_comparison ( CIMS_m6amotif_part,
-                           pore_model = pore_model,
-                           mincurrent = 100,
-                           maxcurrent = 140,
-                           res = 0.5, 
-                           scale=TRUE )
+CITS_m6amotif_part <- seq_spec_compare ( seq        = m6A_motif,
+                                         criterion  = "CITS",
+                                         SOI_GR     = reads_cits_putmod_strandAligned, 
+                                         control_GR = reads_cits_nonmod 
+)
+
+
+
+
+pos_seq_diffs = get_moddiff_vs_modpos_seq ( reads_cits_putmod_strandAligned, reads_cits_nonmod   )
+
+#=================================
+
 
 plot_seq_spec_comparison  ( CITS_m6amotif_part,
+                            pore_model = pore_model,
+                            mincurrent = 100,
+                            maxcurrent = 140,
+                            res = 0.5,
+                            scale=TRUE )    
+
+plot_seq_spec_comparison  ( test,
                             pore_model = pore_model,
                             mincurrent = 100,
                             maxcurrent = 140,
@@ -96,6 +133,8 @@ plot_seq_spec_comparison  ( CITS_m6amotif_part,
 # ===================================================================
 # now generalize the above to arbitrary sequence:
 
+# GR2= expand_range(GRin, k=4, hg19_ref)
+
 as.character(seqnames(CIMS_put[1]))
 # This is how to get the sequence from the reference of a single GRange
 get_refgen_seqs (  refgen = hg19_ref,
@@ -104,7 +143,6 @@ get_refgen_seqs (  refgen = hg19_ref,
                    trail      = 2,
                    RNAstrand  = FALSE
 )
-  x
 # so now do it in a batch.
 CITs_sequences = sapply( 1:length(CITS_put), function(x) get_refgen_seqs( refgen = hg19_ref, 
                                                                 ROI_GR = CITS_put[x], 
