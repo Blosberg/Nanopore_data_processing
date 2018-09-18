@@ -1,13 +1,39 @@
 # Nanopore pipeline:
 
-Processing nanopore data directly to reports and figures.
+This pipeline proocesses nanopore data directly to reports and figures.
 
-This script access two forms of raw input and outputs a report in html format.
-If the variable "intype", in the config file, is set to "fastq", then we assume a single base-called fastq file for each sample, which is then processed into a report. If this variable is set to "raw_minION", then it is assumed that raw data directly output from the minION device is being used (in which case, the fastq data are typically binned into files of 4000 reads each, and raw-current data is preserved.) In the latter case, analysis of the raw current values (before base-calling by Albacore) is performed.
+Two forms of raw input are accepted, and can be used to produce a report in
+html format.  If the variable "intype", in the config file, is set to "fastq",
+then we assume a single base-called fastq file for each sample, which is then
+processed into a report. If this variable is set to "raw_minION", then it is
+assumed that raw data directly output from the minION device is being used (in
+which case, the fastq data are typically binned into files of ~4000 reads each,
+and raw-current data is preserved.) In the latter case, analysis of the raw
+current values (before base-calling by Albacore) is performed, although most of this analysis is not yet included in the final report (the contents of the report are continually under development).
 
-To run the program, first edit the config file `config.json`, as described below, and supply the Transcriptome file (with full path) against which you wish to compare the nanopore RNA data, as well as the genome location, genome version and path to input and output folders.
+To run the program, first edit the config file `config.json`, as described
+below, and supply the Transcriptome file (with full path) against which you
+wish to compare the nanopore reads (if none is supplied, this section is simply skipped). You must also provide  the genome location, genome
+version and path to input and output folders.
 
-## config file
+## config file 
+
+=====
+
+| Variable name | description |
+| ------------- |:-----------:|
+| PATHIN        | string: Required: location of source data. 
+| PATHOUT       | string: Required: location of output path to be written to. 
+| intype        | string: instructs the pipeline what format of data to expect (either "fastq", or "raw_minION").
+| samplelist    | list of samples with identifying name (RUN_ID), number of bins (MAXSAMPLEi), and hashID (fastq_prefix), and file extension (fastq_suffix).
+| target_out | desired output format; the pipeline will proceed until it has accomplished the desired output; either a "bam", an RData file with "GR"anges, or a full html "report" (the latter being the default).
+| ref        | Various data related to the reference genome: "Transcriptome" -absolute path to the file with transcripts to compare to; "Genome_DIR": absolute path leading to the reference genome (fasta); and "Genome_version" (string), the name of the genome
+| scripts   | paths to various executables needed for the pipeline ( it is recommended to not change these.)
+| execution: nice | the degree to which your process is made "nice" to reduce congestion on your computation nodes (integer, max. 19.)
+
+
+=====
+
 in the config file there are three variables to define:
 target_out can be one of three values: "bam, "GR", or "report", in that order of hierarchy.
 "bam": the script will stop when it has generated bam files
