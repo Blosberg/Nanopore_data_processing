@@ -1,15 +1,18 @@
 # Nanopore pipeline:
 
-This pipeline proocesses nanopore data directly to reports and figures.
+This pipeline proocesses nanopore data directly to reports and figures, as well
+as bam-file and .RData in GRanges format.
 
 Two forms of raw input are accepted, and can be used to produce a report in
-html format.  If the variable "intype", in the config file, is set to "fastq",
+html format.  If the variable `intype`, in the config file, is set to "fastq",
 then we assume a single base-called fastq file for each sample, which is then
 processed into a report. If this variable is set to "raw_minION", then it is
 assumed that raw data directly output from the minION device is being used (in
 which case, the fastq data are typically binned into files of ~4000 reads each,
 and raw-current data is preserved.) In the latter case, analysis of the raw
-current values (before base-calling by Albacore) is performed, although most of this analysis is not yet included in the final report (the contents of the report are continually under development).
+current values (before base-calling by Albacore) is performed, although most of
+this analysis is not yet included in the final report (the contents of the
+report are continually under development).
 
 To run the program, first edit the config file `config.json`, as described
 below, and supply the Transcriptome file (with full path) against which you
@@ -17,14 +20,33 @@ wish to compare the nanopore reads (if none is supplied, this section is simply
 skipped). You must also provide  the genome location, genome version and path
 to input and output folders.
 
-The second step is to configure your executables. The assumption here is that you will be using guix; if you are working from the MDC in Berlin then everything is already setup for this purpose --otherwise, you may have to adapt the following steps to your system. 
+The second step is to configure your executables. The assumption here is that
+you will be using guix; if you are working from the MDC in Berlin then
+everything is already setup for this purpose --otherwise, you may have to adapt
+the following steps to your system. 
 
-Navigate to the repository's subfolder `guix` and create your environment from the manifest file that is provided:
-`/gnu/remote/bin/guixr package -p $PWD/.guix-profile -m manifest.scm` --note that this text is the contents of the file
-`generate_env_from_manifest.txt`, so you should just be able to type `source generate_env_from_manifest.txt`. Guix will then go about configuring the executables that you will need to run the pipeline (which will take some time. Go for lunch). 
-Once that's finished, for any future terminal session in which you want to run the pipeline, you should navigate to the `guix` subfolder and type: `source load_env.sh` to load your environment. Assuming your config file is setup (see below), you should then simply be able to type `Snakemake` and everything will run. 
+Navigate to the repository's subfolder `guix` and create your environment from
+the manifest file that is provided with the following command:
 
-This pipeline is a work in progress, but feedback is welcome; if you encounter any problems, please email Brendan.Osberg@mdc-berlin.de
+`/gnu/remote/bin/guixr package -p $PWD/.guix-profile -m manifest.scm` 
+
+Note that this text is the contents of the file
+`generate_env_from_manifest.txt`, so you should just be able to type `source
+generate_env_from_manifest.txt`. Guix will then go about configuring the
+executables that you will need to run the pipeline into a prepared environment
+which can then be used whenever you want. This will take some time; go for
+lunch.  
+
+Once that's finished, for any future terminal session in which you want to run
+the pipeline, you should navigate to the `guix` subfolder and type: 
+
+`source load_env.sh` 
+
+to load your environment. Assuming your config file is setup (see below), you
+should then simply be able to type `Snakemake` and everything will run. 
+
+This pipeline is a work in progress, but feedback is welcome; if you encounter
+any problems, please email Brendan.Osberg@mdc-berlin.de
 
 ## config file 
 
