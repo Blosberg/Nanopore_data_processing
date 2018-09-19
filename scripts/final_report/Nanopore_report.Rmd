@@ -33,10 +33,10 @@ and aligned against the genome `r Genome_version`.
 Aligned reads were then compared to the reference transcriptome database stored in the following file: `r fin_Transcript`.
 
 
-```{r paragraph_GRobj_empty, eval=GRobj_empty }
+```{r paragraph_GRobj_empty, results='asis', echo=FALSE, eval=GRobj_empty }
 cat('This pipeline has the capability to analyze raw current data from the nanopore device, however, for the present data set, the pipeline was unable to find any file containing current data; as such, these results will be omitted from the report.')
 ```
-```{r paragraph_GRobj_notempty, eval=!GRobj_empty }
+```{r paragraph_GRobj_notempty, results='asis', echo=FALSE, eval=!GRobj_empty }
 cat(paste('Raw current data from the nanopore device was imported from the following GRanges object file:', fin_GRobj)) 
 ```
 
@@ -100,7 +100,9 @@ legend( "topright" ,legend="50% confident alignment",col="red", lwd=2 )
 
 Below we see a breakdown of transcriptome by chromosome
 ```{r chrom_breakdown, echo=FALSE}
-barplot(table(seqnames(GRalgn)), main="Transcript prevalence by chromosome", ylab="Freq", log="y" )
+barplot( table(seqnames(GRalgn)), 
+         main="Transcript prevalence by chromosome", 
+         ylab="Freq" )
 
 ```
 
