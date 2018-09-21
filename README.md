@@ -1,7 +1,7 @@
 # Nanopore pipeline:
 
-This pipeline proocesses nanopore data directly to reports and figures, as well
-as bam-file and .RData in GRanges format.
+This pipeline proocesses raw minION nanopore data directly to reports and 
+figures, as well as bam-file and .RData in GRanges format.
 
 Two forms of raw input are accepted, and can be used to produce a report in
 html format.  If the variable `intype`, in the config file, is set to "fastq",
