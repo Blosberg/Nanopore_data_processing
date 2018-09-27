@@ -175,7 +175,6 @@ strand_reversal  <- function( range_in = stop("range to be flipped must be provi
 # --- between current with modified base vs. control. Each list entry 
 # --- tabulates
 
-
 get_moddiff_vs_modpos_seq <- function ( GRmod      = stop("GRmod must be provided"), 
                                         GRcontrol  = stop("GRcontrol must be provided"), 
                                         k=5,
@@ -217,9 +216,100 @@ get_moddiff_vs_modpos_seq <- function ( GRmod      = stop("GRmod must be provide
                                ( (mean(temp2[[x]]$event_mean) - 
                                     mean(GRcontrolL_seqsplit[[ names(temp2)[x] ]]$event_mean))
      #                            /(pore_model_list[[ names(temp2)[x]  ]]$std_dev)  )
-                              )
-                            ) 
+                                )
+                              ) 
   }
 
   return(difflist)
+}
+
+# ==================================================================
+# --- Get extended sequence from pore data
+expand_range <- function ( GRin       = stop("GRmod must be provided"), 
+                           refGenome  = stop("GRcontrol must be provided"), 
+                                    k = 5 )
+{
+  
+  GR_justlocs = GRanges( seqnames = seqnames(GRin), 
+                         ranges   = IRanges(start = start(GRin), ))
+  
+  
+  
+  if ( k <= 0)
+  {stop("k must be a positive integer")}
+  # --------
+  
+  if ( as.character(strand(GRin) ) == "+")
+  {
+    lo_end   <- start(GRin) ;
+    hi_end   <- start(GRin) -1 + k;
+    flipseq = FALSE;
+    
+  }else if( as.character(strand(ROI_GR) )  == "-") {
+    
+    lo_end   <- start(ROI_GR) - trail;
+    hi_end   <- end(ROI_GR)   + lead;    # it will be flipped later.
+    flipseq = TRUE;
+    
+  } 
+  
+  result = eval ( 
+    parse( 
+      text=paste0(
+        "refGenome$",seqnames(GRin),"[",as.character(lo_end),":",as.character(hi_end),"]" 
+      ) 
+    ) 
+  )
+  
+ return(result)
+}
+
+
+# ==================================================================
+# --- compare current distributions between two data sets for a given sequence.
+
+compare_current_byseq <- function( control   = stop("control GR must be provided"),
+                                   treatment = stop("treatment GR must be provided"),
+                                   seq       = stop("sequence must be provided"),
+                                   breaks_in = seq(50,150,1),
+                                   color_control   = rgb(0,0,1,alpha=.4),
+                                   color_treatment = rgb(1,0,0,alpha=.4)
+)
+{
+  base_set = c("A","C","G","T")
+  
+  # see how many bases are unconstrained:
+  Num_Unconstrained = length( gregexpr("N", seq)[[1]] )
+  if( Num_Unconstrained >= 1 )
+    {
+    seqlist = subs_Nvals( seq, Num_Unconstrained )
+    }
+    
+  for ( x in c(1:Num_Unconstrained) )
+    {
+    
+    
+    }
+  
+  
+  control_seq_subset   = control[   control$model_kmer   == seq ]
+  treatment_seq_subset = treatment[ treatment$model_kmer == seq ]
+  
+  hist( control_seq_subset$event_mean, 
+        breaks = breaks_in, 
+        freq   = FALSE, 
+        col    = color_control, 
+        add    = F,
+        main   = paste("Current distribution for sequence", seq) )
+  
+  hist( treatment_seq_subset$event_mean, 
+        breaks   = breaks_in, 
+        freq     = FALSE, 
+        col      = color_treatment, 
+        add      = T)
+  
+  legend("topright", 
+         legend = c("control", "treatment"),
+         fill   = c( color_control, color_treatment))
+  
 }
