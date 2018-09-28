@@ -1,5 +1,5 @@
 {  
-  "PATHIN"  : "/scratch/AG_Akalin/bosberg/nanopore/data/20180913_1457_unmod/",
+  "PATHIN"  : "/scratch/AG_Akalin/bosberg/nanopore/data/20180913_1457_invitro_rps16_unmod/",
   "PATHOUT" : "/scratch/AG_Akalin/bosberg/nanopore/pipeline_output/20180913_1457_unmod/",
 
   "intype":     "raw_minION",

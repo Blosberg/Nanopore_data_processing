@@ -20,8 +20,6 @@ GENOME_VERSION   = config["ref"]["Genome_version"]
 RmdReportScript  = os.path.join(config["scripts"]["script_folder"],"final_report","Nanopore_report.Rmd")
 intype           = config["intype"]
 
-
-
 #------------------------------------------------------
 # --- define output directories
 
@@ -38,13 +36,11 @@ DIR_GR                 = config["PATHOUT"]+"07_GRobjects"
 DIR_REPORT             = config["PATHOUT"]+"Final_report/"
 DIR_REFGENOME          = config['ref']['Genome_DIR']
 
-
-
 #------------------------------------------------------
+# check that the pipeline can be executed: 
 
 if ( not os.access(DIR_REFGENOME, os.W_OK) ):
    print("Write access to refgenome folder is denied. Checking if necessary indexing files already exist: ... ")
-
 
    if( not os.path.isfile( os.path.join(DIR_REFGENOME , config['ref']['Genome_version']+ ".fa.bwt") ) or not os.path.isfile( os.path.join(DIR_REFGENOME , config['ref']['Genome_version']+ ".fa.pac") ) ): 
       bail("bwa index file not found, and cannot be created. Aborting.")
@@ -104,6 +100,7 @@ else:
    print("Unrecognized target output file format: ", config["target_out"], " ... Terminating.")
    exit(1)
 
+# DEBUGGING:
 #------------------------------------------------------
 # print("intype = " + config["intype"])
 # print("target out = " + config["target_out"])
@@ -125,8 +122,8 @@ rule all:
 
 #------------------------------------------------------
 
-rule make_report:
 # build the final output report in html format
+rule make_report:
     input:
         aligned_reads = os.path.join( DIR_SORTED_MINIMAPPED, "run_{sample}.sorted.bam"),
         transcriptome = RefTranscriptome,
@@ -150,8 +147,10 @@ rule make_report:
 
 #------------------------------------------------------
 
+# Align the events to the reference genome. 
+# The wildcard "chunk" can simply be "full", in cases 
+# where there are no chunks
 rule np_event_align:
-# Align the events to the reference genome the wildcard "chunk" can simply be "full", in cases where there are no chunks
     input:
         sortedbam             = os.path.join( DIR_SORTED_ALIGNED_BWA, "chunks", "fastq_run_{sample}_{chunk}.bwaligned.sorted.bam"),
         NOTCALLED_indexedbam  = os.path.join( DIR_SORTED_ALIGNED_BWA, "chunks", "fastq_run_{sample}_{chunk}.bwaligned.sorted.bam.bai"),
@@ -173,8 +172,8 @@ rule np_event_align:
 # rule quickcheck: (TODO)
 #------------------------------------------------------
 
+# Index the sorted bam file with samtools
 rule index_sortedbam:
-# Index the sorted bam file
     input:
         sortedbam  = os.path.join( DIR_SORTED_ALIGNED_BWA, "chunks", "fastq_run_{sample}_{chunk}.bwaligned.sorted.bam")
     output:
@@ -187,8 +186,8 @@ rule index_sortedbam:
 
 #------------------------------------------------------
 
+# Align the reads to the reference with BWA
 rule align_bwa_mem_ont2d:
-# Align the reads to the reference
     input:
         refg_fasta = os.path.join(DIR_REFGENOME , config['ref']['Genome_version']+ ".fa" ),
         refg_bwt   = os.path.join(DIR_REFGENOME , config['ref']['Genome_version']+ ".fa.bwt"),
@@ -207,8 +206,8 @@ rule align_bwa_mem_ont2d:
 
 #------------------------------------------------------
 
+# Index the reads and the fast5 files for nanopolish
 rule np_index:
-# Index the reads and the fast5 files themselves
     input:
         fast5_folder = lambda wc: getPathCase( config['PATHIN'], 'fast5', 'pass', wc.chunk, intype ),
         fastq_file   = lambda wc: os.path.join( DIR_SYMLINKS, config['samplelist'][wc.sample]["RUN_ID"] + "_" + str(wc.chunk) + config['samplelist'][wc.sample]["fastq_suffix"] ) 
@@ -225,9 +224,11 @@ rule np_index:
     shell:
         " nice -19 {nanopolish} {params.options} {input.fast5_folder} {input.fastq_file} 2> {log.logfile} "
  
+# -----------------------------------------------------
 
+# Create BWA-indexed version of reference genome for fast
+#  alignment with bwa later:
 rule bwa_index:
-# Create indexed version of reference genome for fast alignment with bwa later:
     input:
         refgenome_fasta  = os.path.join(DIR_REFGENOME , config['ref']['Genome_version']+ ".fa" )
     output:

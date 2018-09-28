@@ -2,8 +2,9 @@
 # BEGIN RULES
 # -----------------------------------------------------
 
+# produce GRanges object of current data in .RData 
+# format from the .csv files produced by eventalign
 rule create_currentGR_obj:
-# produce GRanges object of current data from reads using .RData format 
     input:
         Samplename   = lambda wc: get_chunkfiles( wc.sample, os.path.join( DIR_EVENTALIGN, "csv_chunks" ), "Ealign", ".csv", False )
     output:
@@ -22,10 +23,12 @@ rule create_currentGR_obj:
                          "--logFile={log}",
                          "--Ealign_files={params.Ealign_files}"] )
 
+
 # -----------------------------------------------------
 
+# combine the ~4000 reads from each minimap2 
+# alignment into a single bam file
 rule merge_bam_files:
-# combine the ~4000 reads from each iteration of the NP data into a single bam file
     input:
         bami      = lambda wc: get_chunkfiles( wc.sample, os.path.join(DIR_SORTED_MINIMAPPED, "bam_chunks"), "run" , ".sorted.bam", False )
     output:
@@ -39,9 +42,9 @@ rule merge_bam_files:
 
 #------------------------------------------------------
 
-# THIS SHOULD BE THE LEAF NODE WHEN TARGET=.BAM
+# convert minimap2 alignments from sam to bam format 
+# and sort by position
 rule convert_sort_minimap:
-# convert from sam to bam format and sort by position
     input:
         aligned     = os.path.join( DIR_FILTERED_MINIMAP, "run_{sample}_{index}.0filtered.sam")
     output:
@@ -55,10 +58,12 @@ rule convert_sort_minimap:
     shell:
         'samtools view  -Sb  {input} | samtools sort > {output} && samtools index {output} 2> {log.logfile}'
 
+
 #------------------------------------------------------
 
+# Check for alignment filter in minimap2s sam file:
+#  if != 4 then remove this read
 rule filter_nonaligned_minimap:
-# Check for alignment filter in sam file: if != 4 then remove this read
     input:
         aligned  = os.path.join( DIR_ALIGNED_MINIMAP, "run_{sample}_{index}.sam" )
     output:
@@ -70,17 +75,19 @@ rule filter_nonaligned_minimap:
     shell:
         " cat {input} | perl -lane 'print if $F[1] ne 4'  >  {output}   2> {log}"
 
+
 #------------------------------------------------------
 
+# use minimap2 to align the fastq reads to the reference 
+# genome
 rule align_minimap:
-# use minimap2 to align the fastq reads to the reference genome
     input:
         mmiref   = os.path.join( DIR_REFGENOME , config['ref']['Genome_version']+ ".mmi" ),
         sample   = lambda wc: os.path.join( DIR_SYMLINKS,   config['samplelist'][sample]["RUN_ID"] + "_" + str(index) + config['samplelist'][sample]["fastq_suffix"] )
     output:
         aligned  = os.path.join( DIR_ALIGNED_MINIMAP, "run_{sample}_{index}.sam" )
     params:
-        options  = " -ax splice "
+        options  = " -ax map-ont splice "
     log:
         log      = os.path.join( DIR_ALIGNED_MINIMAP, "run_{sample}_{index}_alignment.log")
     message: 
@@ -90,8 +97,9 @@ rule align_minimap:
 
 #------------------------------------------------------
 
+# Create indexed version of reference genome for fast 
+# alignment with minimap2 later:
 rule minimizer:
-# Create indexed version of reference genome for fast alignment with minimap2 later:
     input:
         refgenome_fasta  = os.path.join(DIR_REFGENOME , config['ref']['Genome_version']+ ".fa" )
     output:

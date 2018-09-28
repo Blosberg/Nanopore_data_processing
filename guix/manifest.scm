@@ -15,5 +15,6 @@
 "r-rtracklayer"
 "r-dplyr"
 "graphviz"
+"minimap2"
 ))
 (specifications->manifest packages)
