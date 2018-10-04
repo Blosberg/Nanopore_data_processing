@@ -164,7 +164,6 @@ rule np_event_align:
     shell:
         " {nanopolish} eventalign --reads {input.fastq_file} --bam {input.sortedbam} --genome {input.refgenome_fasta} --scale-events  > {output}  2> {log.logfile} "
 
-
 #------------------------------------------------------
 # rule quickcheck: (TODO)
 #------------------------------------------------------
