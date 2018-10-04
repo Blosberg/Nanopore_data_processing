@@ -4,7 +4,7 @@ This pipeline proocesses raw minION nanopore data directly to reports and
 figures, as well as bam-file and .RData in GRanges format.
 
 Two forms of raw input are accepted, and can be used to produce a report in
-html format.  If the variable `intype`, in the config file, is set to "fastq",
+html format.  If the variable `input_data_type`, in the config file, is set to "fastq",
 then we assume a single base-called fastq file for each sample, which is then
 processed into a report. If this variable is set to "raw_minION", then it is
 assumed that raw data directly output from the minION device is being used (in
@@ -56,7 +56,7 @@ any problems, please email Brendan.Osberg@mdc-berlin.de
 | ------------- |:-----------:|
 | PATHIN        | string: Required: location of source data. 
 | PATHOUT       | string: Required: location of output path to be written to. 
-| intype        | string: instructs the pipeline what format of data to expect (either "fastq", or "raw_minION").
+| input_data_type | string: instructs the pipeline what format of data to expect (either "fastq", or "raw_minION").
 | samplelist    | list of samples with identifying name (RUN_ID), number of bins (MAXSAMPLEi), and hashID (fastq_prefix), and file extension (fastq_suffix).
 | target_out | desired output format; the pipeline will proceed until it has accomplished the desired output; either a "bam", an RData file with "GR"anges, or a full html "report" (the latter being the default).
 | ref        | Various data related to the reference genome: "Transcriptome" -absolute path to the file with transcripts to compare to; "Genome_DIR": absolute path leading to the reference genome (fasta); and "Genome_version" (string), the name of the genome
