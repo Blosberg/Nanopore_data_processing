@@ -2,7 +2,7 @@
   "PATHIN"  : "/scratch/AG_Akalin/bosberg/nanopore/data/EW_Herpes_data/",
   "PATHOUT" : "/scratch/AG_Akalin/bosberg/nanopore/pipeline_output/EW_Herpes_data/",
 
-  "intype":     "fastq",
+  "input_data_type":     "fastq",
 
   "samplelist": {
                 "NHDF1": { 

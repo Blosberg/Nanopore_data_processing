@@ -48,7 +48,7 @@ get_event_dat  <-  function( Event_file_list = stop("Datin must be provided")
     fin               = as.character( file.path(  Event_file_list[i] ) )
 
     write(  paste( "---Reading csv file from: ", fin ), 
-            file   = logfile,
+            file   = logFile,
             append = TRUE )
 
     dat_temp        = read.csv(  file = fin, 

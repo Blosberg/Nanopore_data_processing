@@ -44,7 +44,7 @@ names(argsL) <- argsDF$V1
 # e.g. (replace this list with actual arguments)
 Rfuncs_tableGRconv_file  <- argsL$Rfuncs_tableGRconv_file 
 output                   <- argsL$output
-logfile                  <- argsL$logFile
+logFile                  <- argsL$logFile
 Ealign_files             <- unlist( strsplit(argsL$Ealign_files,",")  )
 
 #===============================================================
@@ -58,7 +58,7 @@ read_list_final = unique( dat_all$read_index  )
 Nreads          = length( read_list_final     )
 
 if( !( identical( as.numeric(c(1:Nreads)) , as.numeric(read_list_final) )  ))
-  {  writeLines("ERROR: final read list is not step-wise increasing", logfile );
+  {  writeLines("ERROR: final read list is not step-wise increasing", logFile );
      exit(1)
 
   }
@@ -88,7 +88,7 @@ Crick  = dat_win_finite_stranded[ dat_win_finite_stranded$strand =="-", ];
 Unk    = dat_win_finite_stranded[ dat_win_finite_stranded$strand =="*", ];
 
 if( dim(Unk)[1] > 0 )
-  { writeLines("ERROR: reads being assigned unknown strand", logfile );
+  { writeLines("ERROR: reads being assigned unknown strand", logFile );
     stop(paste("ERROR: reads being assigned unknown strand")) }
 
 # ================================================

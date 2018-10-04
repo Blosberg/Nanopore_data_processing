@@ -2,7 +2,7 @@
   "PATHIN"  : "/scratch/AG_Akalin/bosberg/nanopore/data/20180920_1017_rps16_m1A/",
   "PATHOUT" : "/scratch/AG_Akalin/bosberg/nanopore/pipeline_output/20180920_1017_rps16_m1A/",
 
-  "intype":     "raw_minION",
+  "input_data_type":     "raw_minION",
 
   "samplelist": {
                 "fa3f7c14": { 
