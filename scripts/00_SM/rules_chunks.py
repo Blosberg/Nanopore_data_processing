@@ -46,13 +46,13 @@ rule merge_bam_files:
 # and sort by position
 rule convert_sort_minimap:
     input:
-        aligned     = os.path.join( DIR_FILTERED_MINIMAP, "run_{sample}_{index}.0filtered.sam")
+        aligned     = os.path.join( DIR_FILTERED_MINIMAP, "run_{sample}_{chunk}.0filtered.sam")
     output:
-        sortedbam   = os.path.join( DIR_SORTED_MINIMAPPED, "bam_chunks", "run_{sample}_{index}.sorted.bam")
+        sortedbam   = os.path.join( DIR_SORTED_MINIMAPPED, "bam_chunks", "run_{sample}_{chunk}.sorted.bam")
     params:
         options = "-ax splice "
     log:
-        logfile = os.path.join( DIR_SORTED_MINIMAPPED, "bam_chunks", "run_{sample}_{index}.sortbam.log")
+        logfile = os.path.join( DIR_SORTED_MINIMAPPED, "bam_chunks", "run_{sample}_{chunk}.sortbam.log")
     message: 
         """ --- converting, sorting, and indexing bam file. --- """
     shell:
@@ -65,11 +65,11 @@ rule convert_sort_minimap:
 #  if != 4 then remove this read
 rule filter_nonaligned_minimap:
     input:
-        aligned  = os.path.join( DIR_ALIGNED_MINIMAP, "run_{sample}_{index}.sam" )
+        aligned  = os.path.join( DIR_ALIGNED_MINIMAP, "run_{sample}_{chunk}.sam" )
     output:
-        aligned  = os.path.join( DIR_FILTERED_MINIMAP, "run_{sample}_{index}.0filtered.sam" )
+        aligned  = os.path.join( DIR_FILTERED_MINIMAP, "run_{sample}_{chunk}.0filtered.sam" )
     log:
-        log      = os.path.join( DIR_FILTERED_MINIMAP, "run_{sample}_{index}.0filtering.log" )
+        log      = os.path.join( DIR_FILTERED_MINIMAP, "run_{sample}_{chunk}.0filtering.log" )
     message: 
         """--- filtering unaligned reads from alignment data ---"""
     shell:
@@ -83,13 +83,13 @@ rule filter_nonaligned_minimap:
 rule align_minimap:
     input:
         mmiref   = os.path.join( DIR_REFGENOME , config['ref']['Genome_version']+ ".mmi" ),
-        sample   = lambda wc: os.path.join( DIR_SYMLINKS,   config['samplelist'][sample]["RUN_ID"] + "_" + str(index) + config['samplelist'][sample]["fastq_suffix"] )
+        sample   = lambda wc: os.path.join( DIR_SYMLINKS,   config['samplelist'][sample]["RUN_ID"] + "_" + str(wc.chunk) + config['samplelist'][sample]["fastq_suffix"] )
     output:
-        aligned  = os.path.join( DIR_ALIGNED_MINIMAP, "run_{sample}_{index}.sam" )
+        aligned  = os.path.join( DIR_ALIGNED_MINIMAP, "run_{sample}_{chunk}.sam" )
     params:
-        options  = " -ax map-ont splice "
+        options  = " -ax map-ont "
     log:
-        log      = os.path.join( DIR_ALIGNED_MINIMAP, "run_{sample}_{index}_alignment.log")
+        log      = os.path.join( DIR_ALIGNED_MINIMAP, "run_{sample}_{chunk}_alignment.log")
     message: 
         """--- aligning fastq reads to indexed reference"""
     shell:
