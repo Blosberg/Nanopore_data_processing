@@ -23,19 +23,21 @@ to input and output folders.
 The second step is to configure your executables. The assumption here is that
 you will be using guix; if you are working from the MDC in Berlin then
 everything is already setup for this purpose --otherwise, you may have to adapt
-the following steps to your system. 
+the following steps to your system.  
 
 Navigate to the repository's subfolder `guix` and create your environment from
 the manifest file that is provided with the following command:
 
 `/gnu/remote/bin/guixr package -p $PWD/.guix-profile -m manifest.scm` 
 
-Note that this text is the contents of the file
-`generate_env_from_manifest.txt`, so you should just be able to type `source
-generate_env_from_manifest.txt`. Guix will then go about configuring the
-executables that you will need to run the pipeline into a prepared environment
-which can then be used whenever you want. This will take some time; go for
-lunch.  
+or, alternatively, just use:
+
+`source generate_env_from_manifest.sh`
+
+Since this file simply contains the above command. Guix will then go about
+configuring the executables that you will need to run the pipeline into a
+prepared environment which can then be used whenever you want. This will take
+some time; go for lunch.  
 
 Once that's finished, for any future terminal session in which you want to run
 the pipeline, you should navigate to the `guix` subfolder and type: 
