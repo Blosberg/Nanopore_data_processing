@@ -38,6 +38,7 @@ CITS_put =  GRanges( seqnames = CITS_rawdat$Chr ,
                      strand   = CITS_rawdat$Strand
                     )
 
+#---- filter out mitochondrial alignments
 CIMS_put = sort( CIMS_put[ which( seqnames(CIMS_put) != "chrM") ] ) # 9411 locations
 CITS_put = sort( CITS_put[ which( seqnames(CITS_put) != "chrM") ] ) # 6543 locations
 

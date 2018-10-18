@@ -18,7 +18,7 @@ library(rtracklayer)
 
 # ---- next 3 lines valid only for laptop.
 # setwd("/Users/blosberg/postdoc_work/Nanopore/pigx_nanopore/")
-# fin_readalignment="Input/barcode05_trimmed_aligned_spliceaware_mm2.sorted.bam"
+# fin_readalignment_bam="Input/barcode05_trimmed_aligned_spliceaware_mm2.sorted.bam"
 # fin_Transcript="ref/170317_Homo_sapiens.GRCh37.87.chr.gtf"
 
 GRobj_empty=( file.info(fin_GRobj)$size == 0 )
@@ -28,7 +28,7 @@ source('../Transcripts_funcs.R')
 
 ```
 
-To produce this report, alignment data was taken from the following file: `r fin_readalignment`
+To produce this report, alignment data was taken from the following file: `r fin_readalignment_bam`
 and aligned against the genome `r Genome_version`. 
 Aligned reads were then compared to the reference transcriptome database stored in the following file: `r fin_Transcript`.
 
@@ -43,7 +43,7 @@ cat(paste('Raw current data from the nanopore device was imported from the follo
 <!-------  Load alignment data and reference transcripts: -------> 
 
 ```{r import_data, echo=FALSE}
-algn = readGAlignments(fin_readalignment, use.names=TRUE, param=ScanBamParam(tag="NM", what="mapq"))
+algn = readGAlignments(fin_readalignment_bam, use.names=TRUE, param=ScanBamParam(tag="NM", what="mapq"))
 algn_cigartable = cigarOpTable(cigar(algn))
 gap_index = which(colnames( algn_cigartable ) =="D" )
 gap_indices = c( which( colnames( algn_cigartable ) =="I" ), which(colnames( algn_cigartable ) =="D")  )

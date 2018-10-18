@@ -122,9 +122,9 @@ rule all:
 # build the final output report in html format
 rule make_report:
     input:
-        aligned_reads = os.path.join( DIR_SORTED_MINIMAPPED, "run_{sample}.sorted.bam"),
-        transcriptome = RefTranscriptome,
-        GRobj         = os.path.join( DIR_GR, "{sample}_GR.RData")
+        aligned_reads_bam = os.path.join( DIR_SORTED_MINIMAPPED, "run_{sample}.sorted.bam"),
+        transcriptome     = RefTranscriptome,
+        GRobj             = os.path.join( DIR_GR, "{sample}_GR.RData")
     output:
         os.path.join( DIR_REPORT, "{sample}_report.html")
     params:
@@ -136,10 +136,10 @@ rule make_report:
 
     shell: 
         " Rscript -e  '{params} "
-        " fin_readalignment = \"{input.aligned_reads}\"; "
-        " fin_Transcript = \"{input.transcriptome}\";"
-        " fin_GRobj      = \"{input.GRobj}\";"
-        " Genome_version=\"{GENOME_VERSION}\"; " 
+        " fin_readalignment_bam = \"{input.aligned_reads_bam}\"; "
+        " fin_Transcript        = \"{input.transcriptome}\";"
+        " fin_GRobj             = \"{input.GRobj}\";"
+        " Genome_version        =\"{GENOME_VERSION}\"; " 
         " rmarkdown::render(\"{RmdReportScript}\", output_file = \"{output}\" ) ' "  
 
 #------------------------------------------------------

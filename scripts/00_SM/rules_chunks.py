@@ -6,13 +6,14 @@
 # format from the .csv files produced by eventalign
 rule create_currentGR_obj:
     input:
-        Samplename   = lambda wc: get_chunkfiles( wc.sample, os.path.join( DIR_EVENTALIGN, "csv_chunks" ), "Ealign", ".csv", False )
+        csvfile      = lambda wc: get_chunkfiles( wc.sample, os.path.join( DIR_EVENTALIGN, "csv_chunks" ), "Ealign", ".csv", False )
     output:
         GRobj        = os.path.join( DIR_GR, "{sample}_GR.RData")
     params:
         Rfuncs_tableGRconv_file  = os.path.join( config[ "scripts"]["script_folder"], config[ "scripts"]["Rfuncs_tableGRconv_file"] ), 
         output       = os.path.join( DIR_GR, "{sample}_GR.RData"),
-        Ealign_files = lambda wc: get_chunkfiles( wc.sample, os.path.join( DIR_EVENTALIGN, "csv_chunks" ), "Ealign", ".csv", True ) 
+        Ealign_files = lambda wc: get_chunkfiles( wc.sample, os.path.join( DIR_EVENTALIGN, "csv_chunks" ), "Ealign", ".csv", True ), 
+        samplename   = "{sample}"
     log:
         os.path.join( DIR_GR, "{sample}_GR_conversion.log")
     message: fmt("Convert aligned NP reads to GRanges object")
@@ -21,6 +22,7 @@ rule create_currentGR_obj:
                          "--Rfuncs_tableGRconv_file={params.Rfuncs_tableGRconv_file}",
                          "--output={params.output}",
                          "--logFile={log}",
+                         "--samplename={params.samplename}",
                          "--Ealign_files={params.Ealign_files}"] )
 
 

@@ -14,16 +14,17 @@ if(length(args) < 1) {
 if("--help" %in% args) {
   cat("
       Render to report
-      
+     
       Arguments:
       Rfuncs_tableGRconv_file --script with function definitions used here.
-      output      --filename for the output GRanges .RData 
+      output       -- filename for the output GRanges .RData
+      samplename   -- name of sample for documentation
       Ealign_files -- array of files to use as input
-      logFile      -- filename to pipe output to 
-     
+      logFile      -- filename to pipe output to
+    
       Example:
       ./test.R --arg1=1 --arg2='output.txt' --arg3=TRUE \n\n")
-  
+ 
   q(save="no")
 }
 
@@ -42,8 +43,9 @@ names(argsL) <- argsDF$V1
 # Run Functions -----------------------------------------------------------
 
 # e.g. (replace this list with actual arguments)
-Rfuncs_tableGRconv_file  <- argsL$Rfuncs_tableGRconv_file 
+Rfuncs_tableGRconv_file  <- argsL$Rfuncs_tableGRconv_file
 output                   <- argsL$output
+samplename               <- argsL$samplename
 logFile                  <- argsL$logFile
 Ealign_files             <- unlist( strsplit(argsL$Ealign_files,",")  )
 
@@ -73,7 +75,7 @@ maxcurrent=150
 current_window = c( mincurrent, maxcurrent )
 
 temp           = dat_all[  dat_all$event_level_mean  > mincurrent, ]
-dat_windowed   = temp[ temp$event_level_mean < maxcurrent, ] 
+dat_windowed   = temp[ temp$event_level_mean < maxcurrent, ]
 dat_win_finite = dat_windowed [ which (! is.na (dat_windowed$event_level_mean) ), ]
 rm(temp)
 
@@ -94,11 +96,11 @@ if( dim(Unk)[1] > 0 )
 # ================================================
 # BUILD GRanges OBJECT TO Process
 
-reads_GR = GRanges( seqnames   = dat_win_finite_stranded$contig, 
-                    strand     = dat_win_finite_stranded$strand, 
+reads_GR = GRanges( seqnames   = dat_win_finite_stranded$contig,
+                    strand     = dat_win_finite_stranded$strand,
                     IRanges(   start  =  dat_win_finite_stranded$position+1,
                                end    =  dat_win_finite_stranded$position+5 ), # --- nopolish provides position before beginning of 5bp window.
-                    
+                   
                     reference_kmer = dat_win_finite_stranded$reference_kmer,
                     read_index     = dat_win_finite_stranded$read_index,
                     event_index    = dat_win_finite_stranded$event_index,
@@ -112,7 +114,7 @@ reads_GR = GRanges( seqnames   = dat_win_finite_stranded$contig,
 
 
 
-reads_GRL = split( reads_GR, 
+reads_GRL = split( reads_GR,
                    reads_GR$read_index )
 
 # rm(dat_all)
@@ -125,4 +127,8 @@ reads_GRL = split( reads_GR,
 # rm( dat_windowed )
 # save.image(file="/home/bosberg/projects/nanopore/signal_processing_Rworkspace.RData")
 
-save( file= output, reads_GR, reads_GRL )
+saveRDS( list( "samplename"             = samplename,
+               "Events_all_GR"          = reads_GR,
+               "Events_GRL_splitbyread" = reads_GRL),
+         file = output  )
+
