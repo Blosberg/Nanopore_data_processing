@@ -564,6 +564,14 @@ plot_specific_sequence_currenthist <- function( xdat_in     = stop("xdat must be
             )
     }
 
+  legend( "topright", 
+          legend = seq_in,
+          fill   = col_in, 
+          lty    = "blank", 
+          cex    = 0.8
+  )
+  
+  
 }
 
 
