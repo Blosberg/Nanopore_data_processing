@@ -17,8 +17,9 @@ nanopolish = config["progs"]["nanopolish"]
 RefTranscriptome = config["ref"]["Transcriptome"]
 GENOME_VERSION   = config["ref"]["Genome_version"]
 RmdReportScript  = os.path.join(config["scripts"]["script_folder"],"final_report","Nanopore_report.Rmd")
-input_data_type           = config["input_data_type"]
+input_data_type  = config["input_data_type"]
 
+tables2GR_main   = os.path.join( config["scripts"]["script_folder"], config["scripts"]["Rmain_tableGRconv_file"] )
 #------------------------------------------------------
 # --- define output directories
 

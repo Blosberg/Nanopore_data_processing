@@ -1,6 +1,7 @@
 # -----------------------------------------------------
 # BEGIN RULES
 # -----------------------------------------------------
+# table2GR_script = os.path.join( [config[ "scripts"]["scripts_folder"], [config[ "scripts"]["Rfuncs_tableGRconv_file"] )
 
 # produce GRanges object of current data in .RData 
 # format from the .csv files produced by eventalign
@@ -16,9 +17,10 @@ rule create_currentGR_obj:
         samplename   = "{sample}"
     log:
         os.path.join( DIR_GR, "{sample}_GR_conversion.log")
-    message: fmt("Convert aligned NP reads to GRanges object")
+    message:
+        fmt("Convert aligned NP reads to GRanges object")
     shell:
-        nice('Rscript', ["./scripts/07_GRobjects/npreads_tables2GR.R",
+        nice('Rscript', [ tables2GR_main,
                          "--Rfuncs_tableGRconv_file={params.Rfuncs_tableGRconv_file}",
                          "--output={params.output}",
                          "--logFile={log}",

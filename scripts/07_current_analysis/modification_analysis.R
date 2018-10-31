@@ -6,6 +6,13 @@ RDSdat <- readRDS(dataset)
 
 unknown_mark = "N"
 
+poremodel_statconsts = read.csv( "scripts/ref/pore_model_table.csv",
+                                  stringsAsFactors = F,
+                                  header           = TRUE,
+                                  row.names        = 1,
+                                  sep= "\t"
+                                 )
+
 # ===========================================
 
 allevents_GR_uncalled <-  RDSdat$allevents_GR[ which(   grepl( unknown_mark, 
@@ -43,13 +50,12 @@ CITSput_rankedbycoverage = CITS_put[ most_covered_CITSput_indices]
 
 pi     = 3.141592358979
 angles = seq(0, 2*pi, 0.001)
-xcirc  = cos(angle)
-ycirc  = sin(angle)
+xcirc  = cos(angles)
+ycirc  = sin(angles)
 lines( xcirc, ycirc, col="black")
 
 
 kspace_normed_current_matrix <- get_kspace_normed_current_vectors ( readsdat_in         = allevents_GR_called ,
                                                                     putlocs_GR_in       = CITS_put[ most_covered_CITSput_indices ],
-                                                                    k                   = 5,
-                                                                    breaks_in           = current_hist_breaks
-                                                                   )
+                                                                    k                   = 5
+                                                                  )
