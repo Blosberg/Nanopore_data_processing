@@ -5,17 +5,17 @@
   "input_data_type":     "raw_minION",
 
   "samplelist": {
-                "49af6eac": { 
-                    "RUN_ID"    : "49af6eac",
+                "invitro_rps16_unmod": { 
+                    "RUN_ID"    : "invitro_rps16_unmod",
                     "MAXSAMPLEi":  112, 
                     "fastq_prefix": "fastq_runid_49af6eac0c6421376c03122401771fb5138232b3_",
                     "fastq_suffix": ".fastq"
                           }
                 },
 
-  "target_out": "report",
-
-  "ref": {
+   "target_out": "report",
+ 
+   "ref": {
           "Transcriptome"  : "/scratch/AG_Akalin/refGenomes/hg19_canon/170317_Homo_sapiens.GRCh37.87.chr.gtf",
           "Genome_DIR"     : "/scratch/AG_Akalin/refGenomes/hg19_canon/",
           "Genome_version" : "hg19_canon"
@@ -29,8 +29,8 @@
             },
    "scripts": {
         "script_folder":            "/home/bosberg/projects/nanopore/scripts/",
-        "Rmain_tableGRconv_file":   "06_GRobjects/npreads_tables2GR.R",
         "Rfuncs_tableGRconv_file":  "06_GRobjects/npreads_tables2GR_funcs.R",
+        "Rmain_tableGRconv_file":   "06_GRobjects/npreads_tables2GR.R",
         "pyfunc_defs":              "00_SM/func_defs.py",
         "rules_chunks":             "00_SM/rules_chunks.py",
         "rules_wholefastq":         "00_SM/rules_wholefastq.py"

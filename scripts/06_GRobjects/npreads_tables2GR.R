@@ -128,7 +128,6 @@ reads_GRL = split( reads_GR,
 # save.image(file="/home/bosberg/projects/nanopore/signal_processing_Rworkspace.RData")
 
 saveRDS( list( "samplename"             = samplename,
-               "Events_all_GR"          = reads_GR,
                "Events_GRL_splitbyread" = reads_GRL),
          file = output  )
 

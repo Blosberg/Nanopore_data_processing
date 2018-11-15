@@ -88,7 +88,7 @@ if ( config["target_out"] == "report" ):
                   ]
 elif ( config["target_out"] == "GR" ):
    OUTPUT_FILES=  [
-                  os.path.join( DIR_GR, config["samplelist"][sample]["RUN_ID"]+"_GR.RData")  for sample in config["samplelist"]
+                  os.path.join( DIR_GR, config["samplelist"][sample]["RUN_ID"]+"_reads_GR.rds")  for sample in config["samplelist"]
                   ]
 elif ( config["target_out"] == "bam" ):
    OUTPUT_FILES=  [
@@ -125,7 +125,7 @@ rule make_report:
     input:
         aligned_reads_bam = os.path.join( DIR_SORTED_MINIMAPPED, "run_{sample}.sorted.bam"),
         transcriptome     = RefTranscriptome,
-        GRobj             = os.path.join( DIR_GR, "{sample}_GR.RData")
+        GRobj             = os.path.join( DIR_GR, "{sample}_reads_GR.rds")
     output:
         os.path.join( DIR_REPORT, "{sample}_report.html")
     params:

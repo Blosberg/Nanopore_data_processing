@@ -1,8 +1,91 @@
 # modification_analysis.R
 # ---Driver script for mod analysis.
 
-dataset = "/scratch/AG_Akalin/bosberg/nanopore/pipeline_output/20180417_1233_HEK293_polyA_RNA/GRdat_allevents.RDS"
-RDSdat <- readRDS(dataset)
+HEK_dataset = "/scratch/AG_Akalin/bosberg/nanopore/pipeline_output/20180417_1233_HEK293_polyA_RNA/GRdat_allevents.RDS"
+HEK_RDSdat <- readRDS(HEK_dataset)
+
+IVunmod_dataset = "/scratch/AG_Akalin/bosberg/nanopore/pipeline_output/20180913_1457_invitro_rps16_unmod/06_GRobjects/invitro_rps16_unmod_reads_GR.rds"
+IVunmod_RDSdat <- readRDS(IVunmod_dataset)
+
+# ----- Executed previously: ------
+# HEK_rps_overlaps <- findOverlaps( HEK_RDSdat$allevents_GRL_splitbyread,  rps16_window)
+# HEK_rps16_reads  <- HEK_RDSdat$allevents_GRL_splitbyread[ queryHits(HEK_rps_overlaps) ]
+# saveRDS( HEK_rps16_reads, file = "/scratch/AG_Akalin/bosberg/nanopore/pipeline_output/20180417_1233_HEK293_polyA_RNA/rps_16_reads.rds")
+HEK_rps16_reads <- readRDS( "/scratch/AG_Akalin/bosberg/nanopore/pipeline_output/20180417_1233_HEK293_polyA_RNA/rps16_reads_GR.rds")
+rps16_window    <- readRDS("/home/bosberg/projects/nanopore/scripts/ref/rps16_window_GR.rds")
+
+rps16_range=GRanges( seqnames="chr19", strand ="-", ranges = IRanges( start = 39923777,  end=39926660)  )
+
+
+#======================================
+
+HEK_rps16_signal  <- get_flat_signal_over_all_reads ( reads_GRL_in     = HEK_RDSdat$allevents_GRL_splitbyread,
+                                                      target_range_GR  = rps16_range
+                                                     )
+#======================================
+
+IVum_rps16_signal  <- get_flat_signal_over_all_reads ( reads_GRL_in     = IVunmod_RDSdat$Events_GRL_splitbyread,
+                                                       target_range_GR  = rps16_range
+                                                     )
+
+#======================================
+
+a = 39925572 
+b = 39925600 
+
+HEK_locsignal  = HEK_rps16_signal[ start(HEK_rps16_signal) > a  ]
+HEK_locsignal  = HEK_locsignal[ start(HEK_locsignal)       < b  ]
+
+IVum_locsignal  = IVum_rps16_signal[ start(IVum_rps16_signal) > a  ]
+IVum_locsignal  = IVum_locsignal[ start(IVum_locsignal)       < b  ]
+
+plot( start(IVum_locsignal), 
+      IVum_locsignal$event_mean, 
+      col    = "red",
+      type   = "l",
+      lwd    = 2,
+      xaxt   = "n",
+      xlab   = " chr19: 39925572 - 39925660 ",
+      ylab   = "current [pA]",
+      ps =0.5
+     )
+
+axis(1, at=start(IVum_locsignal), 
+     labels=substr( IVum_locsignal$model_kmer, 1, 1),
+     ps = 0.5)
+
+
+plot(1, 1 ,xlab="x axis", ylab="y axis",  pch=19,
+           col.lab="red", cex.lab=1.5,    #  for the xlab and ylab
+           col="green")      
+
+
+axis(1, at=1:length(IVum_locsignal), labels=substr( IVum_locsignal$model_kmer, 1, 1))
+
+ 
+
+lines( start(IVum_locsignal), IVum_locsignal$event_mean - IVum_locsignal$event_stdv, 
+      col=rgb(1,0,0,alpha=0.25), lwd = 0.5) 
+lines( start(IVum_locsignal), IVum_locsignal$event_mean + IVum_locsignal$event_stdv, 
+      col=rgb(1,0,0,alpha=0.25), lwd = 0.5) 
+
+lines( start(HEK_locsignal), HEK_locsignal$event_mean, 
+      col=rgb(0,0,1,alpha=1), lwd = 2) 
+lines( start(HEK_locsignal), HEK_locsignal$event_mean - HEK_locsignal$event_stdv, 
+      col=rgb(0,0,1,alpha=0.25), lwd = 0.5) 
+lines( start(HEK_locsignal), HEK_locsignal$event_mean + HEK_locsignal$event_stdv, 
+      col=rgb(0,0,1,alpha=0.25), lwd = 0.5) 
+
+#======================================
+
+
+HEK_rps16_flattened_reads <- lapply( HEK_rps16_reads, function(x) flatten_read( read_GR_in = x ) )  
+
+
+
+
+reduced_IVum_chr19_splitby_read <- lapply( IVum_chr19_splitby_read, 
+                                          function(x) reduce(x) )
 
 unknown_mark = "N"
 
@@ -14,6 +97,43 @@ poremodel_statconsts = read.csv( "scripts/ref/pore_model_table.csv",
                                  )
 
 # ===========================================
+
+HEK_splitby_kmer     = split( HEK_RDSdat$allevents_GR,     HEK_RDSdat$allevents_GR$model_kmer     )
+IVunmod_splitby_kmer = split( IVunmod_RDSdat$Events_all_GR, IVunmod_RDSdat$Events_all_GR$model_kmer )
+
+mean_current_HEK     <- lapply( HEK_splitby_kmer, 
+                                function(x) mean(x$event_mean) )
+current_kmer_HEK = unlist( mean_current_HEK)
+
+mean_current_IVum    <- lapply( IVunmod_splitby_kmer, 
+                                function(x) mean(x$event_mean) )
+current_kmer_IVum = unlist( mean_current_IVum )
+
+IVkmers = names( mean_current_IVum )
+
+xmin <- min( unlist(mean_current_IVum) )
+xmax <- max( unlist(mean_current_IVum) )
+
+plot( mean_current_HEK[IVkmers],
+      mean_current_IVum[IVkmers], 
+      xlab = "HEK293 (kmer-subset)",
+      ylab = "In-vitro, unmodified (all kmers)",
+      col  = "blue",
+      main = "Direct current comparison: HEK293 vs. in-vitro"
+      )
+lines( c(xmin, xmax), 
+       c(xmin, xmax),
+       col= rgb(0,0,0,alpha=0.75),
+       lwd=5)
+
+
+
+
+
+HEK_splitby_kmer[[1]]$model_kmer
+
+# ===========================================
+
 
 allevents_GR_uncalled <-  RDSdat$allevents_GR[ which(   grepl( unknown_mark, 
                                                                RDSdat$allevents_GR$model_kmer) )  ]

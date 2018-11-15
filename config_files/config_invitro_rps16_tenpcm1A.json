@@ -1,13 +1,13 @@
 {  
-  "PATHIN"  : "/scratch/AG_Akalin/bosberg/nanopore/data/20180920_1017_rps16_m1A/",
-  "PATHOUT" : "/scratch/AG_Akalin/bosberg/nanopore/pipeline_output/20180920_1017_rps16_m1A/",
+  "PATHIN"  : "/scratch/AG_Akalin/bosberg/nanopore/data/20180920_1017_invitro_rps16_tenpcm1A/",
+  "PATHOUT" : "/scratch/AG_Akalin/bosberg/nanopore/pipeline_output/20180920_1017_invitro_rps16_tenpcm1A/",
 
   "input_data_type":     "raw_minION",
 
   "samplelist": {
                 "fa3f7c14": { 
                     "RUN_ID"    : "fa3f7c14",
-                    "MAXSAMPLEi":  44, 
+                    "MAXSAMPLEi":  15, 
                     "fastq_prefix": "fastq_runid_fa3f7c14ccdb46f49b500b0425d3808a2ae53140_",
                     "fastq_suffix": ".fastq"
                           }
