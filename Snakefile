@@ -88,7 +88,7 @@ if ( config["target_out"] == "report" ):
                   ]
 elif ( config["target_out"] == "GR" ):
    OUTPUT_FILES=  [
-                  os.path.join( DIR_GR, config["samplelist"][sample]["RUN_ID"]+"_reads_GR.rds")  for sample in config["samplelist"]
+                  os.path.join( DIR_GR, config["samplelist"][sample]["RUN_ID"]+"_reads_GRL.rds")  for sample in config["samplelist"]
                   ]
 elif ( config["target_out"] == "bam" ):
    OUTPUT_FILES=  [
@@ -125,7 +125,7 @@ rule make_report:
     input:
         aligned_reads_bam = os.path.join( DIR_SORTED_MINIMAPPED, "run_{sample}.sorted.bam"),
         transcriptome     = RefTranscriptome,
-        GRobj             = os.path.join( DIR_GR, "{sample}_reads_GR.rds")
+        GRobj             = os.path.join( DIR_GR, "{sample}_reads_GRL.rds")
     output:
         os.path.join( DIR_REPORT, "{sample}_report.html")
     params:
@@ -133,8 +133,8 @@ rule make_report:
         " yplotmax = 10000; "
     log:
         logfile = os.path.join( DIR_REPORT, "final_report_{sample}.log")
-    message: """--- producing final report."""
-
+    message:
+        fmt("producing final report")
     shell: 
         " Rscript -e  '{params} "
         " fin_readalignment_bam = \"{input.aligned_reads_bam}\"; "

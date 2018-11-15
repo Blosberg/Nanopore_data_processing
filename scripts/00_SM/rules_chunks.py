@@ -9,10 +9,10 @@ rule create_currentGR_obj:
     input:
         csvfile      = lambda wc: get_chunkfiles( wc.sample, os.path.join( DIR_EVENTALIGN, "csv_chunks" ), "Ealign", ".csv", False )
     output:
-        GRobj        = os.path.join( DIR_GR, "{sample}_reads_GR.rds")
+        GRobj        = os.path.join( DIR_GR, "{sample}_reads_GRL.rds")
     params:
         Rfuncs_tableGRconv_file  = os.path.join( config[ "scripts"]["script_folder"], config[ "scripts"]["Rfuncs_tableGRconv_file"] ), 
-        output       = os.path.join( DIR_GR, "{sample}_reads_GR.rds"),
+        output       = os.path.join( DIR_GR, "{sample}_reads_GRL.rds"),
         Ealign_files = lambda wc: get_chunkfiles( wc.sample, os.path.join( DIR_EVENTALIGN, "csv_chunks" ), "Ealign", ".csv", True ), 
         samplename   = "{sample}"
     log:

@@ -5,8 +5,8 @@
   "input_data_type":     "raw_minION",
 
   "samplelist": {
-                "ec9bd1f6": { 
-                    "RUN_ID"    : "ec9bd1f6",
+                "HEK293_polyA": { 
+                    "RUN_ID"    : "HEK293_polyA",
                     "MAXSAMPLEi":  19, 
                     "fastq_prefix": "fastq_runid_ec9bd1f6f626d73709089ba0bfc63929581e9ede_",
                     "fastq_suffix": ".fastq"
