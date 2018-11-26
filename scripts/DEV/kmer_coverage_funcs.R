@@ -20,4 +20,22 @@ get_targetcov <- function(  read_GR      = stop("reads_GRL must be provided"),
   # location <- reduce(read_GR)
   return( complimentarity )
 }
+# ===============================================================
+# --- sort through a sequence and check its diversity:
+get_kmer_divers <- function( seq_in = stop("GRanges must be provided"),
+                             n      = stop("n must be provided") 
+                            )
+{
+N=nchar(seq_in)  
+  
+kmerset = list()
 
+for ( p in c(1:N-n+1))
+  {
+  kmerset[p]  <- substr( seq_in, p, p+n-1 )
+  }
+
+kmerset_array <- unique( unlist( kmerset ) )
+
+return( kmerset_array)
+}

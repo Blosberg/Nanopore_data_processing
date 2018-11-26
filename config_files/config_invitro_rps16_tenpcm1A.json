@@ -7,7 +7,7 @@
   "samplelist": {
                 "fa3f7c14": { 
                     "RUN_ID"    : "fa3f7c14",
-                    "MAXSAMPLEi":  15, 
+                    "MAXSAMPLEi":  20,
                     "fastq_prefix": "fastq_runid_fa3f7c14ccdb46f49b500b0425d3808a2ae53140_",
                     "fastq_suffix": ".fastq"
                           }
