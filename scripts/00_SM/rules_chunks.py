@@ -91,7 +91,7 @@ rule align_minimap:
     output:
         aligned  = os.path.join( DIR_ALIGNED_MINIMAP, "run_{sample}_{chunk}.sam" )
     params:
-        options  = " -ax map-ont "
+        options  = " -ax splice -uf -k14"
     log:
         log      = os.path.join( DIR_ALIGNED_MINIMAP, "run_{sample}_{chunk}_alignment.log")
     message: 

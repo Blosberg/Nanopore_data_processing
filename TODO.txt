@@ -11,4 +11,4 @@ The raw_MinION output will need to be further developed to get to the point of t
  --- then start updating the report;  
 * Incorporate statistics from Granges data into report.
 
-
+* Need to put the alignment options into the config file (and not always assume RNA sequencing)
