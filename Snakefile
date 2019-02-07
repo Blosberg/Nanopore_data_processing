@@ -7,8 +7,8 @@ import os
 configfile: "./config.json"
 include   : os.path.join( config["scripts"]["script_folder"], config["scripts"]["pyfunc_defs"] )
 
-#------------------------------------------------------
-# --- Dependencies:
+# ------------------------------------------------------
+#--- Dependencies:
 
 MM2        = config["progs"]["minimap"]
 SAMTOOLS   = config["progs"]["SAMTOOLS"]
@@ -21,14 +21,14 @@ input_data_type  = config["input_data_type"]
 
 tables2GR_main   = os.path.join( config["scripts"]["script_folder"], config["scripts"]["Rmain_tableGRconv_file"] )
 #------------------------------------------------------
-# --- define output directories
+#--- define output directories
 
-DIR_SYMLINKS           = config["PATHOUT"]+"01_symlinks/"
+DIR_SYMLINKS           = config["PATHOUT"]+"01_symlinks_fastqindex_chunks/"
 os.makedirs( DIR_SYMLINKS,  exist_ok=True)
 # -- all the rest will be created by snakemake automatically
 
-DIR_ALIGNED_MINIMAP    = config["PATHOUT"]+"02_MM_aligned/"
-DIR_FILTERED_MINIMAP   = config["PATHOUT"]+"03_MM_filtered/"
+DIR_ALIGNED_MINIMAP    = config["PATHOUT"]+"02_MM_aligned_chunks/"
+DIR_FILTERED_MINIMAP   = config["PATHOUT"]+"03_MM_filtered_chunks/"
 DIR_SORTED_MINIMAPPED  = config["PATHOUT"]+"04_MM_sortedbam/"
 DIR_EVENTALIGN         = config["PATHOUT"]+"05_eventalign/"
 DIR_GR                 = config["PATHOUT"]+"06_GRobjects"
@@ -36,7 +36,7 @@ DIR_REPORT             = config["PATHOUT"]+"Final_report/"
 DIR_REFGENOME          = config['ref']['Genome_DIR']
 
 #------------------------------------------------------
-# check that the pipeline can be executed: 
+#--- check that the pipeline can be executed: 
 
 if ( not os.access(DIR_REFGENOME, os.W_OK) ):
    print("Write access to refgenome folder is denied. Checking if necessary indexing files already exist: ... ")
@@ -47,7 +47,7 @@ if ( not os.access(DIR_REFGENOME, os.W_OK) ):
    else:
       print("Refgenome index files are present. Continuing... ")
 
-# Create symbolic links to PATHIN so that indexing/etc can be performed in
+#---  Create symbolic links to PATHIN so that indexing/etc can be performed in
 # written pathout 
 
 if ( input_data_type == "raw_minION"): 
@@ -80,7 +80,7 @@ else:
    exit(1)
 
 #------------------------------------------------------
-# Define output (target) files:
+#---  Define output (target) files:
 
 if ( config["target_out"] == "report" ):
    OUTPUT_FILES=  [
@@ -98,7 +98,7 @@ else:
    print("Unrecognized target output file format: ", config["target_out"], " ... Terminating.")
    exit(1)
 
-# DEBUGGING:
+#---  DEBUGGING:
 #------------------------------------------------------
 # print("input_data_type = " + config["input_data_type"])
 # print("target out = " + config["target_out"])
@@ -108,11 +108,11 @@ else:
 # print("\n finished outputting output files \n\n ")
 # IPython.embed()
 # 
-#=========================================================================
+# ========================================================================
 #
 #   BEGIN RULES    
 #
-#=========================================================================
+# ========================================================================
 
 rule all:
     input:
@@ -182,7 +182,6 @@ rule index_sortedbam:
         " {SAMTOOLS} index  {input.sortedbam}  2> {log.logfile} "
 
 #------------------------------------------------------
-
 # Index the reads and the fast5 files for nanopolish
 rule np_index:
     input:

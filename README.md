@@ -4,15 +4,15 @@ This pipeline proocesses raw minION nanopore data directly to reports and
 figures, as well as bam-file and .RData in GRanges format.
 
 Two forms of raw input are accepted, and can be used to produce a report in
-html format.  If the variable `input_data_type`, in the config file, is set to "fastq",
-then we assume a single base-called fastq file for each sample, which is then
-processed into a report. If this variable is set to "raw_minION", then it is
-assumed that raw data directly output from the minION device is being used (in
-which case, the fastq data are typically binned into files of ~4000 reads each,
-and raw-current data is preserved.) In the latter case, analysis of the raw
-current values (before base-calling by Albacore) is performed, although most of
-this analysis is not yet included in the final report (the contents of the
-report are continually under development).
+html format.  If the variable `input_data_type`, in the config file, is set to
+"fastq", then we assume a single base-called fastq file for each sample, which
+is then processed into a report. If this variable is set to "raw_minION", then
+it is assumed that raw data directly output from the minION device is being
+used (in which case, the fastq data are typically binned into files of ~4000
+reads each, and raw-current data is preserved.) In the latter case, analysis of
+the raw current values (before base-calling by Albacore) is performed, although
+most of this analysis is not yet included in the final report (the contents of
+the report are continually under development).
 
 To run the program, first edit the config file `config.json`, as described
 below, and supply the Transcriptome file (with full path) against which you
