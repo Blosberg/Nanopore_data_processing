@@ -31,7 +31,6 @@ def getPathCase( mainpath, subd1, subd2, filename, input_data_type ):
         exit(1) 
     return( result ) 
 
-
 def makelink(src, target):
     if not os.path.isfile(src):
         bail("ERROR: Refusing to link non-existent file %s" % src)

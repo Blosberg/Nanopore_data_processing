@@ -38,6 +38,7 @@ DIR_REFGENOME          = config['ref']['Genome_DIR']
 #------------------------------------------------------
 #--- check that the pipeline can be executed: 
 
+# check for write access to refgenome dir
 if ( not os.access(DIR_REFGENOME, os.W_OK) ):
    print("Write access to refgenome folder is denied. Checking if necessary indexing files already exist: ... ")
 
@@ -236,5 +237,4 @@ rule np_index:
 #     message: """---- Align the reads from chunk {wildcards.chunk} to the reference ----"""
 #     shell:
 #         " {BWA} {params.options} {input.refg_fasta} {input.reads} | samtools sort -o {output.sortedbam} -T {params.tempfile}  > {log.logfile} 2>&1 "
-# 
 # 
