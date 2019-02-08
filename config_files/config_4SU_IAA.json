@@ -1,0 +1,40 @@
+{  
+  "PATHIN"  : "/scratch/AG_Akalin/bosberg/nanopore/data/20190130_1420_293_4Su_IAA/",
+  "PATHOUT" : "/scratch/AG_Akalin/bosberg/nanopore/pipeline_output/20190130_1420_293_4Su_IAA/",
+
+  "input_data_type":     "raw_minION",
+
+  "samplelist": {
+                "6c2fe901": { 
+                    "RUN_ID"    : "6c2fe901",
+                    "MAXSAMPLEi":  10,
+                    "fastq_prefix": "fastq_runid_6c2fe901b212d687ddcc5dec3a667748a48ba95b_",
+                    "fastq_suffix": ".fastq"
+                          }
+                },
+
+  "target_out": "report",
+
+  "ref": {
+          "Transcriptome"  : "/scratch/AG_Akalin/refGenomes/hg19_canon/170317_Homo_sapiens.GRCh37.87.chr.gtf",
+          "Genome_DIR"     : "/scratch/AG_Akalin/refGenomes/hg19_canon/",
+          "Genome_version" : "hg19_canon"
+          },
+
+   "progs": {
+        "minimap":    "./dev/deps/minimap2/minimap2",
+        "nanopolish": "./dev/deps/nanopolish/nanopolish",
+        "SAMTOOLS":   "samtools"
+            },
+   "scripts": {
+        "script_folder":            "/home/bosberg/projects/nanopore/scripts/",
+        "Rmain_tableGRconv_file":   "06_GRobjects/npreads_tables2GR.R",
+        "Rfuncs_tableGRconv_file":  "06_GRobjects/npreads_tables2GR_funcs.R",
+        "pyfunc_defs":              "00_SM/func_defs.py",
+        "rules_chunks":             "00_SM/rules_chunks.py",
+        "rules_wholefastq":         "00_SM/rules_wholefastq.py"
+            },
+   "execution":{
+        "nice": "0"
+            }
+}
