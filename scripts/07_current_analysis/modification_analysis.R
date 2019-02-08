@@ -1,37 +1,71 @@
 # modification_analysis.R
 # ---Driver script for mod analysis.
 
-HEK_dataset = "/scratch/AG_Akalin/bosberg/nanopore/pipeline_output/20180417_1233_HEK293_polyA_RNA/GRdat_allevents.RDS"
-HEK_RDSdat <- readRDS(HEK_dataset)
+HEK_dataset <- "/scratch/AG_Akalin/bosberg/nanopore/pipeline_output/20180417_1233_HEK293_polyA_RNA/06_GRobjects/HEK293_polyA_reads_GRL.rds"
+HEK_RDSdat  <- readRDS(HEK_dataset)
 
-IVunmod_dataset = "/scratch/AG_Akalin/bosberg/nanopore/pipeline_output/20180913_1457_invitro_rps16_unmod/06_GRobjects/invitro_rps16_unmod_reads_GR.rds"
-IVunmod_RDSdat <- readRDS(IVunmod_dataset)
+IVunmod_dataset <- "/scratch/AG_Akalin/bosberg/nanopore/pipeline_output/20180913_1457_invitro_rps16_unmod/06_GRobjects/invitro_rps16_unmod_reads_GRL.rds"
+IVunmod_RDSdat  <- readRDS(IVunmod_dataset)
 
 # ----- Executed previously: ------
 # HEK_rps_overlaps <- findOverlaps( HEK_RDSdat$allevents_GRL_splitbyread,  rps16_window)
 # HEK_rps16_reads  <- HEK_RDSdat$allevents_GRL_splitbyread[ queryHits(HEK_rps_overlaps) ]
 # saveRDS( HEK_rps16_reads, file = "/scratch/AG_Akalin/bosberg/nanopore/pipeline_output/20180417_1233_HEK293_polyA_RNA/rps_16_reads.rds")
-HEK_rps16_reads <- readRDS( "/scratch/AG_Akalin/bosberg/nanopore/pipeline_output/20180417_1233_HEK293_polyA_RNA/rps16_reads_GR.rds")
 rps16_window    <- readRDS("/home/bosberg/projects/nanopore/scripts/ref/rps16_window_GR.rds")
 
-rps16_range=GRanges( seqnames="chr19", strand ="-", ranges = IRanges( start = 39923777,  end=39926660)  )
+rps16_range=GRanges( seqnames="chr19", strand ="-", ranges = IRanges( start = 39923777,  
+                                                                      end   = 39926660)  )
+
+hg19_ref    <- readDNAStringSet("/scratch/AG_Akalin/refGenomes/hg19_canon/hg19_canon.fa")
+hg19_strack <- SequenceTrack(hg19_ref)
 
 
 #======================================
 
-HEK_rps16_signal  <- get_flat_signal_over_all_reads ( reads_GRL_in     = HEK_RDSdat$allevents_GRL_splitbyread,
+HEK_rps16_olaps   <-  findOverlaps( HEK_RDSdat$Events_GRL_splitbyread, 
+                                    rps16_range )
+
+HEK_rps16_signal  <- get_flat_signal_over_all_reads ( reads_GRL_in     = HEK_RDSdat$Events_GRL_splitbyread,
                                                       target_range_GR  = rps16_range
                                                      )
 #======================================
 
-IVum_rps16_signal  <- get_flat_signal_over_all_reads ( reads_GRL_in     = IVunmod_RDSdat$Events_GRL_splitbyread,
+
+IVum_rps16_olaps   <-  findOverlaps( IVunmod_RDSdat$Events_GRL_splitbyread, 
+                                     rps16_range )
+IVum_rps16_subset  <- IVunmod_RDSdat$Events_GRL_splitbyread[ queryHits(IVum_rps16_olaps[1:400]) ]
+
+
+# Start the clock!
+ptm <- proc.time()
+IVum_rps16_signal  <- get_flat_signal_over_all_reads ( reads_GRL_in     = IVum_rps16_subset,
                                                        target_range_GR  = rps16_range
                                                      )
+# Stop the clock
+proc.time() - ptm
 
 #======================================
 
-a = 39925572 
-b = 39925600 
+
+HEK_atrack  <- AnnotationTrack(HEK_rps16_signal, name = "HEK")
+genome(HEK_rps16_signal) <- "hg19"
+
+IVum_atrack <- AnnotationTrack(IVum_rps16_signal, name = "IVum")
+genome(IVum_rps16_signal) <- "hg19"
+
+chr <- as.character(unique(seqnames(HEK_rps16_signal)))
+gen <- unique( genome(HEK_rps16_signal) )
+                
+itrack <- IdeogramTrack(genome = gen, chromosome = chr)
+
+a = 39923778 
+b = 39923790 
+
+
+plotTracks(list(itrack, gtrack, HEK_atrack, grtrack, IVum_atrack), 
+            from = a, to = b, 
+           cex = 0.8)
+
 
 HEK_locsignal  = HEK_rps16_signal[ start(HEK_rps16_signal) > a  ]
 HEK_locsignal  = HEK_locsignal[ start(HEK_locsignal)       < b  ]
@@ -39,8 +73,11 @@ HEK_locsignal  = HEK_locsignal[ start(HEK_locsignal)       < b  ]
 IVum_locsignal  = IVum_rps16_signal[ start(IVum_rps16_signal) > a  ]
 IVum_locsignal  = IVum_locsignal[ start(IVum_locsignal)       < b  ]
 
+
+
 plot( start(IVum_locsignal), 
-      IVum_locsignal$event_mean, 
+      IVum_locsignal$event_mean,
+      main ="Current vs. sequence",
       col    = "red",
       type   = "l",
       lwd    = 2,
@@ -54,16 +91,6 @@ axis(1, at=start(IVum_locsignal),
      labels=substr( IVum_locsignal$model_kmer, 1, 1),
      ps = 0.5)
 
-
-plot(1, 1 ,xlab="x axis", ylab="y axis",  pch=19,
-           col.lab="red", cex.lab=1.5,    #  for the xlab and ylab
-           col="green")      
-
-
-axis(1, at=1:length(IVum_locsignal), labels=substr( IVum_locsignal$model_kmer, 1, 1))
-
- 
-
 lines( start(IVum_locsignal), IVum_locsignal$event_mean - IVum_locsignal$event_stdv, 
       col=rgb(1,0,0,alpha=0.25), lwd = 0.5) 
 lines( start(IVum_locsignal), IVum_locsignal$event_mean + IVum_locsignal$event_stdv, 
@@ -76,6 +103,11 @@ lines( start(HEK_locsignal), HEK_locsignal$event_mean - HEK_locsignal$event_stdv
 lines( start(HEK_locsignal), HEK_locsignal$event_mean + HEK_locsignal$event_stdv, 
       col=rgb(0,0,1,alpha=0.25), lwd = 0.5) 
 
+legend( "topright",
+        legend=c("IV signal", "HEK cells"),
+        col   =c("red","blue"),lwd = 2 
+        
+        )
 #======================================
 
 
@@ -151,8 +183,6 @@ poremodel_statconsts = read.csv( "scripts/ref/pore_model_table.csv",
 
 PATH_putloc="/scratch/AG_Akalin/bosberg/nanopore/ref/Linder_2015_nature_supp/put_m6A_locs_CITS.csv"
 CITS_put <- get_putlocs( PATH_putloc )
-
-hg19_ref <- readDNAStringSet("/scratch/AG_Akalin/refGenomes/hg19_canon/hg19_canon.fa")
 
 
 # just check for overlaps now to see which ones have the highest coverage

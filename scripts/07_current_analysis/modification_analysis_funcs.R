@@ -8,7 +8,8 @@ get_kspace_normed_current_vectors <- function( readsdat_in           = stop("GRa
                                                poremodel_statconsts  = stop(" matrix of stat params for the model must be provided"),
                                                k                     = 5,
                                                breaks_in             = seq(50,150,1),
-                                               method                = "pca"
+                                               method                = "pca",
+                                               add_synthdat          = FALSE
                                                )
 {
   check_sanity( putlocs_GR_in )
@@ -20,12 +21,10 @@ get_kspace_normed_current_vectors <- function( readsdat_in           = stop("GRa
   
   pcalist       = list()
     
-  ROIi= 9
-  pcalist[[ROIi]] <- get_normed_vector_data( readsdat_loc_in = readsdat_in[ queryHits( overlaps [ subjectHits(overlaps) == ROIi ] ) ]  ,
+  ROIi= 1
+  pcalist[[ROIi]] <- get_normed_vector_data( readsdat_loc_in = readsdat_in[ queryHits( overlaps [ subjectHits(overlaps) == ROIi ] ) ],
                                              putloc_GR_in    = putlocs_GR_in[ ROIi ] )
   
-  
-  ROIi= 1
   
   testROIs = GRanges( seqnames = seqnames(putlocs_GR_in), 
                       ranges = IRanges( start = start(putlocs_GR_in)+20, end = end(putlocs_GR_in)+20 ),
@@ -80,9 +79,17 @@ get_normed_vector_data <-function ( readsdat_loc_in = stop("reads overlapping th
   # rename the rows according to the model_kmer that corresponds to this window
   row.names( all_overlapping_reads_as_kvecs_mat ) <- sequence_list
   
+  #@@@@@
+  synthdat_raw <- get_synthdat ( N                   =  50,
+                                 seqs                =  sequence_list,
+                                 events_splitby_kmer =  readsdat_splitby_kmer )
+  synthdat_normed <-  (all_overlapping_reads_as_kvecs_mat-ROI_statconsts[,1] )/( ROI_statconsts[,2] ) 
+  # all_overlapping_reads_as_kvecs_mat <- cbind(all_overlapping_reads_as_kvecs_mat, synthdat)                           
+  #@@@@@@
+  
   # import the statistical constants for the relevant sequences:
   ROI_statconsts <- poremodel_statconsts[ sequence_list ,] 
-  
+
   all_olapreads_normedkvecs <- ( all_overlapping_reads_as_kvecs_mat-ROI_statconsts[,1])/( ROI_statconsts[,2] )
 
   # For the moment, treat NA's as zero deviation from the model.
@@ -92,32 +99,30 @@ get_normed_vector_data <-function ( readsdat_loc_in = stop("reads overlapping th
   pca <- prcomp( t(all_olapreads_normedkvecs), 
                  center = FALSE, 
                  scale. = FALSE)
-    
-  # @@@ should do it this way at some point: 
-  # outliers     = which( colSums( all_olapreads_normedkvecs * all_olapreads_normedkvecs ) >1 )
-  #  outlier_mean = rowMeans( all_olapreads_normedkvecs [,outliers])
-  #  omu = outlier_mean*(1/sqrt(sum(outlier_mean*outlier_mean) ) )
-  #  first_projection <- omu %*%   all_olapreads_normedkvecs
-  #--- unit vector in the direction of the outlier means.
-  # ----------------------------------------------------
-  # primary display vector is the x-axis of the 2-D plot
-  # primary_disp_vec = outlier_mean/(sqrt(sum(outlier_mean*outlier_mean))); outlier_mean
-  # proj ( omu, all_olapreads_normedkvecs[,1] ) #---- PROJECTS v ONTO u 
-  
+  # pca$rotation %*% t(pca$x) -> gives you back the original all_olapreads_normedkvecs
+
+  rot_in2_pca_mat = solve ( pca$rotation )
+  # "solve" in R means "invert", because R is terrible.
+
+  synthdat_normed_rot2pca = rot_in2_pca_mat %*% synthdat_normed
+  # these are now _row_ -based vectors
+
   plot( pca$x[,1], pca$x[,2], 
         col  = "red",
         xlab = "PC 1",
         ylab = "PC 2",
         main = "Deviation from model" )
   
+  points( synthdat_normed_rot2pca[1,], 
+          synthdat_normed_rot2pca[2,], 
+          col  = "blue",
+          pch  = 2 )
+  
   pi=3.141592358979;  angles = seq(0, 2*pi, 0.001); xcirc  = cos(angles); ycirc  = sin(angles)
   lines( xcirc, ycirc, col="black")
 
-  
   return(pca)
- 
 }
-
 # ===============================================================
 # --- grab the "starting positions" for each kmer when you want the pos of interest to be in the 'ith' position.
 # --- N.B. "Start" means lowest valued x-position in the range --> *REGARDLESS* of strand or direction of transcription.
@@ -217,10 +222,11 @@ convert_single_read_overlap_to_kdimvec  <- function( readloc_GR_in  = stop("GR_i
    readoverlap_splitby_startpos <- split(  readloc_GR_in, 
                                            start(readloc_GR_in) )  
   
-   if ( length(readoverlap_splitby_startpos) < k )
-     {print("WARNING: not all positions covered.") } # turn this into a "return(na)" statement.
+#   if ( length(readoverlap_splitby_startpos) < k )
+#     {print("WARNING: not all positions covered.") } # turn this into a "return(na)" statement.
    
-   read_pos_current_mean <- lapply( readoverlap_splitby_startpos, function(x) mean(x$event_mean) ) 
+   read_pos_current_mean <- lapply( readoverlap_splitby_startpos, 
+                                    function(x) mean(x$event_mean) ) 
    
    return(  unlist(read_pos_current_mean)[ as.character(startpos_array) ] )
    # ---- AVERAGE CURRENT VALUES ARE RETURNED AS A VECTOR WITH ELEMENT NAMES CORRESPONDING TO POSITION.
@@ -281,18 +287,31 @@ gen_orthonorm_vecs <- function(vec_in)
 }
 
 # ===============================================================
-# Inport putative modification sites: 
-
+# Import putative modification sites: 
 get_putlocs <- function( PATHin = stop("PATHin must be provided"))
 {
- 
-CITS_rawdat=read.csv( PATHin, sep = "\t", header = TRUE )
+  
+  CITS_rawdat=read.csv( PATHin, sep = "\t", header = TRUE )
+  
+  CITS_put =  GRanges( seqnames = CITS_rawdat$Chr ,
+                       ranges   = IRanges ( start  = CITS_rawdat$Start,
+                                            end    = CITS_rawdat$End ),
+                       strand   = CITS_rawdat$Strand
+  )
+  
+  return( sort( CITS_put[ which( seqnames(CITS_put) != "chrM") ] )  ) # 6543 locations
+}
 
-CITS_put =  GRanges( seqnames = CITS_rawdat$Chr ,
-                     ranges   = IRanges ( start  = CITS_rawdat$Start,
-                                          end    = CITS_rawdat$End ),
-                     strand   = CITS_rawdat$Strand
-)
 
-return( sort( CITS_put[ which( seqnames(CITS_put) != "chrM") ] )  ) # 6543 locations
+# ===============================================================
+# look for the bin with the highest counts within a certain range of a given a hist( ..., plot = false) dataset, .
+find_maxfreq_length <- function(  histdat   = stop("histdat must be provided"),
+                                  a = stop("a must be provided"),
+                                  b = stop("b must be provided")
+                           )  
+{
+
+subset_1 <- which(histdat$mids > a)
+subset_2 <- subset_1[ which(histdat$mids[subset_1] < b) ]
+return( histdat$mids[ subset_2[ which.max( histdat$counts[ subset_2 ]  )  ] ] )
 }
