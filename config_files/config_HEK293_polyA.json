@@ -1,13 +1,13 @@
-{  
+{
   "PATHIN"  : "/scratch/AG_Akalin/bosberg/nanopore/data/20180417_1233_HEK293_polyA_RNA/",
   "PATHOUT" : "/scratch/AG_Akalin/bosberg/nanopore/pipeline_output/20180417_1233_HEK293_polyA_RNA/",
 
   "input_data_type":     "raw_minION",
 
   "samplelist": {
-                "HEK293_polyA": { 
+                "HEK293_polyA": {
                     "RUN_ID"    : "HEK293_polyA",
-                    "MAXSAMPLEi":  19, 
+                    "MAXSAMPLEi":  19,
                     "fastq_prefix": "fastq_runid_ec9bd1f6f626d73709089ba0bfc63929581e9ede_",
                     "fastq_suffix": ".fastq"
                           }
@@ -22,13 +22,13 @@
           },
 
    "progs": {
-        "minimap":    "./deps/minimap2/minimap2",
-        "nanopolish": "./deps/nanopolish/nanopolish",
-        "BWA":        "./deps/bwa/bwa",
+        "minimap":    "./dev/deps/minimap2/minimap2",
+        "nanopolish": "./dev/deps/nanopolish/nanopolish",
         "SAMTOOLS":   "samtools"
             },
    "scripts": {
         "script_folder":            "/home/bosberg/projects/nanopore/scripts/",
+        "build_histlist_main":      "07_current_analysis/build_currenthistlist_from_GRL_reads.R",
         "Rfuncs_tableGRconv_file":  "06_GRobjects/npreads_tables2GR_funcs.R",
         "Rmain_tableGRconv_file":   "06_GRobjects/npreads_tables2GR.R",
         "pyfunc_defs":              "00_SM/func_defs.py",
@@ -36,6 +36,6 @@
         "rules_wholefastq":         "00_SM/rules_wholefastq.py"
             },
    "execution":{
-        "nice": "19"
+        "nice": "0"
             }
 }

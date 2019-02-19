@@ -1,0 +1,4 @@
+Myc   = GRanges(seqnames="chr8", ranges=IRanges(start=128748315,end=128753680))
+GAPDH = GRanges(seqnames="chr12", ranges=IRanges(start=6643585, end=6647537))
+
+

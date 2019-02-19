@@ -1,22 +1,54 @@
 # -----------------------------------------------------
 # BEGIN RULES
 # -----------------------------------------------------
-# table2GR_script = os.path.join( [config[ "scripts"]["scripts_folder"], [config[ "scripts"]["Rfuncs_tableGRconv_file"] )
 
-# produce GRanges object of current data in .RData 
-# format from the .csv files produced by eventalign
-rule create_currentGR_obj:
+
+# -----------------------------------------------------
+# Take a read-separated list of events, and assemble a histogram of
+# current values for each unique kmer observed.
+rule create_kmer_histlist:
+    input:
+        RDS_GRLreads       = os.path.join( DIR_GR, "{sample}_reads_GRL.rds")
+    output:
+        RDS_histlist       = os.path.join( DIR_GR, "{sample}_kmer_histlist.rds")
+    params:
+        current_histmin=50,
+        current_histmax=150,
+        current_histres=0.5,
+        RDS_GRLreads_in=os.path.join( DIR_GR, "{sample}_reads_GRL.rds"),
+        RDS_histlist_out=os.path.join( DIR_GR, "{sample}_kmer_histlist.rds"),
+        k=5
+    log:
+        logfile=os.path.join( DIR_GR, "{sample}_histlist.log")
+    message:
+        fmt("Build list of histograms for unique kmers in dataset.")
+    shell:
+        nice('Rscript', [ build_histlist_main,
+                          "--current_histmin={params.current_histmin}",
+                          "--current_histmax={params.current_histmax}",
+                          "--current_histres={params.current_histres}",
+                          "--rds_fin_readdat={params.RDS_GRLreads_in}",
+                          "--rds_fout_histlist={params.RDS_histlist_out}",
+                          "--k={params.k}",
+                          "--logfile={log.logfile}",] )
+
+# -----------------------------------------------------
+# produce GRangesList object of current data in .RDS format
+# from the .csv files produced by eventalign
+# each entry of the list is a read:
+
+rule create_readcurrent_GRL_obj:
     input:
         csvfile      = lambda wc: get_chunkfiles( wc.sample, os.path.join( DIR_EVENTALIGN, "csv_chunks" ), "Ealign", ".csv", False )
     output:
         GRobj        = os.path.join( DIR_GR, "{sample}_reads_GRL.rds")
     params:
-        Rfuncs_tableGRconv_file  = os.path.join( config[ "scripts"]["script_folder"], config[ "scripts"]["Rfuncs_tableGRconv_file"] ), 
+        Rfuncs_tableGRconv_file  = os.path.join( config[ "scripts"]["script_folder"], config[ "scripts"]["Rfuncs_tableGRconv_file"] ),
         output       = os.path.join( DIR_GR, "{sample}_reads_GRL.rds"),
-        Ealign_files = lambda wc: get_chunkfiles( wc.sample, os.path.join( DIR_EVENTALIGN, "csv_chunks" ), "Ealign", ".csv", True ), 
+        Ealign_files = lambda wc: get_chunkfiles( wc.sample, os.path.join( DIR_EVENTALIGN, "csv_chunks" ), "Ealign", ".csv", True ),
         samplename   = "{sample}"
     log:
-        os.path.join( DIR_GR, "{sample}_GR_conversion.log")
+        os.path.join( DIR_GR, "{sample}_reads_GRL_conversion.log")
     message:
         fmt("Convert aligned NP reads to GRanges object")
     shell:
@@ -30,7 +62,7 @@ rule create_currentGR_obj:
 
 # -----------------------------------------------------
 
-# combine the ~4000 reads from each minimap2 
+# combine the ~4000 reads from each minimap2
 # alignment into a single bam file
 rule merge_bam_files:
     input:
@@ -39,14 +71,14 @@ rule merge_bam_files:
         sortedbam = os.path.join( DIR_SORTED_MINIMAPPED, "run_{sample}.sorted.bam")
     log:
         logfile   = os.path.join( DIR_SORTED_MINIMAPPED, "{sample}.sortbam.log")
-    message: 
+    message:
         """ --- combining bam files from post-mapping fastq data. --- """
     shell:
         '{SAMTOOLS} merge {output} {input} '
 
 #------------------------------------------------------
 
-# convert minimap2 alignments from sam to bam format 
+# convert minimap2 alignments from sam to bam format
 # and sort by position
 rule convert_sort_minimap:
     input:
@@ -57,7 +89,7 @@ rule convert_sort_minimap:
         options = "-ax splice "
     log:
         logfile = os.path.join( DIR_SORTED_MINIMAPPED, "bam_chunks", "run_{sample}_{chunk}.sortbam.log")
-    message: 
+    message:
         """ --- converting, sorting, and indexing bam file. --- """
     shell:
         'samtools view  -Sb  {input} | samtools sort > {output} && samtools index {output} 2> {log.logfile}'
@@ -74,7 +106,7 @@ rule filter_nonaligned_minimap:
         aligned  = os.path.join( DIR_FILTERED_MINIMAP, "run_{sample}_{chunk}.0filtered.sam" )
     log:
         log      = os.path.join( DIR_FILTERED_MINIMAP, "run_{sample}_{chunk}.0filtering.log" )
-    message: 
+    message:
         """--- filtering unaligned reads from alignment data ---"""
     shell:
         " cat {input} | perl -lane 'print if $F[1] ne 4'  >  {output}   2> {log}"
@@ -82,7 +114,7 @@ rule filter_nonaligned_minimap:
 
 #------------------------------------------------------
 
-# use minimap2 to align the fastq reads to the reference 
+# use minimap2 to align the fastq reads to the reference
 # genome
 rule align_minimap:
     input:
@@ -94,14 +126,14 @@ rule align_minimap:
         options  = " -ax splice -uf -k14"
     log:
         log      = os.path.join( DIR_ALIGNED_MINIMAP, "run_{sample}_{chunk}_alignment.log")
-    message: 
+    message:
         """--- aligning fastq reads to indexed reference"""
     shell:
         "{MM2} {params} {input.mmiref} {input.sample} > {output}  2> {log}"
 
 #------------------------------------------------------
 
-# Create indexed version of reference genome for fast 
+# Create indexed version of reference genome for fast
 # alignment with minimap2 later:
 rule minimizer:
     input:
@@ -112,7 +144,7 @@ rule minimizer:
         options = " -d  "
     log:
         os.path.join( DIR_REFGENOME, config['ref']['Genome_version'], "_mmi2_minimizer_creation.log")
-    message: 
+    message:
         """--- creating minimizer index of reference genome for minimap2."""
     shell:
         "{MM2} {params.options}  {output} {input} 2> {log}"

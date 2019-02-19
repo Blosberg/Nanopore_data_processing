@@ -20,6 +20,8 @@ RmdReportScript  = os.path.join(config["scripts"]["script_folder"],"final_report
 input_data_type  = config["input_data_type"]
 
 tables2GR_main   = os.path.join( config["scripts"]["script_folder"], config["scripts"]["Rmain_tableGRconv_file"] )
+
+build_histlist_main   = os.path.join( config["scripts"]["script_folder"], config["scripts"]["build_histlist_main"] )
 #------------------------------------------------------
 #--- define output directories
 
@@ -86,6 +88,10 @@ else:
 if ( config["target_out"] == "report" ):
    OUTPUT_FILES=  [
                   os.path.join( DIR_REPORT, ""+config["samplelist"][sample]["RUN_ID"]+"_report.html") for sample in config["samplelist"]
+                  ]
+elif ( config["target_out"] == "histlist" ):
+   OUTPUT_FILES=  [
+                  os.path.join( DIR_GR, config["samplelist"][sample]["RUN_ID"]+"_kmer_histlist.rds")  for sample in config["samplelist"]
                   ]
 elif ( config["target_out"] == "GR" ):
    OUTPUT_FILES=  [
