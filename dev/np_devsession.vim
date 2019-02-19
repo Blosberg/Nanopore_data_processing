@@ -3,21 +3,17 @@ if &cp | set nocp | endif
 let s:so_save = &so | let s:siso_save = &siso | set so=0 siso=0
 let v:this_session=expand("<sfile>:p")
 silent only
-cd ~/projects/nanopore
 if expand('%') == '' && !&modified && line('$') <= 1 && getline(1) == ''
   let s:wipebuf = bufnr('%')
 endif
 set shortmess=aoO
 badd +1 Snakefile
 badd +1 scripts/00_SM/rules_wholefastq.py
-badd +27 ~/.vim/foldstyles.vim
 badd +1 scripts/00_SM/rules_chunks.py
 badd +1 scripts/06_GRobjects/npreads_tables2GR.R
 badd +1 scripts/06_GRobjects/npreads_tables2GR_funcs.R
-badd +1 scripts/07_current_analysis/GR_current_analysis.R
-badd +1 scripts/07_current_analysis/GR_current_analysis_funcs.R
-badd +0 README.md
-badd +0 TODO.txt
+badd +1 README.md
+badd +1 TODO.txt
 argglobal
 silent! argdel *
 $argadd Snakefile
@@ -45,7 +41,7 @@ setlocal fdl=0
 setlocal fml=1
 setlocal fdn=20
 setlocal fen
-let s:l = 14 - ((13 * winheight(0) + 21) / 42)
+let s:l = 14 - ((12 * winheight(0) + 20) / 40)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
@@ -62,12 +58,12 @@ setlocal fdl=0
 setlocal fml=1
 setlocal fdn=20
 setlocal fen
-let s:l = 34 - ((33 * winheight(0) + 10) / 21)
+let s:l = 1 - ((0 * winheight(0) + 9) / 19)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-34
-normal! 01|
+1
+normal! 0
 wincmd w
 argglobal
 2argu
@@ -80,14 +76,13 @@ setlocal fdl=0
 setlocal fml=1
 setlocal fdn=20
 setlocal fen
-let s:l = 3 - ((2 * winheight(0) + 10) / 20)
+let s:l = 1 - ((0 * winheight(0) + 10) / 20)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-3
+1
 normal! 0
 wincmd w
-3wincmd w
 wincmd =
 tabedit scripts/06_GRobjects/npreads_tables2GR.R
 set splitbelow splitright
@@ -109,11 +104,11 @@ setlocal fdl=0
 setlocal fml=1
 setlocal fdn=20
 setlocal fen
-let s:l = 42 - ((32 * winheight(0) + 21) / 42)
+let s:l = 43 - ((31 * winheight(0) + 20) / 40)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-42
+43
 normal! 0
 wincmd w
 argglobal
@@ -127,55 +122,11 @@ setlocal fdl=0
 setlocal fml=1
 setlocal fdn=20
 setlocal fen
-let s:l = 2 - ((1 * winheight(0) + 21) / 42)
+let s:l = 4 - ((3 * winheight(0) + 20) / 40)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-2
-normal! 0
-wincmd w
-wincmd =
-tabedit scripts/07_current_analysis/GR_current_analysis.R
-set splitbelow splitright
-wincmd _ | wincmd |
-vsplit
-1wincmd h
-wincmd w
-wincmd t
-set winminheight=1 winheight=1 winminwidth=1 winwidth=1
-wincmd =
-argglobal
-if bufexists('scripts/07_current_analysis/GR_current_analysis.R') | buffer scripts/07_current_analysis/GR_current_analysis.R | else | edit scripts/07_current_analysis/GR_current_analysis.R | endif
-setlocal fdm=expr
-setlocal fde=SnakemakeFolds()
-setlocal fmr={{{,}}}
-setlocal fdi=#
-setlocal fdl=0
-setlocal fml=1
-setlocal fdn=20
-setlocal fen
-let s:l = 1 - ((0 * winheight(0) + 21) / 42)
-if s:l < 1 | let s:l = 1 | endif
-exe s:l
-normal! zt
-1
-normal! 0
-wincmd w
-argglobal
-if bufexists('scripts/07_current_analysis/GR_current_analysis_funcs.R') | buffer scripts/07_current_analysis/GR_current_analysis_funcs.R | else | edit scripts/07_current_analysis/GR_current_analysis_funcs.R | endif
-setlocal fdm=expr
-setlocal fde=SnakemakeFolds()
-setlocal fmr={{{,}}}
-setlocal fdi=#
-setlocal fdl=0
-setlocal fml=1
-setlocal fdn=20
-setlocal fen
-let s:l = 27 - ((20 * winheight(0) + 21) / 42)
-if s:l < 1 | let s:l = 1 | endif
-exe s:l
-normal! zt
-27
+4
 normal! 0
 wincmd w
 wincmd =
@@ -198,12 +149,12 @@ setlocal fdl=0
 setlocal fml=1
 setlocal fdn=20
 setlocal fen
-let s:l = 14 - ((13 * winheight(0) + 21) / 42)
+let s:l = 16 - ((14 * winheight(0) + 20) / 40)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-14
-normal! 077|
+16
+normal! 0
 wincmd w
 argglobal
 if bufexists('TODO.txt') | buffer TODO.txt | else | edit TODO.txt | endif
@@ -215,7 +166,7 @@ setlocal fdl=0
 setlocal fml=1
 setlocal fdn=20
 setlocal fen
-let s:l = 5 - ((4 * winheight(0) + 21) / 42)
+let s:l = 5 - ((4 * winheight(0) + 20) / 40)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
