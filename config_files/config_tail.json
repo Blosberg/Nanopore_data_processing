@@ -1,20 +1,3 @@
-{  
-  "PATHIN"  : "/scratch/AG_Akalin/bosberg/nanopore/data/20190130_1631_293_4Su_IAA_run2/",
-  "PATHOUT" : "/scratch/AG_Akalin/bosberg/nanopore/pipeline_output/20190130_1631_293_4Su_IAA_run2/",
-
-  "input_data_type":     "raw_minION",
-
-  "samplelist": {
-                "da7338d9": { 
-                    "RUN_ID"    : "da7338d9",
-                    "MAXSAMPLEi":  10,
-                    "fastq_prefix": "fastq_runid_da7338d9fd3a28e217b3514efd4aa3bb658f2db2_",
-                    "fastq_suffix": ".fastq"
-                          }
-                },
-
-  "target_out": "reads_GRL",
-
   "ref": {
           "Transcriptome"  : "/scratch/AG_Akalin/refGenomes/hg19_canon/170317_Homo_sapiens.GRCh37.87.chr.gtf",
           "Genome_DIR"     : "/scratch/AG_Akalin/refGenomes/hg19_canon/",

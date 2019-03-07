@@ -1,7 +1,7 @@
 #!/usr/bin/env python3.5
 import os
 
-# import IPython; 
+# import IPython;
 
 # set config file
 configfile: "./config.json"
@@ -14,14 +14,17 @@ MM2        = config["progs"]["minimap"]
 SAMTOOLS   = config["progs"]["SAMTOOLS"]
 nanopolish = config["progs"]["nanopolish"]
 
-RefTranscriptome = config["ref"]["Transcriptome"]
-GENOME_VERSION   = config["ref"]["Genome_version"]
-RmdReportScript  = os.path.join(config["scripts"]["script_folder"],"final_report","Nanopore_report.Rmd")
-input_data_type  = config["input_data_type"]
+RefTranscriptome   = config["ref"]["Transcriptome"]
+GENOME_VERSION     = config["ref"]["Genome_version"]
+RmdReportScript    = os.path.join(config["scripts"]["script_folder"],"final_report","Nanopore_report.Rmd")
+input_data_type    = config["input_data_type"]
 
-tables2GR_main   = os.path.join( config["scripts"]["script_folder"], config["scripts"]["Rmain_tableGRconv_file"] )
+R_tables2GR_main     = os.path.join( config["scripts"]["script_folder"], config["scripts"]["Rmain_table2GRconv"] )
+R_tables2GR_funcs    = os.path.join( config[ "scripts"]["script_folder"], config[ "scripts"]["Rfuncs_table2GRconv"] )
 
-build_histlist_main   = os.path.join( config["scripts"]["script_folder"], config["scripts"]["build_histlist_main"] )
+R_flattenreads_main  = os.path.join( config["scripts"]["script_folder"], config["scripts"]["Rmain_flattenreads"] )
+
+R_build_histlist_main   = os.path.join( config["scripts"]["script_folder"], config["scripts"]["Rmain_build_histlist"] )
 #------------------------------------------------------
 #--- define output directories
 
@@ -38,36 +41,36 @@ DIR_REPORT             = config["PATHOUT"]+"Final_report/"
 DIR_REFGENOME          = config['ref']['Genome_DIR']
 
 #------------------------------------------------------
-#--- check that the pipeline can be executed: 
+#--- check that the pipeline can be executed:
 
 # check for write access to refgenome dir
 if ( not os.access(DIR_REFGENOME, os.W_OK) ):
    print("Write access to refgenome folder is denied. Checking if necessary indexing files already exist: ... ")
 
-   if( not os.path.isfile(os.path.join(DIR_REFGENOME , config['ref']['Genome_version']+ ".mmi")) ):  
+   if( not os.path.isfile(os.path.join(DIR_REFGENOME , config['ref']['Genome_version']+ ".mmi")) ):
       bail("minimap index files not found, and cannot be created. Aborting")
 
    else:
       print("Refgenome index files are present. Continuing... ")
 
 #---  Create symbolic links to PATHIN so that indexing/etc can be performed in
-# written pathout 
+# written pathout
 
-if ( input_data_type == "raw_minION"): 
+if ( input_data_type == "raw_minION"):
    # the snakemake rules defined in the following included script assume
    # that the minION output has been "chunked" into sequential files, and
-   # will have to be reassembled. 
+   # will have to be reassembled.
    include   : os.path.join( config["scripts"]["script_folder"], config["scripts"]["rules_chunks"] )
 
    for sample in config["samplelist"]:
        for linkindex in range(0, config['samplelist'][sample]["MAXSAMPLEi"] + 1):
           linkname = config['samplelist'][sample]["RUN_ID"] + "_" + str(linkindex) + config['samplelist'][sample]["fastq_suffix"]
 
-          source   = getPathCase( config["PATHIN"], "fastq", "pass",config["samplelist"][sample]["fastq_prefix"] + str(linkindex) +  config["samplelist"][sample]["fastq_suffix"], "raw_minION") 
+          source   = getPathCase( config["PATHIN"], "fastq", "pass",config["samplelist"][sample]["fastq_prefix"] + str(linkindex) +  config["samplelist"][sample]["fastq_suffix"], "raw_minION")
 
           makelink(  source, os.path.join( DIR_SYMLINKS, linkname) )
 
- 
+
 elif( input_data_type == "fastq"):
    # Do some other stuff
    include   : os.path.join( config["scripts"]["script_folder"], config["scripts"]["rules_wholefastq"] )
@@ -78,7 +81,7 @@ elif( input_data_type == "fastq"):
        makelink( os.path.join(config["PATHIN"], config["samplelist"][sample]["fastq_prefix"] + config["samplelist"][sample]["fastq_suffix"] ),
                  os.path.join( DIR_SYMLINKS, linkname))
 
-else: 
+else:
    print("Unrecognized input data format. Terminating.")
    exit(1)
 
@@ -93,7 +96,7 @@ elif ( config["target_out"] == "histlist" ):
    OUTPUT_FILES=  [
                   os.path.join( DIR_GR, config["samplelist"][sample]["RUN_ID"]+"_kmer_histlist.rds")  for sample in config["samplelist"]
                   ]
-elif ( config["target_out"] == "GR" ):
+elif ( config["target_out"] == "reads_GRL" ):
    OUTPUT_FILES=  [
                   os.path.join( DIR_GR, config["samplelist"][sample]["RUN_ID"]+"_reads_GRL.rds")  for sample in config["samplelist"]
                   ]
@@ -110,14 +113,14 @@ else:
 # print("input_data_type = " + config["input_data_type"])
 # print("target out = " + config["target_out"])
 # print("OUTPUT_FILES=")
-# for x in OUTPUT_FILES: 
+# for x in OUTPUT_FILES:
 #   print(x)
 # print("\n finished outputting output files \n\n ")
 # IPython.embed()
-# 
+#
 # ========================================================================
 #
-#   BEGIN RULES    
+#   BEGIN RULES
 #
 # ========================================================================
 
@@ -142,18 +145,18 @@ rule make_report:
         logfile = os.path.join( DIR_REPORT, "final_report_{sample}.log")
     message:
         fmt("producing final report")
-    shell: 
+    shell:
         " Rscript -e  '{params} "
         " fin_readalignment_bam = \"{input.aligned_reads_bam}\"; "
         " fin_Transcript        = \"{input.transcriptome}\";"
         " fin_GRobj             = \"{input.GRobj}\";"
-        " Genome_version        =\"{GENOME_VERSION}\"; " 
-        " rmarkdown::render(\"{RmdReportScript}\", output_file = \"{output}\" ) ' "  
+        " Genome_version        =\"{GENOME_VERSION}\"; "
+        " rmarkdown::render(\"{RmdReportScript}\", output_file = \"{output}\" ) ' "
 
 #------------------------------------------------------
 
-# Align the events to the reference genome. 
-# The wildcard "chunk" can simply be "full", in cases 
+# Align the events to the reference genome.
+# The wildcard "chunk" can simply be "full", in cases
 # where there are no chunks
 rule np_event_align:
     input:
@@ -193,11 +196,11 @@ rule index_sortedbam:
 rule np_index:
     input:
         fast5_folder = lambda wc: getPathCase( config['PATHIN'], 'fast5', 'pass', wc.chunk, input_data_type ),
-        fastq_file   = lambda wc: os.path.join( DIR_SYMLINKS, config['samplelist'][wc.sample]["RUN_ID"] + "_" + str(wc.chunk) + config['samplelist'][wc.sample]["fastq_suffix"] ) 
+        fastq_file   = lambda wc: os.path.join( DIR_SYMLINKS, config['samplelist'][wc.sample]["RUN_ID"] + "_" + str(wc.chunk) + config['samplelist'][wc.sample]["fastq_suffix"] )
     output:
-        npi    = os.path.join( DIR_SYMLINKS, "{sample}_{chunk}"+config["samplelist"][sample]["fastq_suffix"]+".index"  ), 
+        npi    = os.path.join( DIR_SYMLINKS, "{sample}_{chunk}"+config["samplelist"][sample]["fastq_suffix"]+".index"  ),
         fai    = os.path.join( DIR_SYMLINKS, "{sample}_{chunk}"+config["samplelist"][sample]["fastq_suffix"]+".index.fai" ),
-        gzi    = os.path.join( DIR_SYMLINKS, "{sample}_{chunk}"+config["samplelist"][sample]["fastq_suffix"]+".index.gzi" ),  
+        gzi    = os.path.join( DIR_SYMLINKS, "{sample}_{chunk}"+config["samplelist"][sample]["fastq_suffix"]+".index.gzi" ),
         readdb = os.path.join( DIR_SYMLINKS, "{sample}_{chunk}"+config["samplelist"][sample]["fastq_suffix"]+".index.readdb")
     params:
         options    = " index -d "

@@ -31,7 +31,6 @@ sequence_trace <- function( sequence_in       = stop("sequence     must be provi
   seq_in_singlechars = unlist( strsplit(sequence_in, split="") )
   
   # Check how many map to explicit and trace bases:
-  Charmap_explicit = match( seq_in_singlechars, base_list_explicit )
   Charmap_trace    = match( seq_in_singlechars, unlist( names(base_tracemap_in) ) )
   
   # check that all base positions are recognized and accounted for.
@@ -70,7 +69,8 @@ return(seqs)
 # ==================================================================
 # --- take average of bases in a given position
 trace_histogram <- function( histlist_in  = stop("reads must be provided"),
-                             sequence_in  = stop("sequence must be provided")
+                             sequence_in  = stop("sequence must be provided"),
+                             return_as_histlist_element = FALSE
                              )
 {
   k             = nchar(sequence_in) # number of bases under consideration.
@@ -91,27 +91,19 @@ trace_histogram <- function( histlist_in  = stop("reads must be provided"),
   if( abs((NORM - nseqs)/nseqs) > 0.0001 )
     {stop("ERROR: normalization violation in sequence trace function.")}
 
-return( (1/NORM)*cumulative_hist )
+  if( return_as_histlist_element )
+  {
+    result = list( "breaks"    = histlist_in[[ 1 ]]$breaks,
+                   "density"   = (cumulative_hist/nseqs)/dx_arr,
+                   "mids"      = histlist_in[[ 1 ]]$mids,
+                   "xname"     = paste0(histlist_in$xname, "-->seq: ", sequence_in),
+                   "equidist"  = histlist_in[[ 1 ]]$equidist
+                   )
+    
+  }else{
+  result =  (1/NORM)*cumulative_hist; 
+  }
+  
+  return( result )
 }
-
-# ==================================================================
-# --- plot_traces_over_bases
-plot_background_hist <- function( xdat     = stop("xdat must be provided"),
-                                  hist_in  = stop("histogram must be provided"))
-{
-  plot( c(min(xdat), xdat, max(xdat)),
-        c(0, hist_in, 0),
-        col   = 'grey43',
-        lty   = "blank",
-        type  = "l",
-        xlab  = "Current [pA]",
-        ylab  = "freq",
-        main  = paste("Current distribution for Homopolymers")
-  )
-  polygon(c(min(xdat), xdat, max(xdat)),
-          c(0, hist_in, 0),
-          lty  ="blank",
-          col  = adjustcolor('grey43',alpha.f = 0.3) )
-}
-
 

@@ -19,13 +19,13 @@ args <- commandArgs(trailingOnly=TRUE)
          Render to report
 
          Arguments:
-         --rds_fin_readdat = the input file with an rds object containing the read-partitioned event list.
-         --rds_fout_histlist         = output file for the histogram list to be stored.
-         --logFile               = file to print the logs to
-         --k                     = number of bases in sequences.
-         --current_histmin       = min value considered in the current histogram,
-         --current_histmax       = max   .... ^^ ,
-         --current_histres       = resolution of ... ^^
+         --rds_fin_readdat    = the input file with an rds object containing the read-partitioned event list.
+         --rds_fout_histlist  = output file for the histogram list to be stored.
+         --logFile            = file to print the logs to
+         --k                  = number of bases in sequences.
+         --current_histmin    = min value considered in the current histogram,
+         --current_histmax    = max   .... ^^ ,
+         --current_histres    = resolution of ... ^^
 
          --help              - print this text
 

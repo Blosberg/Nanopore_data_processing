@@ -53,22 +53,29 @@ get_flat_signal_over_all_reads  <- function( reads_GRL_in     = stop("reads_GRL_
 
 # ===============================================================
 # take a GR object for a single read and eliminate redundance (average overlapping positions)
-flatten_read  <- function( read_GR_in           = stop("read_GR_in must be provided"),
-                           perform_sanity_check = FALSE
+flatten_read  <- function( read_GR_in            = stop("read_GR_in must be provided"),
+                           perform_sanity_checks = FALSE
                           )
 { 
   # --- takes a specific read and combines all events associated with the same position
   # --- producing a single value for each position.
   # --- skipped positions are left as "NA"s
-  
-  chr         = unique( seqnames( read_GR_in ) )
-  str         = unique( strand(   read_GR_in ) )
-  if( length( chr) != 1 || length( str) != 1 )
-    { stop("irregular seqnames and strands in read") }
-  read_index      = unique( read_GR_in$read_index )
-  if( length( read_index ) != 1 )
-    { stop("in flatten_read: read_GR_in is not associated with a single read") }
 
+  if ( perform_sanity_checks )
+    {
+    chr         = unique( seqnames( read_GR_in ) )
+    str         = unique( strand(   read_GR_in ) )
+    if( length( chr) != 1 || length( str) != 1 )
+      { stop("irregular seqnames and strands in read") }
+    read_index      = unique( read_GR_in$read_index )
+    if( length( read_index ) != 1 )
+      { stop("in flatten_read: read_GR_in is not associated with a single read") }
+  } else {
+    chr         = as.character( seqnames( read_GR_in[1] ) )
+    str         = as.character( strand(   read_GR_in[1] ) )
+    read_index  = read_GR_in[1]$read_index 
+    }
+  
   read_GR_in_Ns_removed <- read_GR_in[ read_GR_in$model_kmer != "NNNNN" ]
   # ----------
 
@@ -76,7 +83,7 @@ flatten_read  <- function( read_GR_in           = stop("read_GR_in must be provi
   read_GRL_in_splitby_startpos <- split(   read_GR_in_Ns_removed, 
                                            start( read_GR_in_Ns_removed ) )  
   
-    if( perform_sanity_check )
+    if( perform_sanity_checks )
     {  
     # If all is ok, it should return 0 everywhere.
     sanity  <- unlist( lapply( read_GRL_in_splitby_startpos, 
@@ -150,9 +157,9 @@ flatten_GR_at_spec_position  <- function( readposn_GR_in        = stop("read_GR_
     
     #--- excessive sanity checks are just early-stages training wheels
 
-  event_mean   = mean( readposn_GR_in$event_mean )
-  event_length = mean( readposn_GR_in$event_length )
-  event_stdv   = sqrt( sum( readposn_GR_in$event_stdv*readposn_GR_in$event_stdv ))/length(readposn_GR_in)
+  event_mean   = sum(  readposn_GR_in$event_mean * readposn_GR_in$event_length ) / sum(readposn_GR_in$event_length)
+  event_stdv   = sqrt( sum( readposn_GR_in$event_stdv*readposn_GR_in$event_stdv * readposn_GR_in$event_length ) / sum(readposn_GR_in$event_length) )  
+  event_length = sum(  readposn_GR_in$event_length)
   
   
   result <- GRanges( seqnames        = chr_in,

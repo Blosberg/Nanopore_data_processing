@@ -23,7 +23,7 @@ rule create_kmer_histlist:
     message:
         fmt("Build list of histograms for unique kmers in dataset.")
     shell:
-        nice('Rscript', [ build_histlist_main,
+        nice('Rscript', [ R_build_histlist_main,
                           "--current_histmin={params.current_histmin}",
                           "--current_histmax={params.current_histmax}",
                           "--current_histres={params.current_histres}",
@@ -31,6 +31,32 @@ rule create_kmer_histlist:
                           "--rds_fout_histlist={params.RDS_histlist_out}",
                           "--k={params.k}",
                           "--logfile={log.logfile}",] )
+
+# -----------------------------------------------------
+# flatten reads from GRangesList in .RDS format
+# by "flatten", we mean collaps multiple 'events' assigned to the same segment.
+
+rule flatten_reads:
+    input:
+        GRobj_in     = os.path.join( DIR_GR, "{sample}_reads_GRL.rds")
+    output:
+        GRflat_out   = os.path.join( DIR_GR, "{sample}_reads_flat_GRL.rds")
+    params:
+        Rfuncs_table2GRconv = R_tables2GR_funcs,
+        output       = os.path.join( DIR_GR, "{sample}_reads_GRL.rds"),
+        Ealign_files = lambda wc: get_chunkfiles( wc.sample, os.path.join( DIR_EVENTALIGN, "csv_chunks" ), "Ealign", ".csv", True ),
+        samplename   = "{sample}"
+    log:
+        os.path.join( DIR_GR, "{sample}_flattenreads_GRL.log")
+    message:
+        fmt("Convert aligned NP reads to GRanges object")
+    shell:
+        nice('Rscript', [ R_flattenreads_main,
+                         "--Rfuncs_table2GRconv={params.Rfuncs_table2GRconv}",
+                         "--output={params.output}",
+                         "--logFile={log}",
+                         "--samplename={params.samplename}",
+                         "--Ealign_files={params.Ealign_files}"] )
 
 # -----------------------------------------------------
 # produce GRangesList object of current data in .RDS format
@@ -41,20 +67,23 @@ rule create_readcurrent_GRL_obj:
     input:
         csvfile      = lambda wc: get_chunkfiles( wc.sample, os.path.join( DIR_EVENTALIGN, "csv_chunks" ), "Ealign", ".csv", False )
     output:
-        GRobj        = os.path.join( DIR_GR, "{sample}_reads_GRL.rds")
+        GRobj        = os.path.join( DIR_GR, "{sample}_reads_GRL.rds"),
+        poremodel    = os.path.join( DIR_GR, "{sample}_poremodel.tsv")
     params:
-        Rfuncs_tableGRconv_file  = os.path.join( config[ "scripts"]["script_folder"], config[ "scripts"]["Rfuncs_tableGRconv_file"] ),
-        output       = os.path.join( DIR_GR, "{sample}_reads_GRL.rds"),
-        Ealign_files = lambda wc: get_chunkfiles( wc.sample, os.path.join( DIR_EVENTALIGN, "csv_chunks" ), "Ealign", ".csv", True ),
-        samplename   = "{sample}"
+        Rfuncs_table2GRconv = R_tables2GR_funcs,
+        output_reads_GRL    = os.path.join( DIR_GR, "{sample}_reads_GRL.rds"),
+        output_poremodel    = os.path.join( DIR_GR, "{sample}_poremodel.tsv"),
+        Ealign_files        = lambda wc: get_chunkfiles( wc.sample, os.path.join( DIR_EVENTALIGN, "csv_chunks" ), "Ealign", ".csv", True ),
+        samplename          = "{sample}"
     log:
         os.path.join( DIR_GR, "{sample}_reads_GRL_conversion.log")
     message:
         fmt("Convert aligned NP reads to GRanges object")
     shell:
-        nice('Rscript', [ tables2GR_main,
-                         "--Rfuncs_tableGRconv_file={params.Rfuncs_tableGRconv_file}",
-                         "--output={params.output}",
+        nice('Rscript', [ R_tables2GR_main,
+                         "--Rfuncs_table2GRconv={params.Rfuncs_table2GRconv}",
+                         "--output_reads_GRL={params.output_reads_GRL}",
+                         "--output_poremodel={params.output_poremodel}",
                          "--logFile={log}",
                          "--samplename={params.samplename}",
                          "--Ealign_files={params.Ealign_files}"] )
