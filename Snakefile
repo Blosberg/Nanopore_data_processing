@@ -1,11 +1,28 @@
 #!/usr/bin/env python3.5
-import os
+import os, sys, json, csv, yaml
+import argparse
 
 # import IPython;
 
 # set config file
-configfile: "./config.json"
-include   : os.path.join( config["scripts"]["script_folder"], config["scripts"]["pyfunc_defs"] )
+config_defaults="dev/config_defaults.json"
+settings = yaml.safe_load(open(config_defaults, 'r'))
+
+config_userin="config.json"
+update_config( settings,yaml.safe_load( open( config_userin, 'r')))
+
+config_log="configlog_out.json"
+
+# store a log of the config file:
+with open(config_log, 'w') as outfile:
+    dumps = json.dumps(settings,
+                       indent=4, sort_keys=True,
+                       separators=(",",": "), ensure_ascii=True)
+    outfile.write(dumps)
+
+config = json.load(open(config_log, 'r'))
+
+include: os.path.join( config["scripts"]["script_folder"], config["scripts"]["pyfunc_defs"] )
 
 # ------------------------------------------------------
 #--- Dependencies:
@@ -23,6 +40,7 @@ R_tables2GR_main     = os.path.join( config["scripts"]["script_folder"], config[
 R_tables2GR_funcs    = os.path.join( config[ "scripts"]["script_folder"], config[ "scripts"]["Rfuncs_table2GRconv"] )
 
 R_flattenreads_main  = os.path.join( config["scripts"]["script_folder"], config["scripts"]["Rmain_flattenreads"] )
+R_flattenreads_funcs = os.path.join( config["scripts"]["script_folder"], config["scripts"]["Rfuncs_flattenreads"] )
 
 R_build_histlist_main   = os.path.join( config["scripts"]["script_folder"], config["scripts"]["Rmain_build_histlist"] )
 #------------------------------------------------------
@@ -64,7 +82,7 @@ if ( input_data_type == "raw_minION"):
 
    for sample in config["samplelist"]:
        for linkindex in range(0, config['samplelist'][sample]["MAXSAMPLEi"] + 1):
-          linkname = config['samplelist'][sample]["RUN_ID"] + "_" + str(linkindex) + config['samplelist'][sample]["fastq_suffix"]
+          linkname = sample + "_" + str(linkindex) + config['samplelist'][sample]["fastq_suffix"]
 
           source   = getPathCase( config["PATHIN"], "fastq", "pass",config["samplelist"][sample]["fastq_prefix"] + str(linkindex) +  config["samplelist"][sample]["fastq_suffix"], "raw_minION")
 
@@ -77,7 +95,7 @@ elif( input_data_type == "fastq"):
 
    for sample in config["samplelist"]:
 
-       linkname = config['samplelist'][sample]["RUN_ID"] + config['samplelist'][sample]["fastq_suffix"]
+       linkname = sample + config['samplelist'][sample]["fastq_suffix"]
        makelink( os.path.join(config["PATHIN"], config["samplelist"][sample]["fastq_prefix"] + config["samplelist"][sample]["fastq_suffix"] ),
                  os.path.join( DIR_SYMLINKS, linkname))
 
@@ -90,19 +108,23 @@ else:
 
 if ( config["target_out"] == "report" ):
    OUTPUT_FILES=  [
-                  os.path.join( DIR_REPORT, ""+config["samplelist"][sample]["RUN_ID"]+"_report.html") for sample in config["samplelist"]
+                  os.path.join( DIR_REPORT, ""+ sample +"_report.html") for sample in config["samplelist"]
                   ]
 elif ( config["target_out"] == "histlist" ):
    OUTPUT_FILES=  [
-                  os.path.join( DIR_GR, config["samplelist"][sample]["RUN_ID"]+"_kmer_histlist.rds")  for sample in config["samplelist"]
+                  os.path.join( DIR_GR, sample+"_kmer_histlist.rds")  for sample in config["samplelist"]
+                  ]
+elif ( config["target_out"] == "flatreads_GRL" ):
+   OUTPUT_FILES=  [
+                  os.path.join( DIR_GR, sample+"_reads_flat_GRL.rds")  for sample in config["samplelist"]
                   ]
 elif ( config["target_out"] == "reads_GRL" ):
    OUTPUT_FILES=  [
-                  os.path.join( DIR_GR, config["samplelist"][sample]["RUN_ID"]+"_reads_GRL.rds")  for sample in config["samplelist"]
+                  os.path.join( DIR_GR, sample+"_reads_GRL.rds")  for sample in config["samplelist"]
                   ]
 elif ( config["target_out"] == "bam" ):
    OUTPUT_FILES=  [
-                  os.path.join( DIR_SORTED_MINIMAPPED, "run_"+ config["samplelist"][sample]["RUN_ID"]+".sorted.bam") for sample in config["samplelist"]
+                  os.path.join( DIR_SORTED_MINIMAPPED, "run_"+ sample+".sorted.bam") for sample in config["samplelist"]
                   ]
 else:
    print("Unrecognized target output file format: ", config["target_out"], " ... Terminating.")
@@ -196,7 +218,7 @@ rule index_sortedbam:
 rule np_index:
     input:
         fast5_folder = lambda wc: getPathCase( config['PATHIN'], 'fast5', 'pass', wc.chunk, input_data_type ),
-        fastq_file   = lambda wc: os.path.join( DIR_SYMLINKS, config['samplelist'][wc.sample]["RUN_ID"] + "_" + str(wc.chunk) + config['samplelist'][wc.sample]["fastq_suffix"] )
+        fastq_file   = lambda wc: os.path.join( DIR_SYMLINKS, wc.sample + "_" + str(wc.chunk) + config['samplelist'][wc.sample]["fastq_suffix"] )
     output:
         npi    = os.path.join( DIR_SYMLINKS, "{sample}_{chunk}"+config["samplelist"][sample]["fastq_suffix"]+".index"  ),
         fai    = os.path.join( DIR_SYMLINKS, "{sample}_{chunk}"+config["samplelist"][sample]["fastq_suffix"]+".index.fai" ),

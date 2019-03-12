@@ -18,11 +18,14 @@ args <- commandArgs(trailingOnly=TRUE)
          Render to report
 
          Arguments:
-         --rds_fin_readdat     = the input file with an rds object containing the read-partitioned event list.
-         --rds_fout_flattened  = output file for the histogram list to be stored.
-         --logFile             = file to print the logs to
-	 
-	 --flattenscript_funcs = script of necessary functions
+
+	 --Rfuncs_flattenreads = script of necessary functions
+
+	 --readsGRL_in         = the input file with an rds object containing the read-partitioned event list.
+
+	 --flatreadsGRL_out = output file for the histogram list to be stored.
+
+	 --logFile             = file to print the logs to
 
          --help               ==>  print this text
 
@@ -32,10 +35,6 @@ args <- commandArgs(trailingOnly=TRUE)
      q(save="no")
    }
 
-#  argsL=list( "rds_fin_readdat"     = "/clusterhome/bosberg/projects/nanopore/scripts/06_GRobjects/testreads_50_GRL.rds",
-#              "rds_fout_flattened"  = "/clusterhome/bosberg/projects/nanopore/scripts/06_GRobjects/testreads_50_flattened_GRL.rds",
-#              "flattenscript_funcs" = "/clusterhome/bosberg/projects/nanopore/scripts/06_GRobjects/flatten_reads_funcs.R",
-#              "logfile"             = "/clusterhome/bosberg/projects/nanopore/scripts/06_GRobjects/testreads_50_flattening.log"     )
 
    ## Parse arguments (we expect the form --arg=value)
    parseArgs <- function(x) strsplit(sub("^--", "", x), "=")
@@ -45,37 +44,31 @@ args <- commandArgs(trailingOnly=TRUE)
 
    names(argsL) <- argsDF$V1
 
-source( argsL$flattenscript_funcs )
-   # ==================================================================
+ # argsL <- list (
+# "Rfuncs_flattenreads" = "/home/bosberg/projects/nanopore/scripts/06_GRobjects/Rfuncs_flatten_reads.R",
+# "readsGRL_in"         = "/scratch/AG_Akalin/bosberg/nanopore/pipeline_output/testset/06_GRobjects/TESTSET0_reads_GRL.rds",
+# "flatreadsGRL_out"    = "/scratch/AG_Akalin/bosberg/nanopore/pipeline_output/testset/06_GRobjects/TESTSET0_reads_flat_GRL.rds",
+# "logFile"             = "/scratch/AG_Akalin/bosberg/nanopore/pipeline_output/testset/06_GRobjects/TESTSET0_flattenreads_GRL.log",
+# "samplename"          = "TESTSET0" )
 
-  # read in the rds object of all experimental events split by read.
-  readdat            <- readRDS( argsL$rds_fin_readdat)
+# ==================================================================
+
+source( argsL$Rfuncs_flattenreads )
+
+# read in the rds object of all experimental events split by read.
+  readdat            <- readRDS( argsL$readsGRL_in )
   GRLin_splitby_read <- readdat$Events_GRL_splitbyread
 
-  start_time <- Sys.time()
-  flatten_read( read_GR_in = testread_lean )
-  end_time <- Sys.time()
-
-  
-  start_time <- Sys.time()
-  flatten_read( read_GR_in = testread_fat )
-  end_time <- Sys.time()
-
-  
-  start_time <- Sys.time()
   reads_flattened_GRL <- lapply( GRLin_splitby_read, function(r) flatten_read( read_GR_in = r) )
-  end_time <- Sys.time()
-
 
  # Now export this output:
  saveRDS( reads_flattened_GRL,
-          file = argsL$rds_fout_flattened )
-
+          file = argsL$flatreadsGRL_out )
 
  write( x = paste0( " flatten_reads_main complete. ",
                    as.character(length(reads_flattened_GRL)),
                    " histograms written to file ",
                    argsL$rds_fout_flattened ),
-        file = argsL$logfile,
+        file   = argsL$logFile,
         append = TRUE
         )

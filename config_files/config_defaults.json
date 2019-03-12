@@ -1,6 +1,8 @@
 {
+      
+   "target_out": "reads_GRL",
 
-  "ref": {
+   "ref": {
           "Transcriptome"  : "/scratch/AG_Akalin/refGenomes/hg19_canon/170317_Homo_sapiens.GRCh37.87.chr.gtf",
           "Genome_DIR"     : "/scratch/AG_Akalin/refGenomes/hg19_canon/",
           "Genome_version" : "hg19_canon"
@@ -9,7 +11,7 @@
    "progs": {
         "minimap":    "./dev/deps/minimap2/minimap2",
         "nanopolish": "./dev/deps/nanopolish/nanopolish",
-        "SAMTOOLS":   "${GUIX_PROFILE}/bin/samtools"
+        "SAMTOOLS":   "samtools"
             },
    "scripts": {
         "script_folder":            "/home/bosberg/projects/nanopore/scripts/",

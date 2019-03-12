@@ -42,21 +42,21 @@ rule flatten_reads:
     output:
         GRflat_out   = os.path.join( DIR_GR, "{sample}_reads_flat_GRL.rds")
     params:
-        Rfuncs_table2GRconv = R_tables2GR_funcs,
-        output       = os.path.join( DIR_GR, "{sample}_reads_GRL.rds"),
-        Ealign_files = lambda wc: get_chunkfiles( wc.sample, os.path.join( DIR_EVENTALIGN, "csv_chunks" ), "Ealign", ".csv", True ),
-        samplename   = "{sample}"
+        Rfuncs_flatten_reads = R_flattenreads_funcs,
+        readsGRL_in          = os.path.join( DIR_GR, "{sample}_reads_GRL.rds"),
+        flatreadsGRL_out    = os.path.join( DIR_GR, "{sample}_reads_flat_GRL.rds"),
+        samplename           = "{sample}"
     log:
         os.path.join( DIR_GR, "{sample}_flattenreads_GRL.log")
     message:
-        fmt("Convert aligned NP reads to GRanges object")
+        fmt("Flatten intra-read events with coincident alignments")
     shell:
         nice('Rscript', [ R_flattenreads_main,
-                         "--Rfuncs_table2GRconv={params.Rfuncs_table2GRconv}",
-                         "--output={params.output}",
+                         "--Rfuncs_flattenreads={params.Rfuncs_flatten_reads}",
+                         "--readsGRL_in={params.readsGRL_in}",
+                         "--flatreadsGRL_out={params.flatreadsGRL_out}",
                          "--logFile={log}",
-                         "--samplename={params.samplename}",
-                         "--Ealign_files={params.Ealign_files}"] )
+                         "--samplename={params.samplename}"] )
 
 # -----------------------------------------------------
 # produce GRangesList object of current data in .RDS format
@@ -148,7 +148,7 @@ rule filter_nonaligned_minimap:
 rule align_minimap:
     input:
         mmiref   = os.path.join( DIR_REFGENOME , config['ref']['Genome_version']+ ".mmi" ),
-        sample   = lambda wc: os.path.join( DIR_SYMLINKS,   config['samplelist'][sample]["RUN_ID"] + "_" + str(wc.chunk) + config['samplelist'][sample]["fastq_suffix"] )
+        sample   = lambda wc: os.path.join( DIR_SYMLINKS,   sample + "_" + str(wc.chunk) + config['samplelist'][sample]["fastq_suffix"] )
     output:
         aligned  = os.path.join( DIR_ALIGNED_MINIMAP, "run_{sample}_{chunk}.sam" )
     params:

@@ -13,31 +13,5 @@
                           }
                 },
 
-  "target_out": "reads_GRL",
-
-  "ref": {
-          "Transcriptome"  : "/scratch/AG_Akalin/refGenomes/hg19_canon/170317_Homo_sapiens.GRCh37.87.chr.gtf",
-          "Genome_DIR"     : "/scratch/AG_Akalin/refGenomes/hg19_canon/",
-          "Genome_version" : "hg19_canon"
-          },
-
-   "progs": {
-        "minimap":    "./dev/deps/minimap2/minimap2",
-        "nanopolish": "./dev/deps/nanopolish/nanopolish",
-        "SAMTOOLS":   "samtools"
-            },
-   "scripts": {
-        "script_folder":            "/home/bosberg/projects/nanopore/scripts/",
-        "Rmain_build_histlist":      "06_GRobjects/build_currenthistlist_from_GRL_reads.R",
-        "Rmain_flattenreads":        "scripts/06_GRobjects/flatten_reads_main.R",
-        "Rfuncs_flattenreads":        "scripts/06_GRobjects/flatten_reads_funcs.R",
-        "Rmain_table2GRconv_file":   "06_GRobjects/npreads_tables2GR.R",
-        "Rfuncs_table2GRconv_file":  "06_GRobjects/npreads_tables2GR_funcs.R",
-        "pyfunc_defs":               "00_SM/func_defs.py",
-        "rules_chunks":              "00_SM/rules_chunks.py",
-        "rules_wholefastq":          "00_SM/rules_wholefastq.py"
-            },
-   "execution":{
-        "nice": "0"
-            }
+  "target_out": "reads_GRL"
 }

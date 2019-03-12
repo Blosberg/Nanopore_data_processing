@@ -1,0 +1,18 @@
+{  
+  "PATHIN"  : "/scratch/AG_Akalin/bosberg/nanopore/data/testset/",
+  "PATHOUT" : "/scratch/AG_Akalin/bosberg/nanopore/pipeline_output/testset/",
+
+  "input_data_type":     "raw_minION",
+
+  "samplelist": {
+                "TESTSET0": { 
+                    "RUN_ID"    : "TESTSET0",
+                    "MAXSAMPLEi":  0,
+                    "fastq_prefix": "fastq_runid_TESTSET0_",
+                    "fastq_suffix": ".fastq"
+                          }
+                },
+
+  "target_out": "reads_GRL"
+
+}
