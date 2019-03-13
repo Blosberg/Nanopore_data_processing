@@ -20,7 +20,12 @@ for sample in config["samplelist"]:
     DATPATH = os.path.join(config["PATHIN"], config["samplelist"][sample]["subdir"], "fast5", "pass" )
 
     # define a list of these subentries:
-    config["samplelist"][sample]["chunkdirlist"] = [entry.name for entry in os.scandir( DATPATH ) if entry.is_dir()]
+    unsorted_stringlist =  [entry.name for entry in os.scandir( DATPATH ) if entry.is_dir()]
+    intlist = list( map(int, unsorted_stringlist) )
+    intlist.sort()   
+
+    config["samplelist"][sample]["chunkdirlist"] = list( map(str, intlist)) 
+
 
 # store a log of the config file we just built:
 config_log="configlog_out.json"
