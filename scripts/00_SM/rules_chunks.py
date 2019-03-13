@@ -8,18 +8,18 @@
 # current values for each unique kmer observed.
 rule create_kmer_histlist:
     input:
-        RDS_GRLreads       = os.path.join( DIR_GR, "{sample}_reads_GRL.rds")
+        RDS_GRLreads       = os.path.join( config["PATHOUT"], config["samplelist"][sample]["subdir"], SUBDIR_GR, "{sample}_reads_GRL.rds")
     output:
-        RDS_histlist       = os.path.join( DIR_GR, "{sample}_kmer_histlist.rds")
+        RDS_histlist       = os.path.join( config["PATHOUT"], config["samplelist"][sample]["subdir"], SUBDIR_GR, "{sample}_kmer_histlist.rds")
     params:
         current_histmin=50,
         current_histmax=150,
         current_histres=0.5,
-        RDS_GRLreads_in=os.path.join( DIR_GR, "{sample}_reads_GRL.rds"),
-        RDS_histlist_out=os.path.join( DIR_GR, "{sample}_kmer_histlist.rds"),
+        RDS_GRLreads_in=os.path.join( config["PATHOUT"], config["samplelist"][sample]["subdir"], SUBDIR_GR, "{sample}_reads_GRL.rds"),
+        RDS_histlist_out=os.path.join( config["PATHOUT"], config["samplelist"][sample]["subdir"], SUBDIR_GR, "{sample}_kmer_histlist.rds"),
         k=5
     log:
-        logfile=os.path.join( DIR_GR, "{sample}_histlist.log")
+        logfile=os.path.join( config["PATHOUT"], config["samplelist"][sample]["subdir"], SUBDIR_GR, "{sample}_histlist.log")
     message:
         fmt("Build list of histograms for unique kmers in dataset.")
     shell:
@@ -38,16 +38,16 @@ rule create_kmer_histlist:
 
 rule flatten_reads:
     input:
-        GRobj_in     = os.path.join( DIR_GR, "{sample}_reads_GRL.rds")
+        GRobj_in     = os.path.join( config["PATHOUT"], config["samplelist"][sample]["subdir"], SUBDIR_GR, "{sample}_reads_GRL.rds")
     output:
-        GRflat_out   = os.path.join( DIR_GR, "{sample}_reads_flat_GRL.rds")
+        GRflat_out   = os.path.join( config["PATHOUT"], config["samplelist"][sample]["subdir"], SUBDIR_GR, "{sample}_reads_flat_GRL.rds")
     params:
         Rfuncs_flatten_reads = R_flattenreads_funcs,
-        readsGRL_in          = os.path.join( DIR_GR, "{sample}_reads_GRL.rds"),
-        flatreadsGRL_out    = os.path.join( DIR_GR, "{sample}_reads_flat_GRL.rds"),
+        readsGRL_in          = os.path.join( config["PATHOUT"], config["samplelist"][sample]["subdir"], SUBDIR_GR, "{sample}_reads_GRL.rds"),
+        flatreadsGRL_out    = os.path.join( config["PATHOUT"], config["samplelist"][sample]["subdir"], SUBDIR_GR, "{sample}_reads_flat_GRL.rds"),
         samplename           = "{sample}"
     log:
-        os.path.join( DIR_GR, "{sample}_flattenreads_GRL.log")
+        os.path.join( config["PATHOUT"], config["samplelist"][sample]["subdir"], SUBDIR_GR, "{sample}_flattenreads_GRL.log")
     message:
         fmt("Flatten intra-read events with coincident alignments")
     shell:
@@ -65,18 +65,18 @@ rule flatten_reads:
 
 rule create_readcurrent_GRL_obj:
     input:
-        csvfile      = lambda wc: get_chunkfiles( wc.sample, os.path.join( DIR_EVENTALIGN, "csv_chunks" ), "Ealign", ".csv", False )
+        csvfile      = lambda wc: get_chunkfiles( wc.sample, os.path.join( config["PATHOUT"], config["samplelist"][sample]["subdir"], SUBDIR_EVENTALIGN, "csv_chunks" ), "Ealign", ".csv", False )
     output:
-        GRobj        = os.path.join( DIR_GR, "{sample}_reads_GRL.rds"),
-        poremodel    = os.path.join( DIR_GR, "{sample}_poremodel.tsv")
+        GRobj        = os.path.join( config["PATHOUT"], config["samplelist"][sample]["subdir"], SUBDIR_GR, "{sample}_reads_GRL.rds"),
+        poremodel    = os.path.join( config["PATHOUT"], config["samplelist"][sample]["subdir"], SUBDIR_GR, "{sample}_poremodel.tsv")
     params:
         Rfuncs_table2GRconv = R_tables2GR_funcs,
-        output_reads_GRL    = os.path.join( DIR_GR, "{sample}_reads_GRL.rds"),
-        output_poremodel    = os.path.join( DIR_GR, "{sample}_poremodel.tsv"),
-        Ealign_files        = lambda wc: get_chunkfiles( wc.sample, os.path.join( DIR_EVENTALIGN, "csv_chunks" ), "Ealign", ".csv", True ),
+        output_reads_GRL    = os.path.join( config["PATHOUT"], config["samplelist"][sample]["subdir"], SUBDIR_GR, "{sample}_reads_GRL.rds"),
+        output_poremodel    = os.path.join( config["PATHOUT"], config["samplelist"][sample]["subdir"], SUBDIR_GR, "{sample}_poremodel.tsv"),
+        Ealign_files        = lambda wc: get_chunkfiles( wc.sample, os.path.join( config["PATHOUT"], config["samplelist"][sample]["subdir"], SUBDIR_EVENTALIGN, "csv_chunks" ), "Ealign", ".csv", True ),
         samplename          = "{sample}"
     log:
-        os.path.join( DIR_GR, "{sample}_reads_GRL_conversion.log")
+        os.path.join( config["PATHOUT"], config["samplelist"][sample]["subdir"], SUBDIR_GR, "{sample}_reads_GRL_conversion.log")
     message:
         fmt("Convert aligned NP reads to GRanges object")
     shell:
@@ -97,9 +97,9 @@ rule merge_bam_files:
     input:
         bami      = lambda wc: get_chunkfiles( wc.sample, os.path.join(DIR_SORTED_MINIMAPPED, "bam_chunks"), "run" , ".sorted.bam", False )
     output:
-        sortedbam = os.path.join( DIR_SORTED_MINIMAPPED, "run_{sample}.sorted.bam")
+        sortedbam = os.path.join( config["PATHOUT"], config["samplelist"][sample]["subdir"], SUBDIR_SORTED_MINIMAPPED, "run_{sample}.sorted.bam")
     log:
-        logfile   = os.path.join( DIR_SORTED_MINIMAPPED, "{sample}.sortbam.log")
+        logfile   = os.path.join( config["PATHOUT"], config["samplelist"][sample]["subdir"], SUBDIR_SORTED_MINIMAPPED, "{sample}.sortbam.log")
     message:
         """ --- combining bam files from post-mapping fastq data. --- """
     shell:
@@ -111,13 +111,13 @@ rule merge_bam_files:
 # and sort by position
 rule convert_sort_minimap:
     input:
-        aligned     = os.path.join( DIR_FILTERED_MINIMAP, "run_{sample}_{chunk}.0filtered.sam")
+        aligned     = os.path.join( config["PATHOUT"], config["samplelist"][sample]["subdir"], SUBDIR_FILTERED_MINIMAP, "run_{sample}_{chunk}.0filtered.sam")
     output:
-        sortedbam   = os.path.join( DIR_SORTED_MINIMAPPED, "bam_chunks", "run_{sample}_{chunk}.sorted.bam")
+        sortedbam   = os.path.join( config["PATHOUT"], config["samplelist"][sample]["subdir"], SUBDIR_SORTED_MINIMAPPED, "bam_chunks", "run_{sample}_{chunk}.sorted.bam")
     params:
         options = "-ax splice "
     log:
-        logfile = os.path.join( DIR_SORTED_MINIMAPPED, "bam_chunks", "run_{sample}_{chunk}.sortbam.log")
+        logfile = os.path.join( config["PATHOUT"], config["samplelist"][sample]["subdir"], SUBDIR_SORTED_MINIMAPPED, "bam_chunks", "run_{sample}_{chunk}.sortbam.log")
     message:
         """ --- converting, sorting, and indexing bam file. --- """
     shell:
@@ -130,11 +130,11 @@ rule convert_sort_minimap:
 #  if != 4 then remove this read
 rule filter_nonaligned_minimap:
     input:
-        aligned  = os.path.join( DIR_ALIGNED_MINIMAP, "run_{sample}_{chunk}.sam" )
+        aligned  = os.path.join( config["PATHOUT"], config["samplelist"][sample]["subdir"], SUBDIR_ALIGNED_MINIMAP, "run_{sample}_{chunk}.sam" )
     output:
-        aligned  = os.path.join( DIR_FILTERED_MINIMAP, "run_{sample}_{chunk}.0filtered.sam" )
+        aligned  = os.path.join( config["PATHOUT"], config["samplelist"][sample]["subdir"], SUBDIR_FILTERED_MINIMAP, "run_{sample}_{chunk}.0filtered.sam" )
     log:
-        log      = os.path.join( DIR_FILTERED_MINIMAP, "run_{sample}_{chunk}.0filtering.log" )
+        log      = os.path.join( config["PATHOUT"], config["samplelist"][sample]["subdir"], SUBDIR_FILTERED_MINIMAP, "run_{sample}_{chunk}.0filtering.log" )
     message:
         """--- filtering unaligned reads from alignment data ---"""
     shell:
@@ -148,13 +148,13 @@ rule filter_nonaligned_minimap:
 rule align_minimap:
     input:
         mmiref   = os.path.join( DIR_REFGENOME , config['ref']['Genome_version']+ ".mmi" ),
-        sample   = lambda wc: os.path.join( DIR_SYMLINKS,   sample + "_" + str(wc.chunk) + config['samplelist'][sample]["fastq_suffix"] )
+        sample   = lambda wc: os.path.join( config["PATHOUT"], config["samplelist"][sample]["subdir"], SUBDIR_SYMLINKS,   sample + "_" + str(wc.chunk) + config['samplelist'][sample]["fastq_suffix"] )
     output:
-        aligned  = os.path.join( DIR_ALIGNED_MINIMAP, "run_{sample}_{chunk}.sam" )
+        aligned  = os.path.join( config["PATHOUT"], config["samplelist"][sample]["subdir"], SUBDIR_ALIGNED_MINIMAP, "run_{sample}_{chunk}.sam" )
     params:
         options  = " -ax splice -uf -k14"
     log:
-        log      = os.path.join( DIR_ALIGNED_MINIMAP, "run_{sample}_{chunk}_alignment.log")
+        log      = os.path.join( config["PATHOUT"], config["samplelist"][sample]["subdir"], SUBDIR_ALIGNED_MINIMAP, "run_{sample}_{chunk}_alignment.log")
     message:
         """--- aligning fastq reads to indexed reference"""
     shell:

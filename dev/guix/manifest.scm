@@ -1,4 +1,6 @@
 (define packages (list "vim"
+"python"
+"python-pyyaml"
 "git"
 "python-ont-tombo"
 "snakemake"

@@ -4,28 +4,38 @@ import argparse
 
 # import IPython;
 
-# set config file
+#-----------------------------------------------------------------
+#--- define settings for config file -----------------------------
 config_defaults="dev/config_defaults.json"
-settings = yaml.safe_load(open(config_defaults, 'r'))
+config = yaml.safe_load(open(config_defaults, 'r'))
 
 config_userin="config.json"
-update_config( settings,yaml.safe_load( open( config_userin, 'r')))
+update_config( config, yaml.safe_load( open( config_userin, 'r')))
 
 config_log="configlog_out.json"
 
-# store a log of the config file:
+# look in the path provided for each sample and build a list of chunks in each case.
+for sample in config["samplelist"]:
+    # set path within this sample's data set to look for chunks
+    DATPATH = os.path.join(config["PATHIN"], config["samplelist"][sample]["subdir"], "fast5", "pass" )
+
+    # define a list of these subentries:
+    config["samplelist"][sample]["chunkdirlist"] = [entry.name for entry in os.scandir( DATPATH ) if entry.is_dir()]
+
+# store a log of the config file we just built:
+config_log="configlog_out.json"
+
 with open(config_log, 'w') as outfile:
-    dumps = json.dumps(settings,
+    dumps = json.dumps(config,
                        indent=4, sort_keys=True,
                        separators=(",",": "), ensure_ascii=True)
     outfile.write(dumps)
 
-config = json.load(open(config_log, 'r'))
-
-include: os.path.join( config["scripts"]["script_folder"], config["scripts"]["pyfunc_defs"] )
 
 # ------------------------------------------------------
 #--- Dependencies:
+
+include: os.path.join( config["scripts"]["script_folder"], config["scripts"]["pyfunc_defs"] )
 
 MM2        = config["progs"]["minimap"]
 SAMTOOLS   = config["progs"]["SAMTOOLS"]
@@ -44,19 +54,19 @@ R_flattenreads_funcs = os.path.join( config["scripts"]["script_folder"], config[
 
 R_build_histlist_main   = os.path.join( config["scripts"]["script_folder"], config["scripts"]["Rmain_build_histlist"] )
 #------------------------------------------------------
-#--- define output directories
+#--- Define output directories
 
-DIR_SYMLINKS           = config["PATHOUT"]+"01_symlinks_fastqindex_chunks/"
-os.makedirs( DIR_SYMLINKS,  exist_ok=True)
+SUBDIR_SYMLINKS           = "01_symlinks_fastqindex_chunks/"
+os.makedirs( os.path.join( config["PATHOUT"], config["samplelist"][sample]["subdir"], SUBDIR_SYMLINKS),  exist_ok=True)
 # -- all the rest will be created by snakemake automatically
 
-DIR_ALIGNED_MINIMAP    = config["PATHOUT"]+"02_MM_aligned_chunks/"
-DIR_FILTERED_MINIMAP   = config["PATHOUT"]+"03_MM_filtered_chunks/"
-DIR_SORTED_MINIMAPPED  = config["PATHOUT"]+"04_MM_sortedbam/"
-DIR_EVENTALIGN         = config["PATHOUT"]+"05_eventalign/"
-DIR_GR                 = config["PATHOUT"]+"06_GRobjects"
-DIR_REPORT             = config["PATHOUT"]+"Final_report/"
-DIR_REFGENOME          = config['ref']['Genome_DIR']
+SUBDIR_ALIGNED_MINIMAP    = "02_MM_aligned_chunks/"
+SUBDIR_FILTERED_MINIMAP   = "03_MM_filtered_chunks/"
+SUBDIR_SORTED_MINIMAPPED  = "04_MM_sortedbam/"
+SUBDIR_EVENTALIGN         = "05_eventalign/"
+SUBDIR_GR                 = "06_GRobjects"
+SUBDIR_REPORT             = "Final_report/"
+DIR_REFGENOME             = config['ref']['Genome_DIR']
 
 #------------------------------------------------------
 #--- check that the pipeline can be executed:
@@ -65,7 +75,7 @@ DIR_REFGENOME          = config['ref']['Genome_DIR']
 if ( not os.access(DIR_REFGENOME, os.W_OK) ):
    print("Write access to refgenome folder is denied. Checking if necessary indexing files already exist: ... ")
 
-   if( not os.path.isfile(os.path.join(DIR_REFGENOME , config['ref']['Genome_version']+ ".mmi")) ):
+   if( not os.path.isfile(DIR_REFGENOME , config['ref']['Genome_version']+ ".mmi")):
       bail("minimap index files not found, and cannot be created. Aborting")
 
    else:
@@ -81,12 +91,18 @@ if ( input_data_type == "raw_minION"):
    include   : os.path.join( config["scripts"]["script_folder"], config["scripts"]["rules_chunks"] )
 
    for sample in config["samplelist"]:
-       for linkindex in range(0, config['samplelist'][sample]["MAXSAMPLEi"] + 1):
+
+       # get subdir for this sample:
+       samplePATH = os.path.join(config["PATHIN"], config["samplelist"][sample]["subdir"] )
+
+       # linke to each chunk directly:
+       for linkindex in config["samplelist"][sample]["chunkdirlist"]:
           linkname = sample + "_" + str(linkindex) + config['samplelist'][sample]["fastq_suffix"]
 
-          source   = getPathCase( config["PATHIN"], "fastq", "pass",config["samplelist"][sample]["fastq_prefix"] + str(linkindex) +  config["samplelist"][sample]["fastq_suffix"], "raw_minION")
 
-          makelink(  source, os.path.join( DIR_SYMLINKS, linkname) )
+          source   = getPathCase( samplePATH, "fastq", "pass",config["samplelist"][sample]["fastq_prefix"] + str(linkindex) +  config["samplelist"][sample]["fastq_suffix"], "raw_minION")
+
+          makelink(  source, os.path.join( config["PATHOUT"], config["samplelist"][sample]["subdir"], SUBDIR_SYMLINKS, linkname) )
 
 
 elif( input_data_type == "fastq"):
@@ -95,36 +111,37 @@ elif( input_data_type == "fastq"):
 
    for sample in config["samplelist"]:
 
+       # get subdir for this sample:
+       samplePATH = os.path.join(config["PATHIN"], config["samplelist"][sample]["subdir"] )
+
        linkname = sample + config['samplelist'][sample]["fastq_suffix"]
-       makelink( os.path.join(config["PATHIN"], config["samplelist"][sample]["fastq_prefix"] + config["samplelist"][sample]["fastq_suffix"] ),
-                 os.path.join( DIR_SYMLINKS, linkname))
+       makelink( os.path.join(samplePATH, config["samplelist"][sample]["fastq_prefix"] + config["samplelist"][sample]["fastq_suffix"] ), os.path.join( config["PATHOUT"], config["samplelist"][sample]["subdir"], SUBDIR_SYMLINKS, linkname))
 
 else:
    print("Unrecognized input data format. Terminating.")
    exit(1)
 
+
 #------------------------------------------------------
 #---  Define output (target) files:
 
 if ( config["target_out"] == "report" ):
-   OUTPUT_FILES=  [
-                  os.path.join( DIR_REPORT, ""+ sample +"_report.html") for sample in config["samplelist"]
-                  ]
+   OUTPUT_FILES=  [ os.path.join( config["PATHOUT"], config["samplelist"][sample]["subdir"], SUBDIR_REPORT, ""+ sample +"_report.html") for sample in config["samplelist"] ]
 elif ( config["target_out"] == "histlist" ):
    OUTPUT_FILES=  [
-                  os.path.join( DIR_GR, sample+"_kmer_histlist.rds")  for sample in config["samplelist"]
+                  os.path.join( config["PATHOUT"], config["samplelist"][sample]["subdir"], SUBDIR_GR, sample+"_kmer_histlist.rds")  for sample in config["samplelist"]
                   ]
 elif ( config["target_out"] == "flatreads_GRL" ):
    OUTPUT_FILES=  [
-                  os.path.join( DIR_GR, sample+"_reads_flat_GRL.rds")  for sample in config["samplelist"]
+                  os.path.join( config["PATHOUT"], config["samplelist"][sample]["subdir"], SUBDIR_GR, sample+"_reads_flat_GRL.rds")  for sample in config["samplelist"]
                   ]
 elif ( config["target_out"] == "reads_GRL" ):
    OUTPUT_FILES=  [
-                  os.path.join( DIR_GR, sample+"_reads_GRL.rds")  for sample in config["samplelist"]
+                  os.path.join( config["PATHOUT"], config["samplelist"][sample]["subdir"], SUBDIR_GR, sample+"_reads_GRL.rds")  for sample in config["samplelist"]
                   ]
 elif ( config["target_out"] == "bam" ):
    OUTPUT_FILES=  [
-                  os.path.join( DIR_SORTED_MINIMAPPED, "run_"+ sample+".sorted.bam") for sample in config["samplelist"]
+                  os.path.join( config["PATHOUT"], config["samplelist"][sample]["subdir"], SUBDIR_SORTED_MINIMAPPED, "run_"+ sample+".sorted.bam") for sample in config["samplelist"]
                   ]
 else:
    print("Unrecognized target output file format: ", config["target_out"], " ... Terminating.")
@@ -134,10 +151,10 @@ else:
 #------------------------------------------------------
 # print("input_data_type = " + config["input_data_type"])
 # print("target out = " + config["target_out"])
-# print("OUTPUT_FILES=")
-# for x in OUTPUT_FILES:
-#   print(x)
-# print("\n finished outputting output files \n\n ")
+print("OUTPUT_FILES=")
+for x in OUTPUT_FILES:
+  print(x)
+print("\n finished outputting output files \n\n ")
 # IPython.embed()
 #
 # ========================================================================
@@ -155,16 +172,16 @@ rule all:
 # build the final output report in html format
 rule make_report:
     input:
-        aligned_reads_bam = os.path.join( DIR_SORTED_MINIMAPPED, "run_{sample}.sorted.bam"),
+        aligned_reads_bam = os.path.join( config["PATHOUT"], config["samplelist"][sample]["subdir"], SUBDIR_SORTED_MINIMAPPED, "run_{sample}.sorted.bam"),
         transcriptome     = RefTranscriptome,
-        GRobj             = os.path.join( DIR_GR, "{sample}_reads_GRL.rds")
+        GRobj             = os.path.join( config["PATHOUT"], config["samplelist"][sample]["subdir"], SUBDIR_GR, "{sample}_reads_GRL.rds")
     output:
-        os.path.join( DIR_REPORT, "{sample}_report.html")
+        os.path.join( config["PATHOUT"], config["samplelist"][sample]["subdir"], SUBDIR_REPORT, "{sample}_report.html")
     params:
         " readcov_THRESH = 10;   ",
         " yplotmax = 10000; "
     log:
-        logfile = os.path.join( DIR_REPORT, "final_report_{sample}.log")
+        logfile = os.path.join( config["PATHOUT"], config["samplelist"][sample]["subdir"], SUBDIR_REPORT, "final_report_{sample}.log")
     message:
         fmt("producing final report")
     shell:
@@ -182,17 +199,17 @@ rule make_report:
 # where there are no chunks
 rule np_event_align:
     input:
-        sortedbam             = os.path.join( DIR_SORTED_MINIMAPPED, "bam_chunks", "run_{sample}_{chunk}.sorted.bam"),
-        NOTCALLED_indexedbam  = os.path.join( DIR_SORTED_MINIMAPPED, "bam_chunks", "run_{sample}_{chunk}.sorted.bam.bai"),
-        fastq_file            = os.path.join( DIR_SYMLINKS,  "{sample}_{chunk}" +config["samplelist"][sample]["fastq_suffix"]),
-        fastq_npi             = os.path.join( DIR_SYMLINKS,  "{sample}_{chunk}" + config["samplelist"][sample]["fastq_suffix"] + ".index"),
+        sortedbam             = os.path.join( config["PATHOUT"], config["samplelist"][sample]["subdir"], SUBDIR_SORTED_MINIMAPPED, "bam_chunks", "run_{sample}_{chunk}.sorted.bam"),
+        NOTCALLED_indexedbam  = os.path.join( config["PATHOUT"], config["samplelist"][sample]["subdir"], SUBDIR_SORTED_MINIMAPPED, "bam_chunks", "run_{sample}_{chunk}.sorted.bam.bai"),
+        fastq_file            = os.path.join( config["PATHOUT"], config["samplelist"][sample]["subdir"], SUBDIR_SYMLINKS,  "{sample}_{chunk}" +config["samplelist"][sample]["fastq_suffix"]),
+        fastq_npi             = os.path.join( config["PATHOUT"], config["samplelist"][sample]["subdir"], SUBDIR_SYMLINKS,  "{sample}_{chunk}" + config["samplelist"][sample]["fastq_suffix"] + ".index"),
         refgenome_fasta       = os.path.join( DIR_REFGENOME, config['ref']['Genome_version']+ ".fa" ),
         NOTCALLED_bwt         = os.path.join( DIR_REFGENOME, config['ref']['Genome_version']+ ".fa.bwt"),
         NOTCALLED_pac         = os.path.join( DIR_REFGENOME, config['ref']['Genome_version']+ ".fa.pac")
     output:
-        Ealigned         = os.path.join( DIR_EVENTALIGN, "csv_chunks", 'Ealign_{sample}_{chunk}.csv' )
+        Ealigned         = os.path.join( config["PATHOUT"], config["samplelist"][sample]["subdir"], SUBDIR_EVENTALIGN, "csv_chunks", 'Ealign_{sample}_{chunk}.csv' )
     log:
-        logfile  = os.path.join( DIR_EVENTALIGN, "csv_chunks", 'Ealign_{sample}_{chunk}.log')
+        logfile  = os.path.join( config["PATHOUT"], config["samplelist"][sample]["subdir"], SUBDIR_EVENTALIGN, "csv_chunks", 'Ealign_{sample}_{chunk}.log')
     message: """---- align events from sample {wildcards.sample}, chunk {wildcards.chunk} to the genome ----"""
     shell:
         " {nanopolish} eventalign --reads {input.fastq_file} --bam {input.sortedbam} --genome {input.refgenome_fasta} --scale-events  > {output}  2> {log.logfile} "
@@ -204,11 +221,11 @@ rule np_event_align:
 # Index the sorted bam file with samtools
 rule index_sortedbam:
     input:
-        sortedbam  = os.path.join( DIR_SORTED_MINIMAPPED, "bam_chunks", "run_{sample}_{chunk}.sorted.bam")
+        sortedbam  = os.path.join( config["PATHOUT"], config["samplelist"][sample]["subdir"], SUBDIR_SORTED_MINIMAPPED, "bam_chunks", "run_{sample}_{chunk}.sorted.bam")
     output:
-        indexedbam = os.path.join( DIR_SORTED_MINIMAPPED, "bam_chunks", "run_{sample}_{chunk}.sorted.bam.bai")
+        indexedbam = os.path.join( config["PATHOUT"], config["samplelist"][sample]["subdir"], SUBDIR_SORTED_MINIMAPPED, "bam_chunks", "run_{sample}_{chunk}.sorted.bam.bai")
     log:
-        logfile    = os.path.join( DIR_SORTED_MINIMAPPED, "bam_chunks", 'run_{sample}_{chunk}_samtoolsindex.log')
+        logfile    = os.path.join( config["PATHOUT"], config["samplelist"][sample]["subdir"], SUBDIR_SORTED_MINIMAPPED, "bam_chunks", 'run_{sample}_{chunk}_samtoolsindex.log')
     message: """---- index the bam files for {wildcards.sample} chunk {wildcards.chunk} ----"""
     shell:
         " {SAMTOOLS} index  {input.sortedbam}  2> {log.logfile} "
@@ -217,17 +234,17 @@ rule index_sortedbam:
 # Index the reads and the fast5 files for nanopolish
 rule np_index:
     input:
-        fast5_folder = lambda wc: getPathCase( config['PATHIN'], 'fast5', 'pass', wc.chunk, input_data_type ),
-        fastq_file   = lambda wc: os.path.join( DIR_SYMLINKS, wc.sample + "_" + str(wc.chunk) + config['samplelist'][wc.sample]["fastq_suffix"] )
+        fast5_folder = lambda wc: getPathCase( os.path.join( config["PATHIN"], config["samplelist"][sample]["subdir"] ), 'fast5', 'pass', wc.chunk, input_data_type ),
+        fastq_file   = lambda wc: os.path.join( config["PATHOUT"], config["samplelist"][sample]["subdir"], SUBDIR_SYMLINKS, wc.sample + "_" + str(wc.chunk) + config['samplelist'][wc.sample]["fastq_suffix"] )
     output:
-        npi    = os.path.join( DIR_SYMLINKS, "{sample}_{chunk}"+config["samplelist"][sample]["fastq_suffix"]+".index"  ),
-        fai    = os.path.join( DIR_SYMLINKS, "{sample}_{chunk}"+config["samplelist"][sample]["fastq_suffix"]+".index.fai" ),
-        gzi    = os.path.join( DIR_SYMLINKS, "{sample}_{chunk}"+config["samplelist"][sample]["fastq_suffix"]+".index.gzi" ),
-        readdb = os.path.join( DIR_SYMLINKS, "{sample}_{chunk}"+config["samplelist"][sample]["fastq_suffix"]+".index.readdb")
+        npi    = os.path.join( config["PATHOUT"], config["samplelist"][sample]["subdir"], SUBDIR_SYMLINKS, "{sample}_{chunk}"+config["samplelist"][sample]["fastq_suffix"]+".index"  ),
+        fai    = os.path.join( config["PATHOUT"], config["samplelist"][sample]["subdir"], SUBDIR_SYMLINKS, "{sample}_{chunk}"+config["samplelist"][sample]["fastq_suffix"]+".index.fai" ),
+        gzi    = os.path.join( config["PATHOUT"], config["samplelist"][sample]["subdir"], SUBDIR_SYMLINKS, "{sample}_{chunk}"+config["samplelist"][sample]["fastq_suffix"]+".index.gzi" ),
+        readdb = os.path.join( config["PATHOUT"], config["samplelist"][sample]["subdir"], SUBDIR_SYMLINKS, "{sample}_{chunk}"+config["samplelist"][sample]["fastq_suffix"]+".index.readdb")
     params:
         options    = " index -d "
     log:
-        logfile  = os.path.join( DIR_SYMLINKS,  "{sample}_{chunk}_npi.log" )
+        logfile  = os.path.join( config["PATHOUT"], config["samplelist"][sample]["subdir"], SUBDIR_SYMLINKS,  "{sample}_{chunk}_npi.log" )
     message: """---- index the reads from chunk {wildcards.chunk} against the fast5 files from the same. ----"""
     shell:
         " nice -19 {nanopolish} {params.options} {input.fast5_folder} {input.fastq_file} 2> {log.logfile} "

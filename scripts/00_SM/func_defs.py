@@ -45,9 +45,7 @@ def makelink(src, target):
 
 def get_chunkfiles( sample, DIR, prefix_string, suffix_string, quoted):
  
-    Sample_indices_int     = range(config["samplelist"][sample]["MAXSAMPLEi"] +1) 
-    Sample_indices_str     = [ str(item) for item in Sample_indices_int  ]
- 
+    Sample_indices_str     = config["samplelist"][sample]["chunkdirlist"] 
 
     FILES_list = list( chain( *[ expand ( os.path.join( DIR, prefix_string + "_" + sample + "_" + chunk + suffix_string ), ) for chunk in Sample_indices_str ] ) )
 
