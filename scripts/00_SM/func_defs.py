@@ -3,8 +3,14 @@ def bail( msg ):
     print("ERROR: " + msg + "... exiting.", file=sys.stderr)
     exit(1)
 
-# Generate a command line string that can be passed to snakemake's
-# "shell".  The string is prefixed with an invocation of "nice".
+def dumpjson( yamldatin, fout ):
+    with open(fout, 'w') as outfile:
+        dumps = json.dumps(yamldatin,
+                           indent=4, sort_keys=True,
+                           separators=(",",": "), ensure_ascii=True)
+        outfile.write(dumps)
+
+
 def tool(name):
     return config['tools'][name]['executable']
 
@@ -25,11 +31,11 @@ def getPathCase( mainpath, subd1, subd2, filename, input_data_type ):
     if ( input_data_type == "raw_minION" ):
        result = os.path.join( mainpath, subd1, subd2, filename )
     elif( input_data_type == "fastq" ):
-        result = os.path.join( mainpath, filename ), 
+        result = os.path.join( mainpath, filename ),
     else:
         print("ERROR: Unrecognized input_data_type: " + input_data_type + " in getPathCase")
-        exit(1) 
-    return( result ) 
+        exit(1)
+    return( result )
 
 def makelink(src, target):
     if not os.path.isfile(src):
@@ -38,18 +44,15 @@ def makelink(src, target):
         bail("%s or subdirectory does not exist for linking  " % target)
     else:
         try:
+            # os.symlink( "point_to_here",  "from_here" )
             os.symlink(src, target)
         except FileExistsError:
             pass
 
-
-def get_chunkfiles( sample, DIR, prefix_string, suffix_string, quoted):
- 
-    Sample_indices_str     = config["samplelist"][sample]["chunkdirlist"] 
-
-    FILES_list = list( chain( *[ expand ( os.path.join( DIR, prefix_string + "_" + sample + "_" + chunk + suffix_string ), ) for chunk in Sample_indices_str ] ) )
-
+def get_chunkfiles( samplename, DIR, prefix_string, suffix_string, quoted):
+    Sample_indices_str     = config["samplelist"][samplename]["chunkdirlist"]
+    FILES_list = [ os.path.join( DIR, prefix_string + samplename + "_" + chunk + suffix_string ) for chunk in Sample_indices_str ]
     if ( quoted ):
        return( ",".join( FILES_list )  )
     else:
-       return( FILES_list ) 
+       return( FILES_list )
