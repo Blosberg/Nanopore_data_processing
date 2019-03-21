@@ -27,9 +27,9 @@ for sLoop_countchunks in config["samplelist"]:
     # define a list of these subentries:
     unsorted_stringlist =  [ entry.name for entry in os.scandir( DATPATH ) if entry.is_dir() ]
     intlist = list( map(int, unsorted_stringlist) )
-    intlist.sort()   
+    intlist.sort()
 
-    config["samplelist"][sLoop_countchunks]["chunkdirlist"] = list( map(str, intlist)) 
+    config["samplelist"][sLoop_countchunks]["chunkdirlist"] = list( map(str, intlist))
 
 
 # store a log of the config file we just built:
@@ -37,9 +37,9 @@ config_log="configlog_out.json"
 
 with open(config_log, 'w') as outfile:
     dumps = json.dumps(config,
-                       indent=4, 
+                       indent=4,
                        sort_keys=True,
-                       separators=(",",": "), 
+                       separators=(",",": "),
                        ensure_ascii=True)
     outfile.write(dumps)
 
@@ -132,7 +132,7 @@ elif( input_data_type == "fastq"):
        linkname = sLoop2linki + config['samplelist'][sLoop2linki]["fastq_suffix"]
        makelink( os.path.join(samplePATH, config["samplelist"][sLoop2linki]["fastq_prefix"] + config["samplelist"][sLoop2linki]["fastq_suffix"] ), os.path.join( config["PATHOUT"], config["samplelist"][sLoop2linki]["subdir"], SUBDIR_SYMLINKS, linkname))
 
-  
+
 else:
    print("Unrecognized input data format. Terminating.")
    exit(1)
@@ -146,35 +146,36 @@ OUTPUT_FILES = []
 
 # increment by sample:
 for sampleLoopi_targets in config["samplelist"]:
-  
+
    # @@@ TODO: implement sample-dependent targets with defaults.
    if ( config["target_out"] == "report" ):
-      OUTPUT_FILES.extend(  os.path.join( config["PATHOUT"], config["samplelist"][sampleLoopi_targets]["subdir"], SUBDIR_REPORT, "" + sampleLoopi_targets + "_report.html")  )
+      OUTPUT_FILES.extend(
+                          [ os.path.join( config["PATHOUT"], config["samplelist"][sampleLoopi_targets]["subdir"], SUBDIR_REPORT, "" + sampleLoopi_targets + "_report.html") ]
+                          )
    elif ( config["target_out"] == "histlist" ):
-      OUTPUT_FILES.extend( 
-                     os.path.join( config["PATHOUT"], config["samplelist"][sampleLoopi_targets]["subdir"], SUBDIR_GR, sampleLoopi_targets + "_kmer_histlist.rds")  
+      OUTPUT_FILES.extend(
+                          [ os.path.join( config["PATHOUT"], config["samplelist"][sampleLoopi_targets]["subdir"], SUBDIR_GR, sampleLoopi_targets + "_kmer_histlist.rds") ]
                           )
    elif ( config["target_out"] == "flatreads_GRL" ):
-      OUTPUT_FILES.extend( 
-                          [ os.path.join( config["PATHOUT"], config["samplelist"][sampleLoopi_targets]["subdir"], SUBDIR_GR,  sampleLoopi_targets + "_reads_flat_GRL.rds") ] 
+      OUTPUT_FILES.extend(
+                          [ os.path.join( config["PATHOUT"], config["samplelist"][sampleLoopi_targets]["subdir"], SUBDIR_GR,  sampleLoopi_targets + "_reads_flat_GRL.rds") ]
                          )
    elif ( config["target_out"] == "reads_GRL" ):
-      OUTPUT_FILES.extend( 
+      OUTPUT_FILES.extend(
                           [ os.path.join( config["PATHOUT"], config["samplelist"][sampleLoopi_targets]["subdir"], SUBDIR_GR, sampleLoopi_targets + "_reads_GRL.rds") ]
                           )
    elif ( config["target_out"] == "mergedbam" ):
-      OUTPUT_FILES.extend( 
+      OUTPUT_FILES.extend(
                           [ os.path.join( config["PATHOUT"], config["samplelist"][sampleLoopi_targets]["subdir"], SUBDIR_SORTED_MINIMAPPED, sampleLoopi_targets + ".sorted.bam") ]
                          )
    elif ( config["target_out"] == "aligned_chunks"):
-      OUTPUT_FILES.extend(  
+      OUTPUT_FILES.extend(
                           get_chunkfiles( sampleLoopi_targets, os.path.join( config["PATHOUT"], config["samplelist"][sampleLoopi_targets]["subdir"], SUBDIR_ALIGNED_MINIMAP) ,  "", ".sam", 0 )
                          )
    else:
       print("Unrecognized target output file format: ", config["target_out"], " ... Terminating.")
       exit(1)
 
-  
 #---  DEBUGGING:
 #------------------------------------------------------
 # print("input_data_type = " + config["input_data_type"])
@@ -203,7 +204,7 @@ rule all:
 rule make_report:
     # build the final output report in html format
     input:
-        aligned_reads_bam = os.path.join( config["PATHOUT"], "{wcreport_sampleDir}", SUBDIR_SORTED_MINIMAPPED, "run_{wcreport_samplename}.sorted.bam"),
+        aligned_reads_bam = os.path.join( config["PATHOUT"], "{wcreport_sampleDir}", SUBDIR_SORTED_MINIMAPPED, "{wcreport_samplename}.sorted.bam"),
         transcriptome     = RefTranscriptome,
         GRobj             = os.path.join( config["PATHOUT"], "{wcreport_sampleDir}", SUBDIR_GR, "{wcreport_samplename}_reads_GRL.rds")
     output:
@@ -230,9 +231,9 @@ rule np_event_align:
     # where there are no chunks
     input:
         sortedbam             = os.path.join( config["PATHOUT"], "{wcEvalign_sampleDir}", SUBDIR_SORTED_MINIMAPPED, "bam_chunks", "{wcEvalign_samplename}_{wcEvalign_chunk}.sorted.bam"),
-        NOTCALLED_indexedbam  = os.path.join( config["PATHOUT"], "{wcEvalign_sampleDir}", SUBDIR_SORTED_MINIMAPPED, "bam_chunks", "run_{wcEvalign_samplename}_{wcEvalign_chunk}.sorted.bam.bai"),
-        fastq_file            = os.path.join( config["PATHOUT"], "{wcEvalign_sampleDir}", SUBDIR_SYMLINKS,  "{wcEvalign_samplename}_{wcEvalign_chunk}" +config["fastq_suffix"]),
-        fastq_npi             = os.path.join( config["PATHOUT"], "{wcEvalign_sampleDir}", SUBDIR_SYMLINKS,  "{wcEvalign_samplename}_{wcEvalign_chunk}" + config["fastq_suffix"] + ".index"),
+        NOTCALLED_indexedbam  = os.path.join( config["PATHOUT"], "{wcEvalign_sampleDir}", SUBDIR_SORTED_MINIMAPPED, "bam_chunks", "{wcEvalign_samplename}_{wcEvalign_chunk}.sorted.bam.bai"),
+        fastq_file            = os.path.join( config["PATHOUT"], "{wcEvalign_sampleDir}", SUBDIR_SYMLINKS,  "{wcEvalign_samplename}_{wcEvalign_chunk}." +config["fastq_suffix"]),
+        fastq_npi             = os.path.join( config["PATHOUT"], "{wcEvalign_sampleDir}", SUBDIR_SYMLINKS,  "{wcEvalign_samplename}_{wcEvalign_chunk}." + config["fastq_suffix"] + ".index"),
         refgenome_fasta       = os.path.join( DIR_REFGENOME, config['ref']['Genome_version']+ ".fa" ),
         NOTCALLED_bwt         = os.path.join( DIR_REFGENOME, config['ref']['Genome_version']+ ".fa.bwt"),
         NOTCALLED_pac         = os.path.join( DIR_REFGENOME, config['ref']['Genome_version']+ ".fa.pac")
@@ -251,12 +252,12 @@ rule np_event_align:
 rule index_sortedbam:
     # Index the sorted bam file with samtools
     input:
-        sortedbam  = os.path.join( config["PATHOUT"], "{wcindexbam_sampleDir}", SUBDIR_SORTED_MINIMAPPED, "bam_chunks", "run_{wcindexbam_samplename}_{wcindexbam_chunk}.sorted.bam")
+        sortedbam  = os.path.join( config["PATHOUT"], "{wcindexbam_sampleDir}", SUBDIR_SORTED_MINIMAPPED, "bam_chunks", "{wcindexbam_samplename}_{wcindexbam_chunk}.sorted.bam")
     output:
-        indexedbam = os.path.join( config["PATHOUT"], "{wcindexbam_sampleDir}", SUBDIR_SORTED_MINIMAPPED, "bam_chunks", "run_{wcindexbam_samplename}_{wcindexbam_chunk}.sorted.bam.bai")
+        indexedbam = os.path.join( config["PATHOUT"], "{wcindexbam_sampleDir}", SUBDIR_SORTED_MINIMAPPED, "bam_chunks", "{wcindexbam_samplename}_{wcindexbam_chunk}.sorted.bam.bai")
     log:
-        logfile    = os.path.join( config["PATHOUT"], "{wcindexbam_sampleDir}", SUBDIR_SORTED_MINIMAPPED, "bam_chunks", 'run_{wcindexbam_samplename}_{wcindexbam_chunk}_samtoolsindex.log')
-    message: """---- index the bam files for {wildcards.sample} chunk {wildcards.chunk} ----"""
+        logfile    = os.path.join( config["PATHOUT"], "{wcindexbam_sampleDir}", SUBDIR_SORTED_MINIMAPPED, "bam_chunks", '{wcindexbam_samplename}_{wcindexbam_chunk}_samtoolsindex.log')
+    message: """---- index the bam files for {wildcards.wcindexbam_samplename} chunk {wildcards.wcindexbam_chunk} ----"""
     shell:
         " {SAMTOOLS} index  {input.sortedbam}  2> {log.logfile} "
 

@@ -71,10 +71,10 @@ rule create_readcurrent_GRL_obj:
         poremodel    = os.path.join( config["PATHOUT"], "{wcreadGRL_sampleDir}", SUBDIR_GR, "{wcreadGRL_samplename}_poremodel.tsv")
     params:
         Rfuncs_table2GRconv = R_tables2GR_funcs,
-        output_reads_GRL    = os.path.join( config["PATHOUT"], "{wcalign_sampleDir}", SUBDIR_GR, "{wcreadGRL_samplename}_reads_GRL.rds"),
-        output_poremodel    = os.path.join( config["PATHOUT"], "{wcalign_sampleDir}", SUBDIR_GR, "{wcreadGRL_samplename}_poremodel.tsv"),
+        output_reads_GRL    = os.path.join( config["PATHOUT"], "{wcreadGRL_sampleDir}", SUBDIR_GR, "{wcreadGRL_samplename}_reads_GRL.rds"),
+        output_poremodel    = os.path.join( config["PATHOUT"], "{wcreadGRL_sampleDir}", SUBDIR_GR, "{wcreadGRL_samplename}_poremodel.tsv"),
         Ealign_files        = lambda wc: get_chunkfiles( wc.wcreadGRL_samplename, os.path.join( config["PATHOUT"], wc.wcreadGRL_sampleDir, SUBDIR_EVENTALIGN, "csv_chunks" ), "Ealign_", ".csv", True ),
-        samplename          = "{sample}"
+        samplename          = "{wcreadGRL_samplename}"
     log:
         os.path.join( config["PATHOUT"], "{wcreadGRL_sampleDir}", SUBDIR_GR, "{wcreadGRL_samplename}_reads_GRL_conversion.log")
     message:
@@ -180,11 +180,11 @@ rule align_minimap:
         "{MM2} {params} {input.mmiref} {input.fqlink} > {output}  2> {log}"
 
 #------------------------------------------------------
-# create symlink to data 
+# create symlink to data
 # genome
 # rule create_fqsymlink:
 #     input:
-#         chunk_src     = lambda wc: os.path.join( config["PATHIN"], wc.wcfqlink_sampleDir, "fastq", "pass", config["samplelist"][wc.wcfqlink_samplename]["fastq_prefix"] + wc.wcfqlink_chunk + "." + config["fastq_suffix"] ) 
+#         chunk_src     = lambda wc: os.path.join( config["PATHIN"], wc.wcfqlink_sampleDir, "fastq", "pass", config["samplelist"][wc.wcfqlink_samplename]["fastq_prefix"] + wc.wcfqlink_chunk + "." + config["fastq_suffix"] )
 #     output:
 #         chunk_linkloc = os.path.join( config["PATHOUT"], "{wcfqlink_sampleDir}", SUBDIR_SYMLINKS, "{wcfqlink_samplename}_{wcfqlink_chunk}." + config["fastq_suffix"] )
 #     params:
@@ -193,7 +193,7 @@ rule align_minimap:
 #         """--- creating symbolic link to chunk data ---"""
 #     shell:
 #         " ln ${params} {input} {output}"
-# 
+#
 #------------------------------------------------------
 
 # Create indexed version of reference genome for fast
