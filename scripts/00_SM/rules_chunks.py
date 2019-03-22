@@ -180,20 +180,19 @@ rule align_minimap:
         "{MM2} {params} {input.mmiref} {input.fqlink} > {output}  2> {log}"
 
 #------------------------------------------------------
-# create symlink to data
-# genome
-# rule create_fqsymlink:
-#     input:
-#         chunk_src     = lambda wc: os.path.join( config["PATHIN"], wc.wcfqlink_sampleDir, "fastq", "pass", config["samplelist"][wc.wcfqlink_samplename]["fastq_prefix"] + wc.wcfqlink_chunk + "." + config["fastq_suffix"] )
-#     output:
-#         chunk_linkloc = os.path.join( config["PATHOUT"], "{wcfqlink_sampleDir}", SUBDIR_SYMLINKS, "{wcfqlink_samplename}_{wcfqlink_chunk}." + config["fastq_suffix"] )
-#     params:
-#         options  = " -s "
-#     message:
-#         """--- creating symbolic link to chunk data ---"""
-#     shell:
-#         " ln ${params} {input} {output}"
-#
+rule create_fqsymlink:
+    # create symlink to data:
+    input:
+        chunk_src     = lambda wc: os.path.join( config["PATHIN"], wc.wcfqlink_sampleDir, "fastq", "pass", config["samplelist"][wc.wcfqlink_samplename]["fastq_prefix"] + wc.wcfqlink_chunk + "." + config["fastq_suffix"] )
+    output:
+        chunk_linkloc = os.path.join( config["PATHOUT"], "{wcfqlink_sampleDir}", SUBDIR_SYMLINKS, "{wcfqlink_samplename}_{wcfqlink_chunk}." + config["fastq_suffix"] )
+    params:
+        options  = " -s "
+    message:
+        """--- creating symbolic link to chunk data ---"""
+    shell:
+        " ln {params} {input} {output}"
+
 #------------------------------------------------------
 
 # Create indexed version of reference genome for fast

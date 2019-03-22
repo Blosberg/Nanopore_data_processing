@@ -69,8 +69,6 @@ R_build_histlist_main   = os.path.join( config["scripts"]["script_folder"], conf
 #--- Define output directories
 
 SUBDIR_SYMLINKS           = "01_symlinks_fastqindex_chunks/"
-# -- all the rest will be created by snakemake automatically
-
 SUBDIR_ALIGNED_MINIMAP    = "02_MM_aligned_chunks/"
 SUBDIR_FILTERED_MINIMAP   = "03_MM_filtered_chunks/"
 SUBDIR_SORTED_MINIMAPPED  = "04_MM_sortedbam/"
@@ -104,20 +102,20 @@ if ( input_data_type == "raw_minION"):
 
    for sLooplinki in config["samplelist"]:
 
-       os.makedirs( os.path.join( config["PATHOUT"], config["samplelist"][sLooplinki]["subdir"], SUBDIR_SYMLINKS),  exist_ok=True)
+#       os.makedirs( os.path.join( config["PATHOUT"], config["samplelist"][sLooplinki]["subdir"], SUBDIR_SYMLINKS),  exist_ok=True)
 
        # get subdir for this sample:
        samplePATH = os.path.join( config["PATHIN"], config["samplelist"][sLooplinki]["subdir"] )
 
-       # linke to each chunk directly:
-       for linkindex in config["samplelist"][sLooplinki]["chunkdirlist"]:
-          linkname = sLooplinki + "_" + str(linkindex) + "." + config["fastq_suffix"]
-
-          target   = getPathCase( samplePATH, "fastq", "pass",config["samplelist"][sLooplinki]["fastq_prefix"] + str(linkindex) + "." +  config["fastq_suffix"], "raw_minION")
-
-          linkloc  = os.path.join( config["PATHOUT"], config["samplelist"][sLooplinki]["subdir"], SUBDIR_SYMLINKS, linkname)
-
-          makelink(  target, linkloc )
+#       # linke to each chunk directly:
+#       for linkindex in config["samplelist"][sLooplinki]["chunkdirlist"]:
+#          linkname = sLooplinki + "_" + str(linkindex) + "." + config["fastq_suffix"]
+#
+#          target   = getPathCase( samplePATH, "fastq", "pass",config["samplelist"][sLooplinki]["fastq_prefix"] + str(linkindex) + "." +  config["fastq_suffix"], "raw_minION")
+#
+#          linkloc  = os.path.join( config["PATHOUT"], config["samplelist"][sLooplinki]["subdir"], SUBDIR_SYMLINKS, linkname)
+#
+#          makelink(  target, linkloc )
 
 
 elif( input_data_type == "fastq"):
@@ -130,7 +128,7 @@ elif( input_data_type == "fastq"):
        samplePATH = os.path.join(config["PATHIN"], config["samplelist"][sLoop2linki]["subdir"] )
 
        linkname = sLoop2linki + config['samplelist'][sLoop2linki]["fastq_suffix"]
-       makelink( os.path.join(samplePATH, config["samplelist"][sLoop2linki]["fastq_prefix"] + config["samplelist"][sLoop2linki]["fastq_suffix"] ), os.path.join( config["PATHOUT"], config["samplelist"][sLoop2linki]["subdir"], SUBDIR_SYMLINKS, linkname))
+#       makelink( os.path.join(samplePATH, config["samplelist"][sLoop2linki]["fastq_prefix"] + config["samplelist"][sLoop2linki]["fastq_suffix"] ), os.path.join( config["PATHOUT"], config["samplelist"][sLoop2linki]["subdir"], SUBDIR_SYMLINKS, linkname))
 
 
 else:
@@ -176,19 +174,20 @@ for sampleLoopi_targets in config["samplelist"]:
       print("Unrecognized target output file format: ", config["target_out"], " ... Terminating.")
       exit(1)
 
+
 #---  DEBUGGING:
 #------------------------------------------------------
 # print("input_data_type = " + config["input_data_type"])
 # print("target out = " + config["target_out"])
 # IPython.embed()
-print("---- last check before rules: ------ ")
-print ( "len(OUTPUT_FILES)=")
-print ( len( OUTPUT_FILES) )
-print(" OUTPUT_FILES=")
-for x in OUTPUT_FILES:
-  print(x)
-print("\n finished outputting output files \n\n ")
-
+# print("---- last check before rules: ------ ")
+# print ( "len(OUTPUT_FILES)=")
+# print ( len( OUTPUT_FILES) )
+# print(" OUTPUT_FILES=")
+# for x in OUTPUT_FILES:
+#   print(x)
+# print("\n finished outputting output files \n\n ")
+# 
 #
 # ========================================================================
 #

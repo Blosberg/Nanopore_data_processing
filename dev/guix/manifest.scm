@@ -1,22 +1,27 @@
-(define packages (list "vim"
-"python"
-"python-pyyaml"
+(define packages 
+ (list
+ ;; Internal development:
+"vim"
 "git"
-"python-ont-tombo"
+"glibc-locales"
+;; Snakemake control flow:
+"python"
 "snakemake"
-"samtools"
-"bwa"
-"htslib"
 "python-ipython"
-"nss-certs"
+"python-pyyaml"
+"graphviz"
+"htslib"
+;; R-packages:
 "r-minimal"
 "r-genomicalignments"
 "r-rmarkdown"
 "r-data-table"
-"glibc-locales"
 "r-rtracklayer"
 "r-dplyr"
-"graphviz"
+;; Mapping and mod-detection:
+"samtools"
+"python-ont-tombo"
 "minimap2"
+"nanopolish"
 ))
 (specifications->manifest packages)

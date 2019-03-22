@@ -10,7 +10,7 @@
           },
 
    "progs": {
-        "minimap":    "./dev/deps/minimap2/minimap2",
+        "minimap":    "./dev/guix/.guix-profile/bin/minimap2",
         "nanopolish": "./dev/deps/nanopolish/nanopolish",
         "SAMTOOLS":   "samtools"
             },
