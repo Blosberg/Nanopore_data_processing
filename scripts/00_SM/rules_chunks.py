@@ -60,20 +60,21 @@ rule flatten_reads:
 
 # -----------------------------------------------------
 # produce GRangesList object of current data in .RDS format
-# from the .csv files produced by eventalign
+# from the .tsv files produced by eventalign
 # each entry of the list is a read:
 
 rule create_readcurrent_GRL_obj:
     input:
-        csvfile      = lambda wc: get_chunkfiles( wc.wcreadGRL_samplename, os.path.join( config["PATHOUT"], wc.wcreadGRL_sampleDir, SUBDIR_EVENTALIGN, "csv_chunks" ), "Ealign_", ".csv", False )
+        tsvfile      = lambda wc: get_chunkfiles( wc.wcreadGRL_samplename, os.path.join( config["PATHOUT"], wc.wcreadGRL_sampleDir, SUBDIR_EVENTALIGN, "tsv_chunks" ), "Ealign_", ".tsv", False )
     output:
         GRobj        = os.path.join( config["PATHOUT"], "{wcreadGRL_sampleDir}", SUBDIR_GR, "{wcreadGRL_samplename}_reads_GRL.rds"),
         poremodel    = os.path.join( config["PATHOUT"], "{wcreadGRL_sampleDir}", SUBDIR_GR, "{wcreadGRL_samplename}_poremodel.tsv")
     params:
-        Rfuncs_table2GRconv = R_tables2GR_funcs,
-        output_reads_GRL    = os.path.join( config["PATHOUT"], "{wcreadGRL_sampleDir}", SUBDIR_GR, "{wcreadGRL_samplename}_reads_GRL.rds"),
-        output_poremodel    = os.path.join( config["PATHOUT"], "{wcreadGRL_sampleDir}", SUBDIR_GR, "{wcreadGRL_samplename}_poremodel.tsv"),
-        Ealign_files        = lambda wc: get_chunkfiles( wc.wcreadGRL_samplename, os.path.join( config["PATHOUT"], wc.wcreadGRL_sampleDir, SUBDIR_EVENTALIGN, "csv_chunks" ), "Ealign_", ".csv", True ),
+        Rfuncs_tsv2GRconv = R_tables2GR_funcs,
+        output_reads_GRL  = os.path.join( config["PATHOUT"], "{wcreadGRL_sampleDir}", SUBDIR_GR, "{wcreadGRL_samplename}_reads_GRL.rds"),
+        output_poremodel  = os.path.join( config["PATHOUT"], "{wcreadGRL_sampleDir}", SUBDIR_GR, "{wcreadGRL_samplename}_poremodel.tsv"),
+        Flatten           = config["Flatten"],
+        Ealign_files      = lambda wc: get_chunkfiles( wc.wcreadGRL_samplename, os.path.join( config["PATHOUT"], wc.wcreadGRL_sampleDir, SUBDIR_EVENTALIGN, "tsv_chunks" ), "Ealign_", ".tsv", True ),
         samplename          = "{wcreadGRL_samplename}"
     log:
         os.path.join( config["PATHOUT"], "{wcreadGRL_sampleDir}", SUBDIR_GR, "{wcreadGRL_samplename}_reads_GRL_conversion.log")
@@ -81,11 +82,12 @@ rule create_readcurrent_GRL_obj:
         fmt("Convert aligned NP reads to GRanges object")
     shell:
         nice('Rscript', [ R_tables2GR_main,
-                         "--Rfuncs_table2GRconv={params.Rfuncs_table2GRconv}",
+                         "--Rfuncs_tsv2GRconv={params.Rfuncs_tsv2GRconv}",
                          "--output_reads_GRL={params.output_reads_GRL}",
                          "--output_poremodel={params.output_poremodel}",
-                         "--logFile={log}",
                          "--samplename={params.samplename}",
+                         "--Flatten={params.Flatten}",
+                         "--logFile={log}",
                          "--Ealign_files={params.Ealign_files}"] )
 
 # -----------------------------------------------------

@@ -57,8 +57,8 @@ GENOME_VERSION     = config["ref"]["Genome_version"]
 RmdReportScript    = os.path.join(config["scripts"]["script_folder"],"final_report","Nanopore_report.Rmd")
 input_data_type    = config["input_data_type"]
 
-R_tables2GR_main     = os.path.join( config["scripts"]["script_folder"], config["scripts"]["Rmain_table2GRconv"] )
-R_tables2GR_funcs    = os.path.join( config[ "scripts"]["script_folder"], config[ "scripts"]["Rfuncs_table2GRconv"] )
+R_tables2GR_main     = os.path.join( config["scripts"]["script_folder"], config["scripts"]["Rmain_tsv2GRconv"] )
+R_tables2GR_funcs    = os.path.join( config[ "scripts"]["script_folder"], config[ "scripts"]["Rfuncs_tsv2GRconv"] )
 
 R_flattenreads_main  = os.path.join( config["scripts"]["script_folder"], config["scripts"]["Rmain_flattenreads"] )
 R_flattenreads_funcs = os.path.join( config["scripts"]["script_folder"], config["scripts"]["Rfuncs_flattenreads"] )
@@ -187,7 +187,7 @@ for sampleLoopi_targets in config["samplelist"]:
 # for x in OUTPUT_FILES:
 #   print(x)
 # print("\n finished outputting output files \n\n ")
-# 
+#
 #
 # ========================================================================
 #
@@ -237,9 +237,9 @@ rule np_event_align:
         NOTCALLED_bwt         = os.path.join( DIR_REFGENOME, config['ref']['Genome_version']+ ".fa.bwt"),
         NOTCALLED_pac         = os.path.join( DIR_REFGENOME, config['ref']['Genome_version']+ ".fa.pac")
     output:
-        Evaligned         = os.path.join( config["PATHOUT"], "{wcEvalign_sampleDir}", SUBDIR_EVENTALIGN, "csv_chunks", 'Ealign_{wcEvalign_samplename}_{wcEvalign_chunk}.csv' )
+        Evaligned         = os.path.join( config["PATHOUT"], "{wcEvalign_sampleDir}", SUBDIR_EVENTALIGN, "tsv_chunks", 'Ealign_{wcEvalign_samplename}_{wcEvalign_chunk}.tsv' )
     log:
-        logfile  = os.path.join( config["PATHOUT"], "{wcEvalign_sampleDir}", SUBDIR_EVENTALIGN, "csv_chunks", 'Ealign_{wcEvalign_samplename}_{wcEvalign_chunk}.log')
+        logfile  = os.path.join( config["PATHOUT"], "{wcEvalign_sampleDir}", SUBDIR_EVENTALIGN, "tsv_chunks", 'Ealign_{wcEvalign_samplename}_{wcEvalign_chunk}.log')
     message: """---- Align events from sample {wildcards.wcEvalign_samplename}, chunk {wildcards.wcEvalign_chunk} to the genome ----"""
     shell:
         " {nanopolish} eventalign --reads {input.fastq_file} --bam {input.sortedbam} --genome {input.refgenome_fasta} --scale-events  > {output}  2> {log.logfile} "
