@@ -1,16 +1,17 @@
-(define packages 
+(define packages
  (list
- ;; Internal development:
+;; Internal development packages:
 "vim"
+"nss-certs"
 "git"
 "glibc-locales"
+"htslib"
 ;; Snakemake control flow:
 "python"
+"python-pyyaml"
 "snakemake"
 "python-ipython"
-"python-pyyaml"
 "graphviz"
-"htslib"
 ;; R-packages:
 "r-minimal"
 "r-genomicalignments"

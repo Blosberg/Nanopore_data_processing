@@ -1,6 +1,6 @@
 {
   "fastq_suffix": "fastq",
-  "Flatten": 1,
+  "Flatten": "TRUE",
 
   "target_out": "flatreads_GRL",
 
@@ -12,8 +12,8 @@
 
    "progs": {
         "minimap":    "./dev/guix/.guix-profile/bin/minimap2",
-        "nanopolish": "./dev/deps/nanopolish/nanopolish",
-        "SAMTOOLS":   "samtools"
+        "nanopolish": "./dev/guix/.guix-profile/bin/nanopolish",
+        "SAMTOOLS":   "./dev/guix/.guix-profile/bin/samtools"
             },
    "scripts": {
         "script_folder":            "/home/bosberg/projects/nanopore/scripts/",

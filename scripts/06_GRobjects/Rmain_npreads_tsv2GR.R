@@ -1,6 +1,6 @@
-# Environment from this execution is stored in : "/home/bosberg/projects/nanopore/signal_processing_Rworkspace.RData"
-# import nanopore data and run some statistics on them:
-# rm(list=ls()) # CLEAN UP EVERYTHING
+# Rmain_npreads_tsv2GR
+# import nanopore data in .tsv format and output read-separated GRanges objects:
+# For optimization, model_mean/model_stdv columns are omitted to conserve space.
 
 
 # @@@ TODO: generalize this as an input boolean (see issue #9 on GH):
@@ -20,7 +20,7 @@ if("--help" %in% args) {
       Render to report
 
       Arguments:
-      Rfuncs_table2GRconv --script with function definitions used here.
+      Rfuncs_tsv2GRconv --script with function definitions used here.
       output_reads_GRL    -- rds filename read-separated GRL output.
       output_poremodel    -- rds filename with model date (for each model kmer) saved.
       samplename          -- name of sample for documentation
@@ -49,17 +49,18 @@ names(argsL) <- argsDF$V1
 # Run Functions -----------------------------------------------------------
 
 # e.g. (replace this list with actual arguments)
-Rfuncs_table2GRconv  <- argsL$Rfuncs_table2GRconv
-output_poremodel     <- argsL$output_poremodel
-output_reads_GRL     <- argsL$output_reads_GRL
-samplename           <- argsL$samplename
-logFile              <- argsL$logFile
-Ealign_files         <- unlist( strsplit(argsL$Ealign_files,",")  )
+Rfuncs_tsv2GRconv  <- argsL$Rfuncs_tsv2GRconv
+output_poremodel   <- argsL$output_poremodel
+output_reads_GRL   <- argsL$output_reads_GRL
+samplename         <- argsL$samplename
+Flatten_reads      <- argsL$Flatten_reads
+logFile            <- argsL$logFile
+Ealign_files       <- unlist( strsplit(argsL$Ealign_files,",")  )
 
 #===============================================================
 suppressPackageStartupMessages( library(GenomicRanges) )
 suppressPackageStartupMessages( library(dplyr)         )
-source(Rfuncs_table2GRconv)
+source(Rfuncs_tsv2GRconv)
 
 dat_all         = get_event_dat( Event_file_list = Ealign_files, 
                                  logFile         = logFile )
@@ -97,51 +98,15 @@ ReadList_finite_stranded  <- split( dat_finite_stranded,
 # ================================================
 # Flatten overlapping read-events:
 
-if(Flatten_reads)
-{
-  # tic <- Sys.time()
-  Flatreadlist <-
-    lapply(ReadList_finite_stranded, function(x)
-      flatten_read_tbl (read_tbl_in   = x,
-                        perform_sanity_checks = FALSE))
-  # toc <- Sys.time()
-  
-  GRL_out <- GRangesList(lapply(Flatreadlist, function(x)
-    GRanges(
-      seqnames = x$contig,
-      strand   = x$strand,
-      range    = IRanges(start = x$position + 1,
-                         end   = x$position + 5),
-      read_index   = x$read_index,
-      event_index  = x$event_index,
-      event_mean   = x$event_level_mean,
-      event_stdv   = x$event_stdv,
-      event_length = x$event_length,
-      model_kmer   = x$model_kmer
-    )))
-} else {
-
-  GRL_out <- GRangesList( lapply( ReadList_finite_stranded, function(x)
-    GRanges(
-      seqnames = x$contig,
-      strand   = x$strand,
-      range    = IRanges(start = x$position + 1,
-                         end   = x$position + 5),
-      read_index   = x$read_index,
-      event_index  = x$event_index,
-      event_mean   = x$event_level_mean,
-      event_stdv   = x$event_stdv,
-      event_length = x$event_length,
-      model_kmer   = x$model_kmer
-    )))
-  
-}
+GRL_out <- convert_tbl_readlist_to_GRL( Readlist_in   = ReadList_finite_stranded,
+                                        Flatten_reads = Flatten_reads )
 
 # ================================================
 # BUILD GRanges OBJECT TO Process
 
 # output the GRL object to store reads:
 saveRDS( list( "samplename"             = samplename,
+               "Flattened_reads"        = Flatten_reads,
                "Events_GRL_splitbyread" = GRL_out ),
          file = output_reads_GRL  )
 

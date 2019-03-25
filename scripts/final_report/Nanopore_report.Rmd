@@ -21,7 +21,7 @@ library(rtracklayer)
 # fin_readalignment_bam="Input/barcode05_trimmed_aligned_spliceaware_mm2.sorted.bam"
 # fin_Transcript="ref/170317_Homo_sapiens.GRCh37.87.chr.gtf"
 
-GRobj_empty=( file.info(fin_GRobj)$size == 0 )
+GRobj_empty=( file.info(fin_GRLreads)$size == 0 )
 
 source('../Transcripts_funcs.R')
 
@@ -37,7 +37,7 @@ Aligned reads were then compared to the reference transcriptome database stored 
 cat('This pipeline has the capability to analyze raw current data from the nanopore device, however, for the present data set, the pipeline was unable to find any file containing current data; as such, these results will be omitted from the report.')
 ```
 ```{r paragraph_GRobj_notempty, results='asis', echo=FALSE, eval=!GRobj_empty }
-cat(paste('Raw current data from the nanopore device was imported from the following GRanges object file:', fin_GRobj)) 
+cat(paste('Raw current data from the nanopore device was imported from the following GRanges object file:', fin_GRLreads)) 
 ```
 
 <!-------  Load alignment data and reference transcripts: -------> 
@@ -51,8 +51,12 @@ gap_indices = c( which( colnames( algn_cigartable ) =="I" ), which(colnames( alg
 GRalgn  = as(algn, 'GRanges')
 GRLalgn = as(algn, 'GRangesList')
 
-# GRalgn   = granges(algn)
-# GRLalgn  = grglist(algn)
+GRob      = readRDS(fin_GRLreads)
+
+GRLalgn   = GRob$Events_GRL_splitbyread
+GRalgn    = unlist( GRangesList( GRLalgn ) )
+flattened = GRob$Flattened_reads
+
 
 GRalgn$num_mismatches = GRalgn$NM  - ( algn_cigartable[ , gap_indices[1]] +algn_cigartable[ , gap_indices[2]])
 

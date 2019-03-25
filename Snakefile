@@ -205,7 +205,7 @@ rule make_report:
     input:
         aligned_reads_bam = os.path.join( config["PATHOUT"], "{wcreport_sampleDir}", SUBDIR_SORTED_MINIMAPPED, "{wcreport_samplename}.sorted.bam"),
         transcriptome     = RefTranscriptome,
-        GRobj             = os.path.join( config["PATHOUT"], "{wcreport_sampleDir}", SUBDIR_GR, "{wcreport_samplename}_reads_GRL.rds")
+        GRLreads          = os.path.join( config["PATHOUT"], "{wcreport_sampleDir}", SUBDIR_GR, "{wcreport_samplename}_reads_GRL.rds")
     output:
         os.path.join( config["PATHOUT"], "{wcreport_sampleDir}", SUBDIR_REPORT, "{wcreport_samplename}_report.html")
     params:
@@ -219,7 +219,7 @@ rule make_report:
         " Rscript -e  '{params} "
         " fin_readalignment_bam = \"{input.aligned_reads_bam}\"; "
         " fin_Transcript        = \"{input.transcriptome}\";"
-        " fin_GRobj             = \"{input.GRobj}\";"
+        " fin_GRLreads          = \"{input.GRLreads}\";"
         " Genome_version        =\"{GENOME_VERSION}\"; "
         " rmarkdown::render(\"{RmdReportScript}\", output_file = \"{output}\" ) ' "
 

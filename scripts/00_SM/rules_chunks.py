@@ -32,42 +32,16 @@ rule create_kmer_histlist:
                           "--k={params.k}",
                           "--logfile={log.logfile}",] )
 
-# -----------------------------------------------------
-# flatten reads from GRangesList in .RDS format
-# by "flatten", we mean collaps multiple 'events' assigned to the same segment.
-
-rule flatten_reads:
-    input:
-        GRobj_in     = os.path.join( config["PATHOUT"], "{wcflatten_sampleDir}", SUBDIR_GR, "{wcflatten_samplename}_reads_GRL.rds")
-    output:
-        GRflat_out   = os.path.join( config["PATHOUT"], "{wcflatten_sampleDir}", SUBDIR_GR, "{wcflatten_samplename}_reads_flat_GRL.rds")
-    params:
-        Rfuncs_flatten_reads = R_flattenreads_funcs,
-        readsGRL_in          = os.path.join( config["PATHOUT"], "{wcflatten_sampleDir}", SUBDIR_GR, "{wcflatten_samplename}_reads_GRL.rds"),
-        flatreadsGRL_out     = os.path.join( config["PATHOUT"], "{wcflatten_sampleDir}", SUBDIR_GR, "{wcflatten_samplename}_reads_flat_GRL.rds"),
-        samplename           = "{wcflatten_samplename}"
-    log:
-        os.path.join( config["PATHOUT"], "{wcflatten_sampleDir}", SUBDIR_GR, "{wcflatten_samplename}_flattenreads_GRL.log")
-    message:
-        fmt("Flatten intra-read events with coincident alignments")
-    shell:
-        nice('Rscript', [ R_flattenreads_main,
-                         "--Rfuncs_flattenreads={params.Rfuncs_flatten_reads}",
-                         "--readsGRL_in={params.readsGRL_in}",
-                         "--flatreadsGRL_out={params.flatreadsGRL_out}",
-                         "--logFile={log}",
-                         "--samplename={params.samplename}"] )
 
 # -----------------------------------------------------
-# produce GRangesList object of current data in .RDS format
-# from the .tsv files produced by eventalign
-# each entry of the list is a read:
-
 rule create_readcurrent_GRL_obj:
+    # produce GRangesList object of current data in .RDS format
+    # from the .tsv files produced by eventalign
+    # each entry of the list is a read:
     input:
         tsvfile      = lambda wc: get_chunkfiles( wc.wcreadGRL_samplename, os.path.join( config["PATHOUT"], wc.wcreadGRL_sampleDir, SUBDIR_EVENTALIGN, "tsv_chunks" ), "Ealign_", ".tsv", False )
     output:
-        GRobj        = os.path.join( config["PATHOUT"], "{wcreadGRL_sampleDir}", SUBDIR_GR, "{wcreadGRL_samplename}_reads_GRL.rds"),
+        GRLreads     = os.path.join( config["PATHOUT"], "{wcreadGRL_sampleDir}", SUBDIR_GR, "{wcreadGRL_samplename}_reads_GRL.rds"),
         poremodel    = os.path.join( config["PATHOUT"], "{wcreadGRL_sampleDir}", SUBDIR_GR, "{wcreadGRL_samplename}_poremodel.tsv")
     params:
         Rfuncs_tsv2GRconv = R_tables2GR_funcs,
@@ -79,14 +53,14 @@ rule create_readcurrent_GRL_obj:
     log:
         os.path.join( config["PATHOUT"], "{wcreadGRL_sampleDir}", SUBDIR_GR, "{wcreadGRL_samplename}_reads_GRL_conversion.log")
     message:
-        fmt("Convert aligned NP reads to GRanges object")
+        fmt("Convert aligned NP reads to GRangesList object")
     shell:
         nice('Rscript', [ R_tables2GR_main,
                          "--Rfuncs_tsv2GRconv={params.Rfuncs_tsv2GRconv}",
                          "--output_reads_GRL={params.output_reads_GRL}",
                          "--output_poremodel={params.output_poremodel}",
                          "--samplename={params.samplename}",
-                         "--Flatten={params.Flatten}",
+                         "--Flatten_reads={params.Flatten}",
                          "--logFile={log}",
                          "--Ealign_files={params.Ealign_files}"] )
 
