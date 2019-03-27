@@ -23,12 +23,10 @@ library(rtracklayer)
 
 GRobj_empty=( file.info(fin_GRLreads)$size == 0 )
 
-source('../Transcripts_funcs.R')
-
 
 ```
 
-To produce this report, alignment data was taken from the following file: `r fin_readalignment_bam`
+To produce this report, genome-aligned reads were obtained from the fiel : `r fin_GRLreads`
 and aligned against the genome `r Genome_version`. 
 Aligned reads were then compared to the reference transcriptome database stored in the following file: `r fin_Transcript`.
 

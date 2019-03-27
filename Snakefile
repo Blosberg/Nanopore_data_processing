@@ -198,6 +198,8 @@ for sampleLoopi_targets in config["samplelist"]:
 rule all:
     input:
         OUTPUT_FILES
+    message:
+        fmt("Target output files:\n" + "\n".join(OUTPUT_FILES) + "\n" )
 
 #------------------------------------------------------
 rule make_report:
@@ -214,7 +216,7 @@ rule make_report:
     log:
         logfile = os.path.join( config["PATHOUT"], "{wcreport_sampleDir}", SUBDIR_REPORT, "final_report_{wcreport_samplename}.log")
     message:
-        fmt("Producing final report")
+        fmt("Compiling final report")
     shell:
         " Rscript -e  '{params} "
         " fin_readalignment_bam = \"{input.aligned_reads_bam}\"; "
