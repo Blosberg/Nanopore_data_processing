@@ -7,7 +7,8 @@
     \_| \_/\__,_|_| |_|\___/| .__/|_| .__/ \___|_|
                             | |     | |
                             |_|     |_|              
-# ==============================================
+
+--- 
 
 This pipeline proocesses nanopore date into reports, and aligned reads in bam or 
 GRangeslist format. 
