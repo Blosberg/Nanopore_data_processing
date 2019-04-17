@@ -1,4 +1,6 @@
 {
+  "fastq_suffix": "fastq",
+  "Flatten": "TRUE",
 
   "target_out": "flatreads_GRL",
 
@@ -9,17 +11,17 @@
           },
 
    "progs": {
-        "minimap":    "./dev/deps/minimap2/minimap2",
-        "nanopolish": "./dev/deps/nanopolish/nanopolish",
-        "SAMTOOLS":   "samtools"
+        "minimap":    "./dev/guix/.guix-profile/bin/minimap2",
+        "nanopolish": "./dev/guix/.guix-profile/bin/nanopolish",
+        "SAMTOOLS":   "./dev/guix/.guix-profile/bin/samtools"
             },
    "scripts": {
         "script_folder":            "/home/bosberg/projects/nanopore/scripts/",
         "Rmain_build_histlist":     "06_GRobjects/Rmain_build_currenthistlist_from_GRL_reads.R",
         "Rmain_flattenreads":       "06_GRobjects/Rmain_flatten_reads.R",
         "Rfuncs_flattenreads":      "06_GRobjects/Rfuncs_flatten_reads.R",
-        "Rmain_table2GRconv":       "06_GRobjects/Rmain_npreads_tables2GR.R",
-        "Rfuncs_table2GRconv":      "06_GRobjects/Rfuncs_npreads_tables2GR.R",
+        "Rmain_tsv2GRconv":         "06_GRobjects/Rmain_npreads_tsv2GR.R",
+        "Rfuncs_tsv2GRconv":        "06_GRobjects/Rfuncs_npreads_tsv2GR.R",
         "pyfunc_defs":              "00_SM/func_defs.py",
         "rules_chunks":             "00_SM/rules_chunks.py",
         "rules_wholefastq":         "00_SM/rules_wholefastq.py"

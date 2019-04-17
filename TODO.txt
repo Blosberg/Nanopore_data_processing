@@ -1,14 +1,11 @@
 Todo: 
 
-Currently: just fastq branch works so long as the output only goes as far as "bam"
-The raw_MinION output will need to be further developed to get to the point of the reports (will probably crash now on its own)
- the goal:
-
-   * have just-fastq input produce empty current-statistics file, and when the report recognizes that, skip the corresponding section
-   * have the OUTPUT_FILES built for each sample independently, with a max-integer for each case; some may be raw_minION, some may be fastq.
-
 
  --- then start updating the report;  
 * Incorporate statistics from Granges data into report.
 
 * Need to put the alignment options into the config file (and not always assume RNA sequencing)
+
+* re-build the environment with the current manifest and test
+
+* specify nanopolish from guix package rather than directly

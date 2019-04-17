@@ -22,15 +22,47 @@ plot_background_hist <- function( xdat     = stop("xdat must be provided"),
 # --- very general (probably obsolete compared to subsequent functions)
 # --- returns normalized histogram for a given set of breaks and GR
 get_normalized_current_hist <- function( GR_input   = stop("reads must be provided"),
-                                         breaks_in  = seq(50,150,0.5)
+                                         histmin    = 50,
+                                         histmax    = 150,
+                                         histres    = 0.5
                                          )
 {
-  temp <- hist( GR_input$event_mean,
+  breaks_in  = seq( histmin, histmax, histres )
+
+  # now select just the values within the window we've declared.
+  mincutoff  = GR_input[ GR_input$event_mean >= histmin ]
+  finite_win = mincutoff[ mincutoff$event_mean <= histmax ]
+
+  temp <- hist( finite_win$event_mean,
                 breaks=breaks_in,
                 plot = FALSE)
   result <- (1/sum( temp$counts )) * temp$counts
   return(result)
 }
+
+# ==================================================================
+# --- very general (probably obsolete compared to subsequent functions)
+# --- returns normalized histogram for a given set of breaks and GR
+get_fullhist_data <- function( GR_input   = stop("reads must be provided"),
+                                histmin    = 50,
+                                histmax    = 150,
+                                histres    = 0.5
+                              )
+{
+  breaks_in  = seq( histmin, histmax, histres )
+
+  # now select just the values within the window we've declared.
+  mincutoff  = GR_input[ GR_input$event_mean >= histmin ]
+  finite_win = mincutoff[ mincutoff$event_mean <= histmax ]
+
+  result <- hist( finite_win$event_mean,
+                  breaks=breaks_in,
+                  plot = FALSE)
+
+  return(result)
+}
+
+
 
 # ==================================================================
 # --- select specific sequence from two histlists
@@ -137,7 +169,7 @@ calculate_histogram_overlap <- function(  hist1    = stop("hist1 must be provide
 
   # two profiles alongside each-other now from each histogram.
   profiles = rbind( diff( hist1$breaks) * hist1$density,  diff( hist2$breaks) * hist2$density )
-  
+
   # take the min of each one, and sum the result.
   result = sum( apply(profiles, 2, FUN=min) )
 
@@ -157,24 +189,24 @@ plot_histogram_overlap <- function(   hist1    = stop("hist1 must be provided"),
     stop("histograms do not share common x-axis binning positions.")
   if( is.null(hist1) || is.null(hist2) )
     stop("Null passed as histogram. Stopping. ")
-  
+
   xdat = hist1$mids
 
   plot( c( min(xdat),
            xdat,
            max(xdat) ),
         c( 0,
-           hist1$density, 
+           hist1$density,
            0),
         col = "black",
         type="l",
         xlab = "Current [pA]",
         ylab = "prob.",
-        main = paste( seq_in, " : ", round( calculate_histogram_overlap( hist1 = hist1,  
-                                                                                  hist2 = hist2), 
+        main = paste( seq_in, " : ", round( calculate_histogram_overlap( hist1 = hist1,
+                                                                                  hist2 = hist2),
                                                      digits = 4)  )
   )
-  
+
   polygon( c( min(xdat),
               xdat,
               max(xdat)
@@ -186,7 +218,7 @@ plot_histogram_overlap <- function(   hist1    = stop("hist1 must be provided"),
   border ="black",
   lty  = "blank"
   )
-  
+
   lines( c( min(xdat),
             xdat,
             max(xdat) ),
@@ -195,7 +227,7 @@ plot_histogram_overlap <- function(   hist1    = stop("hist1 must be provided"),
             0),
          col = "black"
   )
-  
+
   polygon( c( min(xdat),
               xdat,
               max(xdat)
@@ -219,21 +251,21 @@ plot_single_histogram <- function(   hist     = stop("hist1 must be provided"),
                                      add      = FALSE
 )
 {
-  
+
   if ( is.null(seq) )
-    {   
+    {
     y = hist } else{
-    y = hist[[seq]] 
+    y = hist[[seq]]
     }
-  
+
   xdat = y$mids
-  
-  if( add ) 
+
+  if( add )
   {  lines( c( min(xdat),
            xdat,
            max(xdat) ),
         c( 0,
-           y$density, 
+           y$density,
            0),
         col = "black",
         type="l",
@@ -245,7 +277,7 @@ plot_single_histogram <- function(   hist     = stop("hist1 must be provided"),
            xdat,
            max(xdat) ),
         c( 0,
-           y$density, 
+           y$density,
            0),
         col = "black",
         type="l",
@@ -255,7 +287,7 @@ plot_single_histogram <- function(   hist     = stop("hist1 must be provided"),
   )
   }
     # ----------------------
-  
+
   polygon( c( min(xdat),
               xdat,
               max(xdat)
@@ -268,7 +300,7 @@ plot_single_histogram <- function(   hist     = stop("hist1 must be provided"),
   lty  = "blank"
   )
 }
-  
+
 # ==================================================================
 # --- get mean
 hist_mean <- function(   hist_in    = stop("hist must be provided"),
@@ -276,7 +308,7 @@ hist_mean <- function(   hist_in    = stop("hist must be provided"),
                          )
 {
   return( sum( hist_in$density* hist_in$mids * diff(hist_in$breaks) ) )
-  #                P(x)             x              dx 
+  #                P(x)             x              dx
   }
 
 
@@ -287,7 +319,7 @@ hist_mean <- function(   hist_in    = stop("hist must be provided"),
 
 # ==================================================================
 # --- add colored areas for specific bases with various unknowns
-plot_specific_sequence_currenthist <- function( 
+plot_specific_sequence_currenthist <- function(
                                                 histlist_in = stop("histogram list must be provided"),
                                                 seq_in      = stop("sequence must be provided"),
                                                 scale_HP    = 1,
@@ -296,7 +328,7 @@ plot_specific_sequence_currenthist <- function(
                                                 )
 {
   xdat = histlist_in[[ 1 ]]$mids
-  
+
   if( add )
   {
     polygon( c( min(xdat),
@@ -340,14 +372,14 @@ plot_specific_sequence_currenthist <- function(
             )
     }
 
-  legend( "topright", 
+  legend( "topright",
           legend = seq_in,
-          fill   = col_in, 
-          lty    = "blank", 
+          fill   = col_in,
+          lty    = "blank",
           cex    = 0.8
   )
-  
-  
+
+
 }
 
 # ==================================================================
