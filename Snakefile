@@ -4,49 +4,13 @@ import argparse
 
 # import IPython;
 
-#-----------------------------------------------------------------
-#--- Define settings for config file -----------------------------
-
-# import default settings:
-config_defaults="dev/config_defaults.json"
-config = yaml.safe_load(open(config_defaults, 'r'))
+# config is determined by the --configfile option at runtime,
+# and that file is prepared by the wrapper script nanopiper.py
 
 include: os.path.join( config["scripts"]["script_folder"], config["scripts"]["pyfunc_defs"] )
 
-# import user-supplied settings, over-writing as necessary
-config_userin="config.json"
-update_config( config, yaml.safe_load( open( config_userin, 'r')))
-
-# look in the path provided for each sample and build a list of "chunks" in
-# each case.  these are just directory names and should be simply numbers
-# (0,1,2,...)
-for sLoop_countchunks in config["samplelist"]:
-    # set path within this sample's data set to look for chunks
-    DATPATH = os.path.join(config["PATHIN"], config["samplelist"][sLoop_countchunks]["subdir"], "fast5", "pass" )
-
-    # define a list of these subentries:
-    unsorted_stringlist =  [ entry.name for entry in os.scandir( DATPATH ) if entry.is_dir() ]
-    intlist = list( map(int, unsorted_stringlist) )
-    intlist.sort()
-
-    config["samplelist"][sLoop_countchunks]["chunkdirlist"] = list( map(str, intlist))
-
-
-# store a log of the config file we just built:
-config_log="configlog_out.json"
-
-with open(config_log, 'w') as outfile:
-    dumps = json.dumps(config,
-                       indent=4,
-                       sort_keys=True,
-                       separators=(",",": "),
-                       ensure_ascii=True)
-    outfile.write(dumps)
-
-
 # ------------------------------------------------------
-#--- Define Dependencies:
-
+# --- Define Dependencies:
 
 MM2        = config["progs"]["minimap"]
 SAMTOOLS   = config["progs"]["SAMTOOLS"]
@@ -58,7 +22,7 @@ RmdReportScript    = os.path.join(config["scripts"]["script_folder"],"final_repo
 input_data_type    = config["input_data_type"]
 
 R_tables2GR_main     = os.path.join( config["scripts"]["script_folder"], config["scripts"]["Rmain_tsv2GRconv"] )
-R_tables2GR_funcs    = os.path.join( config[ "scripts"]["script_folder"], config[ "scripts"]["Rfuncs_tsv2GRconv"] )
+R_tables2GR_funcs    = os.path.join( config["scripts"]["script_folder"], config[ "scripts"]["Rfuncs_tsv2GRconv"] )
 
 R_flattenreads_main  = os.path.join( config["scripts"]["script_folder"], config["scripts"]["Rmain_flattenreads"] )
 R_flattenreads_funcs = os.path.join( config["scripts"]["script_folder"], config["scripts"]["Rfuncs_flattenreads"] )
@@ -66,7 +30,7 @@ R_flattenreads_funcs = os.path.join( config["scripts"]["script_folder"], config[
 R_build_histlist_main   = os.path.join( config["scripts"]["script_folder"], config["scripts"]["Rmain_build_histlist"] )
 
 #------------------------------------------------------
-#--- Define output directories
+# --- Define output directories
 
 SUBDIR_SYMLINKS           = "01_symlinks_fastqindex_chunks/"
 SUBDIR_ALIGNED_MINIMAP    = "02_MM_aligned_chunks/"
@@ -79,65 +43,7 @@ SUBDIR_REPORT             = "Final_report/"
 DIR_REFGENOME             = config['ref']['Genome_DIR']
 
 #------------------------------------------------------
-#--- Check that the pipeline can be executed:
-
-# check for write access to refgenome dir
-if ( not os.access(DIR_REFGENOME, os.W_OK) ):
-   print("Write access to refgenome folder is denied. Checking if necessary indexing files already exist: ... ")
-
-   if( not os.path.isfile(DIR_REFGENOME , config['ref']['Genome_version'] + ".mmi")):
-      bail("minimap index files not found, and cannot be created. Aborting")
-
-   else:
-      print("Refgenome index files are present. Continuing... ")
-
-#--- Create symbolic links to PATHIN so that indexing/etc can be performed in
-# written pathout
-
-if ( input_data_type == "raw_minION"):
-   # the snakemake rules defined in the following included script assume
-   # that the minION output has been "chunked" into sequential files, and
-   # will have to be reassembled.
-   include   : os.path.join( config["scripts"]["script_folder"], config["scripts"]["rules_chunks"] )
-
-   for sLooplinki in config["samplelist"]:
-
-#       os.makedirs( os.path.join( config["PATHOUT"], config["samplelist"][sLooplinki]["subdir"], SUBDIR_SYMLINKS),  exist_ok=True)
-
-       # get subdir for this sample:
-       samplePATH = os.path.join( config["PATHIN"], config["samplelist"][sLooplinki]["subdir"] )
-
-#       # linke to each chunk directly:
-#       for linkindex in config["samplelist"][sLooplinki]["chunkdirlist"]:
-#          linkname = sLooplinki + "_" + str(linkindex) + "." + config["fastq_suffix"]
-#
-#          target   = getPathCase( samplePATH, "fastq", "pass",config["samplelist"][sLooplinki]["fastq_prefix"] + str(linkindex) + "." +  config["fastq_suffix"], "raw_minION")
-#
-#          linkloc  = os.path.join( config["PATHOUT"], config["samplelist"][sLooplinki]["subdir"], SUBDIR_SYMLINKS, linkname)
-#
-#          makelink(  target, linkloc )
-
-
-elif( input_data_type == "fastq"):
-   # Do some other stuff
-   include   : os.path.join( config["scripts"]["script_folder"], config["scripts"]["rules_wholefastq"] )
-
-   for sLoop2linki in config["samplelist"]:
-
-       # get subdir for this sample:
-       samplePATH = os.path.join(config["PATHIN"], config["samplelist"][sLoop2linki]["subdir"] )
-
-       linkname = sLoop2linki + config['samplelist'][sLoop2linki]["fastq_suffix"]
-#       makelink( os.path.join(samplePATH, config["samplelist"][sLoop2linki]["fastq_prefix"] + config["samplelist"][sLoop2linki]["fastq_suffix"] ), os.path.join( config["PATHOUT"], config["samplelist"][sLoop2linki]["subdir"], SUBDIR_SYMLINKS, linkname))
-
-
-else:
-   print("Unrecognized input data format. Terminating.")
-   exit(1)
-
-
-#------------------------------------------------------
-#--- Define output (target) files:
+# --- Define output (target) files:
 
 # Initialize empty list
 OUTPUT_FILES = []
@@ -173,7 +79,6 @@ for sampleLoopi_targets in config["samplelist"]:
    else:
       print("Unrecognized target output file format: ", config["target_out"], " ... Terminating.")
       exit(1)
-
 
 #---  DEBUGGING:
 #------------------------------------------------------

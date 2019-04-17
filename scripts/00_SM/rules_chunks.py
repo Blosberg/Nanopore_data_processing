@@ -34,6 +34,33 @@ rule create_kmer_histlist:
 
 
 # -----------------------------------------------------
+rule flatten_reads:
+    # flatten reads from GRangesList in .RDS format
+    # by "flatten", we mean collaps multiple 'events'
+    # assigned to the same segment on the same read.
+    input:
+        GRobj_in     = os.path.join( config["PATHOUT"], config["samplelist"][sample]["subdir"], SUBDIR_GR, "{sample}_reads_GRL.rds")
+    output:
+        GRflat_out   = os.path.join( config["PATHOUT"], config["samplelist"][sample]["subdir"], SUBDIR_GR, "{sample}_reads_flat_GRL.rds")
+    params:
+        Rfuncs_flatten_reads = R_flattenreads_funcs,
+        readsGRL_in          = os.path.join( config["PATHOUT"], config["samplelist"][sample]["subdir"], SUBDIR_GR, "{sample}_reads_GRL.rds"),
+        flatreadsGRL_out    = os.path.join( config["PATHOUT"], config["samplelist"][sample]["subdir"], SUBDIR_GR, "{sample}_reads_flat_GRL.rds"),
+        samplename           = "{sample}"
+    log:
+        os.path.join( config["PATHOUT"], config["samplelist"][sample]["subdir"], SUBDIR_GR, "{sample}_flattenreads_GRL.log")
+    message:
+        fmt("Flatten intra-read events with coincident alignments")
+    shell:
+        nice('Rscript', [ R_flattenreads_main,
+                         "--Rfuncs_flattenreads={params.Rfuncs_flatten_reads}",
+                         "--readsGRL_in={params.readsGRL_in}",
+                         "--flatreadsGRL_out={params.flatreadsGRL_out}",
+                         "--logFile={log}",
+                         "--samplename={params.samplename}"] )
+
+# -----------------------------------------------------
+
 rule create_readcurrent_GRL_obj:
     # produce GRangesList object of current data in .RDS format
     # from the .tsv files produced by eventalign
@@ -88,8 +115,10 @@ rule np_index:
 
 
 # -----------------------------------------------------
+
 rule merge_bam_files:
-    # combine the various ~4000 read chunks into a single bam file
+    # combine the ~4000 reads from each minimap2
+    # alignment into a single bam file
     input:
         bami      = lambda wc: get_chunkfiles( wc.wcmerge_samplename, os.path.join( config["PATHOUT"], wc.wcmerge_sampleDir, SUBDIR_SORTED_MINIMAPPED, "bam_chunks"), "" , ".sorted.bam", False )
     output:
@@ -171,9 +200,9 @@ rule create_fqsymlink:
 
 #------------------------------------------------------
 
-# Create indexed version of reference genome for fast
-# alignment with minimap2 later:
 rule minimizer:
+    # Create indexed version of reference genome for fast
+    # alignment with minimap2 later:
     input:
         refgenome_fasta  = os.path.join(DIR_REFGENOME , config['ref']['Genome_version']+ ".fa" )
     output:

@@ -1,8 +1,11 @@
 {
   "fastq_suffix": "fastq",
-  "Flatten": "TRUE",
+  "fast5dir_default":"fast5/pass/",
+  "fastqdir_default":"fastq/pass/",
 
+  "Flatten": "TRUE",
   "target_out": "flatreads_GRL",
+
 
   "ref": {
           "Transcriptome"  : "/scratch/AG_Akalin/refGenomes/hg19_canon/170317_Homo_sapiens.GRCh37.87.chr.gtf",
@@ -26,7 +29,89 @@
         "rules_chunks":             "00_SM/rules_chunks.py",
         "rules_wholefastq":         "00_SM/rules_wholefastq.py"
             },
+
    "execution":{
-        "nice": "0"
-            }
-}
+        "submit-to-cluster": no,
+        "jobs": 1,
+        "nice": 0,
+        "type": "RNA",
+        "cluster":{
+           "missing-file-timeout": 120,
+           "stack": 128M,
+           "contact-email": "none",
+           "args": ""
+           },
+        "rules":{
+           "diffmeth":
+              {
+             "threads": 1,
+             "memory": 30G
+              },
+           "final_report":
+              {
+             "threads": 1,
+             "memory": 40G
+              },
+           "make_report":
+              {
+              "threads": 1,
+              "memory": 30G
+              },
+           "np_event_align":
+              {
+              "threads": 1,
+              "memory": 30G
+              },
+           "index_sortedbam":
+              {
+              "threads": 1,
+              "memory": 30G
+              },
+           "np_index":
+              {
+              "threads": 1,
+              "memory": 30G
+              },
+           "create_kmer_histlist":
+              {
+              "threads": 1,
+              "memory": 30G
+              },
+           "flatten_reads":
+              {
+              "threads": 1,
+              "memory": 30G
+              },
+           "create_readcurrent_GRL_obj":
+              {
+              "threads": 1,
+              "memory": 30G
+              },
+           "merge_bam_files":
+              {
+              "threads": 1,
+              "memory": 30G
+              },
+           "convert_sort_minimap":
+              {
+              "threads": 1,
+              "memory": 30G
+              },
+           "filter_nonaligned_minimap":
+              {
+              "threads": 1,
+              "memory": 30G
+              },
+           "align_minimap":
+              {
+              "threads": 1,
+              "memory": 30G
+              },
+           "minimizer":
+              {
+              "threads": 1,
+              "memory": 30G
+              }
+           }
+        }
+   }
