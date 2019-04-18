@@ -54,27 +54,27 @@ for sampleLoopi_targets in config["samplelist"]:
    # @@@ TODO: implement sample-dependent targets with defaults.
    if ( config["target_out"] == "report" ):
       OUTPUT_FILES.extend(
-                          [ os.path.join( config["PATHOUT"], config["samplelist"][sampleLoopi_targets]["subdir"], SUBDIR_REPORT, "" + sampleLoopi_targets + "_report.html") ]
+                          [ os.path.join( config["PATHOUT"], config["samplelist"][sampleLoopi_targets]["sampledir"], SUBDIR_REPORT, "" + sampleLoopi_targets + "_report.html") ]
                           )
    elif ( config["target_out"] == "histlist" ):
       OUTPUT_FILES.extend(
-                          [ os.path.join( config["PATHOUT"], config["samplelist"][sampleLoopi_targets]["subdir"], SUBDIR_GR, sampleLoopi_targets + "_kmer_histlist.rds") ]
+                          [ os.path.join( config["PATHOUT"], config["samplelist"][sampleLoopi_targets]["sampledir"], SUBDIR_GR, sampleLoopi_targets + "_kmer_histlist.rds") ]
                           )
    elif ( config["target_out"] == "flatreads_GRL" ):
       OUTPUT_FILES.extend(
-                          [ os.path.join( config["PATHOUT"], config["samplelist"][sampleLoopi_targets]["subdir"], SUBDIR_GR,  sampleLoopi_targets + "_reads_flat_GRL.rds") ]
+                          [ os.path.join( config["PATHOUT"], config["samplelist"][sampleLoopi_targets]["sampledir"], SUBDIR_GR,  sampleLoopi_targets + "_reads_flat_GRL.rds") ]
                          )
    elif ( config["target_out"] == "reads_GRL" ):
       OUTPUT_FILES.extend(
-                          [ os.path.join( config["PATHOUT"], config["samplelist"][sampleLoopi_targets]["subdir"], SUBDIR_GR, sampleLoopi_targets + "_reads_GRL.rds") ]
+                          [ os.path.join( config["PATHOUT"], config["samplelist"][sampleLoopi_targets]["sampledir"], SUBDIR_GR, sampleLoopi_targets + "_reads_GRL.rds") ]
                           )
    elif ( config["target_out"] == "mergedbam" ):
       OUTPUT_FILES.extend(
-                          [ os.path.join( config["PATHOUT"], config["samplelist"][sampleLoopi_targets]["subdir"], SUBDIR_SORTED_MINIMAPPED, sampleLoopi_targets + ".sorted.bam") ]
+                          [ os.path.join( config["PATHOUT"], config["samplelist"][sampleLoopi_targets]["sampledir"], SUBDIR_SORTED_MINIMAPPED, sampleLoopi_targets + ".sorted.bam") ]
                          )
    elif ( config["target_out"] == "aligned_chunks"):
       OUTPUT_FILES.extend(
-                          get_chunkfiles( sampleLoopi_targets, os.path.join( config["PATHOUT"], config["samplelist"][sampleLoopi_targets]["subdir"], SUBDIR_ALIGNED_MINIMAP) ,  "", ".sam", 0 )
+                          get_chunkfiles( sampleLoopi_targets, os.path.join( config["PATHOUT"], config["samplelist"][sampleLoopi_targets]["sampledir"], SUBDIR_ALIGNED_MINIMAP) ,  "", ".sam", 0 )
                          )
    else:
       print("Unrecognized target output file format: ", config["target_out"], " ... Terminating.")
@@ -138,8 +138,8 @@ rule np_event_align:
     input:
         sortedbam             = os.path.join( config["PATHOUT"], "{wcEvalign_sampleDir}", SUBDIR_SORTED_MINIMAPPED, "bam_chunks", "{wcEvalign_samplename}_{wcEvalign_chunk}.sorted.bam"),
         NOTCALLED_indexedbam  = os.path.join( config["PATHOUT"], "{wcEvalign_sampleDir}", SUBDIR_SORTED_MINIMAPPED, "bam_chunks", "{wcEvalign_samplename}_{wcEvalign_chunk}.sorted.bam.bai"),
-        fastq_file            = os.path.join( config["PATHOUT"], "{wcEvalign_sampleDir}", SUBDIR_SYMLINKS,  "{wcEvalign_samplename}_{wcEvalign_chunk}." +config["fastq_suffix"]),
-        fastq_npi             = os.path.join( config["PATHOUT"], "{wcEvalign_sampleDir}", SUBDIR_SYMLINKS,  "{wcEvalign_samplename}_{wcEvalign_chunk}." + config["fastq_suffix"] + ".index"),
+        fastq_file            = os.path.join( config["PATHOUT"], "{wcEvalign_sampleDir}", SUBDIR_SYMLINKS,  "{wcEvalign_samplename}_{wcEvalign_chunk}" +config["fastq_suffix"]),
+        fastq_npi             = os.path.join( config["PATHOUT"], "{wcEvalign_sampleDir}", SUBDIR_SYMLINKS,  "{wcEvalign_samplename}_{wcEvalign_chunk}" + config["fastq_suffix"] + ".index"),
         refgenome_fasta       = os.path.join( DIR_REFGENOME, config['ref']['Genome_version']+ ".fa" ),
         NOTCALLED_bwt         = os.path.join( DIR_REFGENOME, config['ref']['Genome_version']+ ".fa.bwt"),
         NOTCALLED_pac         = os.path.join( DIR_REFGENOME, config['ref']['Genome_version']+ ".fa.pac")

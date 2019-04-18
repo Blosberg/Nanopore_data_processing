@@ -73,7 +73,7 @@ def get_chunkfiles( samplename, DIR, prefix_string, suffix_string, quoted):
 
 # --------------------------------------------------------------
 
-def prep_configfile( config_defaults, config_userin, config_npSM_out):
+def prep_configfile( config_defaults, config_userin, config_npSM_out, clustersub ):
     # Create the SM config file, from default, and user-defined inputs:
 
     config = yaml.safe_load(open(config_defaults, 'r'))
@@ -108,7 +108,7 @@ def prep_configfile( config_defaults, config_userin, config_npSM_out):
 
     # If we are currently runing a SGE cluster submission, then
     # prepare a cluster-config file (specifying mem/time/etc. for each job)
-    if( args.clustersub ):
+    if( clustersub ):
        generate_cluster_configuration( config )
 
     #  --------- Now dump the config dictionary to the output path : ------------

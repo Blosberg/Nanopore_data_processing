@@ -141,7 +141,8 @@ args = parser.parse_args()
    
 config = prep_configfile( args.config_defaults,
                           args.config_userin,
-                          args.config_npSM )
+                          args.config_npSM,
+                          args.clustersub )
 
 # @@@ DEBUGGING: REMOVE THIS:
 # quit()

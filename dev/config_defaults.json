@@ -19,7 +19,7 @@
         "SAMTOOLS":   "./dev/guix/.guix-profile/bin/samtools"
             },
    "scripts": {
-        "script_folder":            "/home/bosberg/projects/nanopore/scripts/",
+        "script_folder":            "/home/bosberg/projects/nanopiper/scripts/",
         "Rmain_build_histlist":     "06_GRobjects/Rmain_build_currenthistlist_from_GRL_reads.R",
         "Rmain_flattenreads":       "06_GRobjects/Rmain_flatten_reads.R",
         "Rfuncs_flattenreads":      "06_GRobjects/Rfuncs_flatten_reads.R",
