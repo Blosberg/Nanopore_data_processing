@@ -100,15 +100,16 @@ def prep_configfile( config_defaults, config_userin, config_npSM_out):
        fqdir  = os.path.join( config["PATHIN"], config["samplelist"][sample]["sampledir"], config["samplelist"][sample].get( "fastqdir", config["fastqdir_default"] ) )
        if ( os.path.isdir( fqdir )  ):
           # determine the common prefix that preceeds _{chunk}.fastq in each of these files:
-          fastqprefix = list( set (  [ re.sub("_\d+." + config["fastq_suffix"], '_', entry.name ) for entry in  os.scandir( fqdir ) if entry.is_file() ] ) )
+          fastqprefix = list( set (  [ re.sub("_\d+" + config["fastq_suffix"], '_', entry.name ) for entry in  os.scandir( fqdir ) if entry.is_file() ] ) )
           if ( len( fastqprefix ) != 1 ):
               bail("Number of fastq prefixes for a given sample is different from 1 ")
           else:
               config["samplelist"][sample]["fastq_prefix"] = fastqprefix[0]
 
-    # --------- Now dump the config dictionary to the output path : ------------
-    if( config["execution"]["submit-to-cluster"] ):
-       generate_cluster_configuration( config_defaults )
+    # If we are currently runing a SGE cluster submission, then
+    # prepare a cluster-config file (specifying mem/time/etc. for each job)
+    if( args.clustersub ):
+       generate_cluster_configuration( config )
 
     #  --------- Now dump the config dictionary to the output path : ------------
 
@@ -123,11 +124,11 @@ def prep_configfile( config_defaults, config_userin, config_npSM_out):
                             ensure_ascii=True )
         outfile.write(dumps)
 
-    return 0
+    return config
 
 # --------------------------------------------------------------
 
-def generate_cluster_configuration(config_defaults):
+def generate_cluster_configuration( config ):
     rules = config['execution']['rules']
 
     cluster_conf = {}

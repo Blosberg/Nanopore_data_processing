@@ -98,13 +98,13 @@ rule np_index:
     input:
         fast5_folder = os.path.join( config["PATHIN"], "{wcnpindex_sampleDir}/fast5/pass", "{wcnpindex_chunk}"),
 #        fast5_folder = lambda wc: getPathCase( os.path.join( config["PATHIN"], "{wcnpindex_sampleDir}"), 'fast5', 'pass', wc.wcnpindex_chunk, input_data_type ),
-        fastq_file   = os.path.join( config["PATHOUT"], "{wcnpindex_sampleDir}", SUBDIR_SYMLINKS, "{wcnpindex_samplename}_{wcnpindex_chunk}." + config["fastq_suffix"])
+        fastq_file   = os.path.join( config["PATHOUT"], "{wcnpindex_sampleDir}", SUBDIR_SYMLINKS, "{wcnpindex_samplename}_{wcnpindex_chunk}" + config["fastq_suffix"])
 #        fastq_file   = lambda wc: os.path.join( config["PATHOUT"], "{wcnpindex_sampleDir}", SUBDIR_SYMLINKS, wc.wcnpindex_samplename + "_{wcnpindex_chunk}." + config["fastq_suffix"] )
     output:
-        npi    = os.path.join( config["PATHOUT"], "{wcnpindex_sampleDir}", SUBDIR_SYMLINKS, "{wcnpindex_samplename}_{wcnpindex_chunk}."+config["fastq_suffix"]+".index"  ),
-        fai    = os.path.join( config["PATHOUT"], "{wcnpindex_sampleDir}", SUBDIR_SYMLINKS, "{wcnpindex_samplename}_{wcnpindex_chunk}."+config["fastq_suffix"]+".index.fai" ),
-        gzi    = os.path.join( config["PATHOUT"], "{wcnpindex_sampleDir}", SUBDIR_SYMLINKS, "{wcnpindex_samplename}_{wcnpindex_chunk}."+config["fastq_suffix"]+".index.gzi" ),
-        readdb = os.path.join( config["PATHOUT"], "{wcnpindex_sampleDir}", SUBDIR_SYMLINKS, "{wcnpindex_samplename}_{wcnpindex_chunk}."+config["fastq_suffix"]+".index.readdb")
+        npi    = os.path.join( config["PATHOUT"], "{wcnpindex_sampleDir}", SUBDIR_SYMLINKS, "{wcnpindex_samplename}_{wcnpindex_chunk}"+config["fastq_suffix"]+".index"  ),
+        fai    = os.path.join( config["PATHOUT"], "{wcnpindex_sampleDir}", SUBDIR_SYMLINKS, "{wcnpindex_samplename}_{wcnpindex_chunk}"+config["fastq_suffix"]+".index.fai" ),
+        gzi    = os.path.join( config["PATHOUT"], "{wcnpindex_sampleDir}", SUBDIR_SYMLINKS, "{wcnpindex_samplename}_{wcnpindex_chunk}"+config["fastq_suffix"]+".index.gzi" ),
+        readdb = os.path.join( config["PATHOUT"], "{wcnpindex_sampleDir}", SUBDIR_SYMLINKS, "{wcnpindex_samplename}_{wcnpindex_chunk}"+config["fastq_suffix"]+".index.readdb")
     params:
         options    = " index -d "
     log:
@@ -172,7 +172,7 @@ rule align_minimap:
     # genome
     input:
         mmiref   = os.path.join( DIR_REFGENOME , config['ref']['Genome_version']+ ".mmi" ),
-        fqlink   = os.path.join( config["PATHOUT"], "{wcalign_sampleDir}", SUBDIR_SYMLINKS, "{wcalign_samplename}_{wcalign_chunk}." + config["fastq_suffix"] )
+        fqlink   = os.path.join( config["PATHOUT"], "{wcalign_sampleDir}", SUBDIR_SYMLINKS, "{wcalign_samplename}_{wcalign_chunk}" + config["fastq_suffix"] )
     output:
         aligned  = os.path.join( config["PATHOUT"], "{wcalign_sampleDir}", SUBDIR_ALIGNED_MINIMAP,  "{wcalign_samplename}_{wcalign_chunk}.sam" )
     params:
@@ -188,9 +188,9 @@ rule align_minimap:
 rule create_fqsymlink:
     # create symlink to data:
     input:
-        chunk_src     = lambda wc: os.path.join( config["PATHIN"], wc.wcfqlink_sampleDir, "fastq", "pass", config["samplelist"][wc.wcfqlink_samplename]["fastq_prefix"] + wc.wcfqlink_chunk + "." + config["fastq_suffix"] )
+        chunk_src     = lambda wc: os.path.join( config["PATHIN"], wc.wcfqlink_sampleDir, "fastq", "pass", config["samplelist"][wc.wcfqlink_samplename]["fastq_prefix"] + wc.wcfqlink_chunk + config["fastq_suffix"] )
     output:
-        chunk_linkloc = os.path.join( config["PATHOUT"], "{wcfqlink_sampleDir}", SUBDIR_SYMLINKS, "{wcfqlink_samplename}_{wcfqlink_chunk}." + config["fastq_suffix"] )
+        chunk_linkloc = os.path.join( config["PATHOUT"], "{wcfqlink_sampleDir}", SUBDIR_SYMLINKS, "{wcfqlink_samplename}_{wcfqlink_chunk}" + config["fastq_suffix"] )
     params:
         options  = " -s "
     message:

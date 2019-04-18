@@ -1,5 +1,5 @@
 {
-  "fastq_suffix": "fastq",
+  "fastq_suffix": ".fastq",
   "fast5dir_default":"fast5/pass/",
   "fastqdir_default":"fastq/pass/",
 
@@ -31,7 +31,6 @@
             },
 
    "execution":{
-        "submit-to-cluster": no,
         "jobs": 1,
         "nice": 0,
         "type": "RNA",

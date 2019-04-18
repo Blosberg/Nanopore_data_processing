@@ -1,4 +1,4 @@
-#!/clusterhome/bosberg/projects/nanopiper/dev/guix/.guix-profile/bin/python3
+#!/home/bosberg/projects/nanopiper/dev/guix/.guix-profile/bin/python3
 # -*- python -*-
 # nanopiper Pipeline.
 #
@@ -31,21 +31,19 @@ import re # regular expressions.
 
 # --- TO BE GENERALIZED: ----------------------------------
 
-snakefilename="Snakefile"
-GUIX_PROFILE="/home/bosberg/projects/nanopiper/dev/guix/"
-VERSION="0.1.0"
-config_defaults= "dev/config_defaults.json"
-config_userin="./config.json"
-fast5dir_default="fast5/pass"
-fastqdir_default="fastq/pass"
-fastqsuffix_default="fastq"
 
-sys.path.append("/clusterhome/bosberg/projects/nanopiper/scripts/00_SM/")
+PATH_EXEC="/home/bosberg/projects/nanopiper/"
+# ^ execution path from which pipeline executables (+repo) are stored.
 
+snakefilename = PATH_EXEC+"Snakefile"
+GUIX_PROFILE  = PATH_EXEC+"dev/guix/"
+VERSION       = "0.1.0"
+
+sys.path.append(PATH_EXEC+"scripts/00_SM/")
 from func_defs import * 
 
 # shouldn't need this; check back.
-# path_rules_chunks="/clusterhome/bosberg/projects/nanopiper/scripts/00_SM/rules_chunks.py"
+# path_rules_chunks="/home/bosberg/projects/nanopiper/scripts/00_SM/rules_chunks.py"
 # include: path_rules_chunks
 
 # --- DOCUMENTATION/HELP: ---------------------------------
@@ -79,17 +77,17 @@ parser = argparse.ArgumentParser( description=description,
 parser.add_argument('-v', '--version', action='version',
                     version=VERSION)
                      
-parser.add_argument('-config_defaults', nargs='?', default='dev/config_defaults.json',
+parser.add_argument('-config_defaults', nargs='?', default=PATH_EXEC+'dev/config_defaults.json',
                     help="""\
 The config file of default values --to be overwritten as needed.
 """)
 
-parser.add_argument('-config_userin', nargs='?', default='./config.json',
+parser.add_argument('-config_userin', nargs='?', default=PATH_EXEC+'./config.json',
                     help="""\
 The config file supplied by the user --to overwrite defaults as needed.
 """)
 
-parser.add_argument('config_npSM', nargs='?', default='./config_npSM.json',
+parser.add_argument('config_npSM', nargs='?', default=PATH_EXEC+'config_npSM.json',
                     help="""\
 The config file produced by this scripts and supplied to SnakeMake.
 """)
@@ -104,6 +102,11 @@ parser.add_argument('-n', '--dry-run', dest='dry_run', action='store_true',
                     help="""\
 Only show what work would be performed.  Do not actually run the
 pipeline.""")
+
+parser.add_argument('--clustersub', dest="clustersub", default=False,
+                    help="""\
+Should we submit this Snakejob to an SGE cluster?
+""")
 
 parser.add_argument('--graph', dest='graph',
                     help="""\
@@ -136,14 +139,12 @@ args = parser.parse_args()
 
 # --- PREPARE config: --------------------------------
    
-prep_configfile( args.config_defaults,
-                 args.config_userin,
-                 args.config_npSM )
+config = prep_configfile( args.config_defaults,
+                          args.config_userin,
+                          args.config_npSM )
 
 # @@@ DEBUGGING: REMOVE THIS:
-quit()
-
-config = json.load(open(args.configfile, 'r'))
+# quit()
 
 # --- Validate that pipeline can be executed:
 
@@ -153,7 +154,7 @@ DIR_REFGENOME             = config['ref']['Genome_DIR']
 if ( not os.access(DIR_REFGENOME, os.W_OK) ):
    print("Write access to refgenome folder is denied. Checking if necessary indexing files already exist: ... ")
 
-   if( not os.path.isfile(DIR_REFGENOME , config['ref']['Genome_version']+ ".mmi")):
+   if( not os.path.isfile( os.path.join( DIR_REFGENOME , config['ref']['Genome_version']+ ".mmi")) ):
       bail("minimap index files not found, and cannot be created. Aborting")
 
    else:
@@ -203,16 +204,19 @@ if ( not os.access(DIR_REFGENOME, os.W_OK) ):
 
 
 command = [
-    os.path.join(GUIX_PROFILE, ".guix_profile", "bin", "snakemake"),
+    os.path.join(GUIX_PROFILE, ".guix-profile", "bin", "snakemake"),
     "--snakefile={}".format(snakefilename),
-    "--configfile={}".format(args.config_SMout),
+    "--configfile={}".format(args.config_npSM),
     "--jobs={}".format( str(config['execution']['jobs']) ),
 ]
 
-if config['execution']['submit-to-cluster']:
+if ( args.clustersub ):
 # Jobs to be submitted to an SGE cluster:
-    cluster_config_file = generate_cluster_configuration()
+
     print("Commencing snakemake run submission to cluster", flush=True, file=sys.stderr)
+
+    # cluster_config generation is handled in func_defs.
+    # generate_cluster_configuration( config )
 
     # Check if a particular queue has been specified: 
     if ( ('queue' in config['execution']['cluster'] )  or ( 'queue' in config['execution']['rules']['__default__'] )):
@@ -244,17 +248,20 @@ if config['execution']['submit-to-cluster']:
             raise
 
     # create path for Snakemake e/o logfiles: 
-    os.makedirs(path.join(config['locations']['output-dir'], 'pigx_work/cluster_log_files'), exist_ok=True)
+    ClusterLogsDir = os.path.join(config['PATHOUT'], 'cluster_log_files')
+    os.makedirs( ClusterLogsDir , exist_ok=True)
 
 
     # define qsub command:
-    qsub = "qsub -e pigx_work/cluster_log_files/ -o pigx_work/cluster_log_files/ -v R_LIBS_USER -v PATH -v GUIX_LOCPATH  %s -l h_stack={cluster.h_stack} -l h_vmem={cluster.MEM} %s -b y -pe smp {cluster.nthreads} -cwd" % ( queue_selection_string, contact_email_string)
+    # The following were removed (and might be necessary): 
+    # " -v R_LIBS_USER "
+    # "--jobscript={}/qsub-template.sh".format(config['locations']['pkglibexecdir']),
+    qsub = "qsub -e " + ClusterLogsDir + " -o " + ClusterLogsDir + " -v PATH -v GUIX_LOCPATH  %s -l h_stack={cluster.h_stack} -l h_vmem={cluster.MEM} %s -b y -pe smp {cluster.nthreads} -cwd" % ( queue_selection_string, contact_email_string)
     if config['execution']['cluster']['args']:
         qsub += " " + config['execution']['cluster']['args']
     command += [
         "--cluster-config={}".format(cluster_config_file),
         "--cluster={}".format(qsub),
-        "--jobscript={}/qsub-template.sh".format(config['locations']['pkglibexecdir']),
         "--latency-wait={}".format(config['execution']['cluster']['missing-file-timeout'])
     ]
 else:
@@ -264,11 +271,8 @@ else:
 command.append("--rerun-incomplete")
 if args.graph:
     # Only output dag graph:
-    command.append("--dag")
-    with open(args.graph, "w") as outfile:
-        p1 = subprocess.Popen(command, stdout=subprocess.PIPE)
-        p2 = subprocess.Popen(['dot','-Tpdf'], stdin=p1.stdout, stdout=outfile)
-        p2.communicate()
+    command.append("--dag | dot -Tpdf > " + config["PATHOUT"] + "dag.pdf")
+
 else:
     # Check for additional arguments/flags:
     prepare_links()
