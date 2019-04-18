@@ -39,16 +39,16 @@ rule flatten_reads:
     # by "flatten", we mean collaps multiple 'events'
     # assigned to the same segment on the same read.
     input:
-        GRobj_in     = os.path.join( config["PATHOUT"], config["samplelist"][sample]["subdir"], SUBDIR_GR, "{sample}_reads_GRL.rds")
+        GRobj_in     = os.path.join( config["PATHOUT"], "{wcflatten_sampleDir}", SUBDIR_GR, "{wcflatten_samplename}_reads_GRL.rds")
     output:
-        GRflat_out   = os.path.join( config["PATHOUT"], config["samplelist"][sample]["subdir"], SUBDIR_GR, "{sample}_reads_flat_GRL.rds")
+        GRflat_out   = os.path.join( config["PATHOUT"], "{wcflatten_sampleDir}", SUBDIR_GR, "{wcflatten_samplename}_reads_flat_GRL.rds")
     params:
         Rfuncs_flatten_reads = R_flattenreads_funcs,
-        readsGRL_in          = os.path.join( config["PATHOUT"], config["samplelist"][sample]["subdir"], SUBDIR_GR, "{sample}_reads_GRL.rds"),
-        flatreadsGRL_out    = os.path.join( config["PATHOUT"], config["samplelist"][sample]["subdir"], SUBDIR_GR, "{sample}_reads_flat_GRL.rds"),
-        samplename           = "{sample}"
+        readsGRL_in          = os.path.join( config["PATHOUT"], "{wcflatten_sampleDir}", SUBDIR_GR, "{wcflatten_samplename}_reads_GRL.rds"),
+        flatreadsGRL_out     = os.path.join( config["PATHOUT"], "{wcflatten_sampleDir}", SUBDIR_GR, "{wcflatten_samplename}_reads_flat_GRL.rds"),
+        samplename           = "{wcflatten_samplename}"
     log:
-        os.path.join( config["PATHOUT"], config["samplelist"][sample]["subdir"], SUBDIR_GR, "{sample}_flattenreads_GRL.log")
+        logfile              = os.path.join( config["PATHOUT"], "{wcflatten_sampleDir}", SUBDIR_GR, "{wcflatten_samplename}_flattenreads_GRL.log")
     message:
         fmt("Flatten intra-read events with coincident alignments")
     shell:

@@ -82,9 +82,9 @@ parser.add_argument('-config_defaults', nargs='?', default=PATH_EXEC+'dev/config
 The config file of default values --to be overwritten as needed.
 """)
 
-parser.add_argument('-config_userin', nargs='?', default=PATH_EXEC+'./config.json',
+parser.add_argument( '-c', '-config_userin', dest='config_userin', nargs='?', default=PATH_EXEC+'./config.json',
                     help="""\
-The config file supplied by the user --to overwrite defaults as needed.
+The config file supplied by the user, to overwrite defaults as needed.
 """)
 
 parser.add_argument('config_npSM', nargs='?', default=PATH_EXEC+'config_npSM.json',
@@ -276,8 +276,7 @@ if args.graph:
 
 else:
     # Check for additional arguments/flags:
-    prepare_links()
-    display_logo()
+    #    display_logo()
     if args.force:
         command.append("--forceall")
     if args.dry_run:

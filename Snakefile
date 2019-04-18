@@ -2,13 +2,6 @@
 import os, sys, json, csv, yaml
 import argparse
 
-# import IPython;
-
-# config is determined by the --configfile option at runtime,
-# and that file is prepared by the wrapper script nanopiper.py
-
-include: os.path.join( config["scripts"]["script_folder"], config["scripts"]["pyfunc_defs"] )
-
 # ------------------------------------------------------
 # --- Define Dependencies:
 
@@ -41,6 +34,12 @@ SUBDIR_GR                 = "06_GRobjects"
 SUBDIR_REPORT             = "Final_report/"
 
 DIR_REFGENOME             = config['ref']['Genome_DIR']
+
+#------------------------------------------------------
+# --- Include function definitions and rules
+
+include: os.path.join( config["scripts"]["script_folder"], config["scripts"]["pyfunc_defs"] )
+include: os.path.join( config["scripts"]["script_folder"], config["scripts"]["rules_chunks"] )
 
 #------------------------------------------------------
 # --- Define output (target) files:
