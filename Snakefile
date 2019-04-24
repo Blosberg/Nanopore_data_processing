@@ -14,11 +14,8 @@ GENOME_VERSION     = config["ref"]["Genome_version"]
 RmdReportScript    = os.path.join(config["scripts"]["script_folder"],"final_report","Nanopore_report.Rmd")
 input_data_type    = config["input_data_type"]
 
-R_tables2GR_main     = os.path.join( config["scripts"]["script_folder"], config["scripts"]["Rmain_tsv2GRconv"] )
-R_tables2GR_funcs    = os.path.join( config["scripts"]["script_folder"], config[ "scripts"]["Rfuncs_tsv2GRconv"] )
-
-R_flattenreads_main  = os.path.join( config["scripts"]["script_folder"], config["scripts"]["Rmain_flattenreads"] )
-R_flattenreads_funcs = os.path.join( config["scripts"]["script_folder"], config["scripts"]["Rfuncs_flattenreads"] )
+Rmain_tsv2GRL     = os.path.join( config["scripts"]["script_folder"], config["scripts"]["Rmain_tsv2GRconv"] )
+Rfuncs_tsv2GRL    = os.path.join( config["scripts"]["script_folder"], config[ "scripts"]["Rfuncs_tsv2GRconv"] )
 
 R_build_histlist_main   = os.path.join( config["scripts"]["script_folder"], config["scripts"]["Rmain_build_histlist"] )
 
@@ -51,38 +48,34 @@ OUTPUT_FILES = []
 for sampleLoopi_targets in config["samplelist"]:
 
    # @@@ TODO: implement sample-dependent targets with defaults.
-   if ( config["target_out"] == "report" ):
+   if ( config["execution"]["target_out"] == "report" ):
       OUTPUT_FILES.extend(
                           [ os.path.join( config["PATHOUT"], config["samplelist"][sampleLoopi_targets]["sampledir"], SUBDIR_REPORT, "" + sampleLoopi_targets + "_report.html") ]
                           )
-   elif ( config["target_out"] == "histlist" ):
+   elif ( config["execution"]["target_out"] == "histlist" ):
       OUTPUT_FILES.extend(
                           [ os.path.join( config["PATHOUT"], config["samplelist"][sampleLoopi_targets]["sampledir"], SUBDIR_GR, sampleLoopi_targets + "_kmer_histlist.rds") ]
                           )
-   elif ( config["target_out"] == "flatreads_GRL" ):
-      OUTPUT_FILES.extend(
-                          [ os.path.join( config["PATHOUT"], config["samplelist"][sampleLoopi_targets]["sampledir"], SUBDIR_GR,  sampleLoopi_targets + "_reads_flat_GRL.rds") ]
-                         )
-   elif ( config["target_out"] == "reads_GRL" ):
+   elif ( config["execution"]["target_out"] == "reads_GRL" ):
       OUTPUT_FILES.extend(
                           [ os.path.join( config["PATHOUT"], config["samplelist"][sampleLoopi_targets]["sampledir"], SUBDIR_GR, sampleLoopi_targets + "_reads_GRL.rds") ]
                           )
-   elif ( config["target_out"] == "mergedbam" ):
+   elif ( config["execution"]["target_out"] == "mergedbam" ):
       OUTPUT_FILES.extend(
                           [ os.path.join( config["PATHOUT"], config["samplelist"][sampleLoopi_targets]["sampledir"], SUBDIR_SORTED_MINIMAPPED, sampleLoopi_targets + ".sorted.bam") ]
                          )
-   elif ( config["target_out"] == "aligned_chunks"):
+   elif ( config["execution"]["target_out"] == "aligned_chunks"):
       OUTPUT_FILES.extend(
                           get_chunkfiles( sampleLoopi_targets, os.path.join( config["PATHOUT"], config["samplelist"][sampleLoopi_targets]["sampledir"], SUBDIR_ALIGNED_MINIMAP) ,  "", ".sam", 0 )
                          )
    else:
-      print("Unrecognized target output file format: ", config["target_out"], " ... Terminating.")
+      print("Unrecognized target output file format: ", config["execution"]["target_out"], " ... Terminating.")
       exit(1)
 
 #---  DEBUGGING:
 #------------------------------------------------------
 # print("input_data_type = " + config["input_data_type"])
-# print("target out = " + config["target_out"])
+# print("target out = " + config["execution"]["target_out"])
 # IPython.embed()
 # print("---- last check before rules: ------ ")
 # print ( "len(OUTPUT_FILES)=")

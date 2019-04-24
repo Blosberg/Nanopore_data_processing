@@ -3,9 +3,7 @@
   "fast5dir_default":"fast5/pass/",
   "fastqdir_default":"fastq/pass/",
 
-  "Flatten": "TRUE",
-  "target_out": "flatreads_GRL",
-
+  "ReadType":     "ONT_Direct_RNA",
 
   "ref": {
           "Transcriptome"  : "/scratch/AG_Akalin/refGenomes/hg19_canon/170317_Homo_sapiens.GRCh37.87.chr.gtf",
@@ -14,15 +12,13 @@
           },
 
    "progs": {
-        "minimap":    "./dev/guix/.guix-profile/bin/minimap2",
-        "nanopolish": "./dev/guix/.guix-profile/bin/nanopolish",
-        "SAMTOOLS":   "./dev/guix/.guix-profile/bin/samtools"
+        "minimap":    "minimap2",
+        "nanopolish": "nanopolish",
+        "SAMTOOLS":   "samtools"
             },
    "scripts": {
         "script_folder":            "/home/bosberg/projects/nanopiper/scripts/",
         "Rmain_build_histlist":     "06_GRobjects/Rmain_build_currenthistlist_from_GRL_reads.R",
-        "Rmain_flattenreads":       "06_GRobjects/Rmain_flatten_reads.R",
-        "Rfuncs_flattenreads":      "06_GRobjects/Rfuncs_flatten_reads.R",
         "Rmain_tsv2GRconv":         "06_GRobjects/Rmain_npreads_tsv2GR.R",
         "Rfuncs_tsv2GRconv":        "06_GRobjects/Rfuncs_npreads_tsv2GR.R",
         "pyfunc_defs":              "00_SM/func_defs.py",
@@ -30,9 +26,26 @@
         "rules_wholefastq":         "00_SM/rules_wholefastq.py"
             },
 
+   "options":{
+        "minimap2":{
+             "PacBio_genome":           "-ax map-pb         ",
+             "ONT_genome":              "-ax map-ont        ",
+             "PacBio_CCS_genome":       "-ax asm20          ",
+             "short_genome_paired_end": "-ax sr             ",
+             "spliced_long":            "-ax splice         ",
+             "ONT_Direct_RNA":          "-ax splice -uf -k14",
+             "Final_PacBio":            "-ax splice -uf -C5 ",
+             "xspecies_asm2asm":        "-cx asm5           ",
+             "PacBio_overlap":          "-x ava-pb          ",
+             "ONT_overlap":             "-x ava-ont         "
+        }
+   },
    "execution":{
         "jobs": 1,
+        "clustersub":0,
+        "target_out": "report",
         "nice": 0,
+        "FlattenReads": "TRUE",
         "type": "RNA",
         "cluster":{
            "missing-file-timeout": 120,
@@ -72,11 +85,6 @@
               "memory": 30G
               },
            "create_kmer_histlist":
-              {
-              "threads": 1,
-              "memory": 30G
-              },
-           "flatten_reads":
               {
               "threads": 1,
               "memory": 30G

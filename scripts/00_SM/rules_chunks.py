@@ -2,11 +2,9 @@
 # BEGIN RULES
 # -----------------------------------------------------
 
-
-# -----------------------------------------------------
-# Take a read-separated list of events, and assemble a histogram of
-# current values for each unique kmer observed.
 rule create_kmer_histlist:
+    # Take a read-separated list of events, and assemble a histogram of
+    # current values for each unique kmer observed.
     input:
         RDS_GRLreads       = os.path.join( config["PATHOUT"], "{wckmerhist_sampleDir}", SUBDIR_GR, "{wckmerhist_samplename}_reads_GRL.rds")
     output:
@@ -32,35 +30,7 @@ rule create_kmer_histlist:
                           "--k={params.k}",
                           "--logfile={log.logfile}",] )
 
-
 # -----------------------------------------------------
-rule flatten_reads:
-    # flatten reads from GRangesList in .RDS format
-    # by "flatten", we mean collaps multiple 'events'
-    # assigned to the same segment on the same read.
-    input:
-        GRobj_in     = os.path.join( config["PATHOUT"], "{wcflatten_sampleDir}", SUBDIR_GR, "{wcflatten_samplename}_reads_GRL.rds")
-    output:
-        GRflat_out   = os.path.join( config["PATHOUT"], "{wcflatten_sampleDir}", SUBDIR_GR, "{wcflatten_samplename}_reads_flat_GRL.rds")
-    params:
-        Rfuncs_flatten_reads = R_flattenreads_funcs,
-        readsGRL_in          = os.path.join( config["PATHOUT"], "{wcflatten_sampleDir}", SUBDIR_GR, "{wcflatten_samplename}_reads_GRL.rds"),
-        flatreadsGRL_out     = os.path.join( config["PATHOUT"], "{wcflatten_sampleDir}", SUBDIR_GR, "{wcflatten_samplename}_reads_flat_GRL.rds"),
-        samplename           = "{wcflatten_samplename}"
-    log:
-        logfile              = os.path.join( config["PATHOUT"], "{wcflatten_sampleDir}", SUBDIR_GR, "{wcflatten_samplename}_flattenreads_GRL.log")
-    message:
-        fmt("Flatten intra-read events with coincident alignments")
-    shell:
-        nice('Rscript', [ R_flattenreads_main,
-                         "--Rfuncs_flattenreads={params.Rfuncs_flatten_reads}",
-                         "--readsGRL_in={params.readsGRL_in}",
-                         "--flatreadsGRL_out={params.flatreadsGRL_out}",
-                         "--logFile={log}",
-                         "--samplename={params.samplename}"] )
-
-# -----------------------------------------------------
-
 rule create_readcurrent_GRL_obj:
     # produce GRangesList object of current data in .RDS format
     # from the .tsv files produced by eventalign
@@ -71,18 +41,18 @@ rule create_readcurrent_GRL_obj:
         GRLreads     = os.path.join( config["PATHOUT"], "{wcreadGRL_sampleDir}", SUBDIR_GR, "{wcreadGRL_samplename}_reads_GRL.rds"),
         poremodel    = os.path.join( config["PATHOUT"], "{wcreadGRL_sampleDir}", SUBDIR_GR, "{wcreadGRL_samplename}_poremodel.tsv")
     params:
-        Rfuncs_tsv2GRconv = R_tables2GR_funcs,
+        Rfuncs_tsv2GRconv = Rfuncs_tsv2GRL,
         output_reads_GRL  = os.path.join( config["PATHOUT"], "{wcreadGRL_sampleDir}", SUBDIR_GR, "{wcreadGRL_samplename}_reads_GRL.rds"),
         output_poremodel  = os.path.join( config["PATHOUT"], "{wcreadGRL_sampleDir}", SUBDIR_GR, "{wcreadGRL_samplename}_poremodel.tsv"),
-        Flatten           = config["Flatten"],
+        Flatten           = config["execution"]["FlattenReads"],
         Ealign_files      = lambda wc: get_chunkfiles( wc.wcreadGRL_samplename, os.path.join( config["PATHOUT"], wc.wcreadGRL_sampleDir, SUBDIR_EVENTALIGN, "tsv_chunks" ), "Ealign_", ".tsv", True ),
         samplename          = "{wcreadGRL_samplename}"
     log:
         os.path.join( config["PATHOUT"], "{wcreadGRL_sampleDir}", SUBDIR_GR, "{wcreadGRL_samplename}_reads_GRL_conversion.log")
     message:
-        fmt("Convert aligned NP reads to GRangesList object")
+        fmt("Convert aligned NP reads from {input} to GRangesList object")
     shell:
-        nice('Rscript', [ R_tables2GR_main,
+        nice('Rscript', [ Rmain_tsv2GRL,
                          "--Rfuncs_tsv2GRconv={params.Rfuncs_tsv2GRconv}",
                          "--output_reads_GRL={params.output_reads_GRL}",
                          "--output_poremodel={params.output_poremodel}",
@@ -109,13 +79,13 @@ rule np_index:
         options    = " index -d "
     log:
         logfile  = os.path.join( config["PATHOUT"], "{wcnpindex_sampleDir}", SUBDIR_SYMLINKS,  "{wcnpindex_samplename}_{wcnpindex_chunk}_npi.log" )
-    message: """---- Index the reads from chunk {wildcards.wcnpindex_chunk} against the fast5 files from the same. ----"""
+    message:
+        fmt("Index the reads from chunk {wildcards.wcnpindex_chunk} against the fast5 files from the same.")
     shell:
         " nice -19 {nanopolish} {params.options} {input.fast5_folder} {input.fastq_file} 2> {log.logfile} "
 
 
 # -----------------------------------------------------
-
 rule merge_bam_files:
     # combine the ~4000 reads from each minimap2
     # alignment into a single bam file
@@ -126,34 +96,32 @@ rule merge_bam_files:
     log:
         logfile   = os.path.join( config["PATHOUT"], "{wcmerge_sampleDir}", SUBDIR_SORTED_MINIMAPPED, "{wcmerge_samplename}.mergingbam.log")
     message:
-        """ --- combining bam files from post-mapping fastq data. --- """
+        fmt("Combining bam files from post-mapping fastq data.")
     shell:
         '{SAMTOOLS} merge {output} {input} '
 
 #------------------------------------------------------
-
-# convert minimap2 alignments from sam to bam format
-# and sort by position
 rule convert_sort_minimap:
+    # convert minimap2 alignments from sam to bam format
+    # and sort by position
     input:
         aligned     = os.path.join( config["PATHOUT"], "{wcsort_sampleDir}", SUBDIR_FILTERED_MINIMAP, "{wcsort_samplename}_{wcsort_chunk}.0filtered.sam")
     output:
         sortedbam   = os.path.join( config["PATHOUT"], "{wcsort_sampleDir}", SUBDIR_SORTED_MINIMAPPED, "bam_chunks", "{wcsort_samplename}_{wcsort_chunk}.sorted.bam")
-    params:
-        options = "-ax splice "
+#    params:
+#
     log:
         logfile = os.path.join( config["PATHOUT"], "{wcsort_sampleDir}", SUBDIR_SORTED_MINIMAPPED, "bam_chunks", "{wcsort_samplename}_{wcsort_chunk}.sortingbam.log")
     message:
-        """ --- converting, sorting, and indexing bam file. --- """
+        fmt("Converting, sorting, and indexing input file: {input}")
     shell:
         'samtools view  -Sb  {input} | samtools sort > {output} && samtools index {output} 2> {log.logfile}'
 
 
 #------------------------------------------------------
-
-# Check for alignment filter in minimap2s sam file:
-#  if != 4 then remove this read
 rule filter_nonaligned_minimap:
+    # Check for alignment filter in minimap2s sam file:
+    #  if != 4 then remove this read
     input:
         aligned  = os.path.join( config["PATHOUT"], "{wcfilter_sampleDir}", SUBDIR_ALIGNED_MINIMAP, "{wcfilter_samplename}_{wcfilter_chunk}.sam" )
     output:
@@ -161,12 +129,11 @@ rule filter_nonaligned_minimap:
     log:
         log      = os.path.join( config["PATHOUT"], "{wcfilter_sampleDir}", SUBDIR_FILTERED_MINIMAP, "{wcfilter_samplename}_{wcfilter_chunk}.0filtering.log" )
     message:
-        """--- filtering unaligned reads from alignment data ---"""
+        fmt("Filtering unaligned reads from alignment data")
     shell:
         " cat {input} | perl -lane 'print if $F[1] ne 4'  >  {output}   2> {log}"
 
 #------------------------------------------------------
-
 rule align_minimap:
     # use minimap2 to align the fastq reads to the reference
     # genome
@@ -176,11 +143,11 @@ rule align_minimap:
     output:
         aligned  = os.path.join( config["PATHOUT"], "{wcalign_sampleDir}", SUBDIR_ALIGNED_MINIMAP,  "{wcalign_samplename}_{wcalign_chunk}.sam" )
     params:
-        options  = " -ax splice -uf -k14"
+        options  = config["execution"]["MM2_align_option"]
     log:
         log      = os.path.join( config["PATHOUT"], "{wcalign_sampleDir}", SUBDIR_ALIGNED_MINIMAP,  "{wcalign_samplename}_{wcalign_chunk}_alignment.log" )
     message:
-        """--- aligning fastq reads from {input.fqlink} to {input.mmiref}; outputting to {output} --- """
+        fmt("Aligning fastq reads from {input.fqlink} to {input.mmiref}; outputting to {output}")
     shell:
         "{MM2} {params} {input.mmiref} {input.fqlink} > {output}  2> {log}"
 
@@ -194,12 +161,31 @@ rule create_fqsymlink:
     params:
         options  = " -s "
     message:
-        """--- creating symbolic link to chunk data ---"""
+        fmt("Creating symbolic link to chunk data")
     shell:
         " ln {params} {input} {output}"
 
-#------------------------------------------------------
 
+#------------------------------------------------------
+# rule basecall:
+#     # If we have fast5 data, but no fastq, then perform
+#     # basecalling ourselves:
+#     # docs: https://medium.com/@kepler_00/nanopore-gpu-basecalling-using-guppy-on-ubuntu-18-04-and-nvidia-docker-v2-with-a-rtx-2080-d875945e5c8d
+#     # https://community.nanoporetech.com/protocols/Guppy-protocol-preRev/v/gpb_2003_v1_revj_14dec2018
+#     input:
+#         fast5_folder =
+#     output:
+#         fastq_folder =
+#     params:
+#         ???
+#     log:
+#         os.path.join( DIR_???, ??? )
+#      message:
+#         fmt("Performing base-calling of fast5 data from {input}")
+#     shell:
+#         guppy_basecaller -i <fast5_dir> -o <output_folder> -c dna_r9.4.1_450bps -x "cuda:0"
+#
+#------------------------------------------------------
 rule minimizer:
     # Create indexed version of reference genome for fast
     # alignment with minimap2 later:
@@ -212,7 +198,7 @@ rule minimizer:
     log:
         os.path.join( DIR_REFGENOME, config['ref']['Genome_version'], "_mmi2_minimizer_creation.log")
     message:
-        """--- creating minimizer index of reference genome for minimap2."""
+        fmt("Creating minimizer index of reference genome for minimap2.")
     shell:
         "{MM2} {params.options}  {output} {input} 2> {log}"
 

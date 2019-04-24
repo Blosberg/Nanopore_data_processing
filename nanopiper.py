@@ -31,34 +31,28 @@ import re # regular expressions.
 
 # --- TO BE GENERALIZED: ----------------------------------
 
-
-PATH_EXEC="/home/bosberg/projects/nanopiper/"
+PATH_NANOPIPER_EXEC="/home/bosberg/projects/nanopiper/"
 # ^ execution path from which pipeline executables (+repo) are stored.
+NANOPIPER_UGLY= False
+snakefilename = PATH_NANOPIPER_EXEC+"Snakefile"
+GUIX_PROFILE  = PATH_NANOPIPER_EXEC+"dev/guix/"
 
-snakefilename = PATH_EXEC+"Snakefile"
-GUIX_PROFILE  = PATH_EXEC+"dev/guix/"
-VERSION       = "0.1.0"
-
-sys.path.append(PATH_EXEC+"scripts/00_SM/")
-from func_defs import * 
-
-# shouldn't need this; check back.
-# path_rules_chunks="/home/bosberg/projects/nanopiper/scripts/00_SM/rules_chunks.py"
-# include: path_rules_chunks
+sys.path.append(PATH_NANOPIPER_EXEC+"scripts/00_SM/")
+from func_defs import *
 
 # --- DOCUMENTATION/HELP: ---------------------------------
 
 description = """\
 Nanopiper is a data processing pipeline, developed by
-B. Osberg at MDC in Berlin in 2017-2018 for nanopore read data. 
-It produces current and coverage information and can be used to 
+B. Osberg at MDC in Berlin in 2017-2018 for nanopore read data.
+It produces current and coverage information and can be used to
 produce information on modification and perhaps cell type.
 """
 
 epilog = """\
 
 Copyright 2019, 2198 Bren Osbeg
-License GPLv3+: GNU GPL version 3 or later 
+License GPLv3+: GNU GPL version 3 or later
 <http://gnu.org/licenses/gpl.html>.
 
 This is free software: you are free to change and redistribute it.
@@ -74,25 +68,22 @@ parser = argparse.ArgumentParser( description=description,
                                   epilog=epilog,
                                   formatter_class=formatter )
 
-parser.add_argument('-v', '--version', action='version',
-                    version=VERSION)
-                     
-parser.add_argument('-config_defaults', nargs='?', default=PATH_EXEC+'dev/config_defaults.json',
+parser.add_argument('-config_defaults', nargs='?', default=PATH_NANOPIPER_EXEC+'dev/config_defaults.json',
                     help="""\
 The config file of default values --to be overwritten as needed.
 """)
 
-parser.add_argument( '-c', '-config_userin', dest='config_userin', nargs='?', default=PATH_EXEC+'./config.json',
+parser.add_argument( '-c', '-config_userin', dest='config_userin', nargs='?', default=PATH_NANOPIPER_EXEC+'./config.json',
                     help="""\
 The config file supplied by the user, to overwrite defaults as needed.
 """)
 
-parser.add_argument('config_npSM', nargs='?', default=PATH_EXEC+'config_npSM.json',
+parser.add_argument('config_npSM', nargs='?', default=PATH_NANOPIPER_EXEC+'config_npSM.json',
                     help="""\
 The config file produced by this scripts and supplied to SnakeMake.
 """)
 
-parser.add_argument('--target', dest='target', action='append',
+parser.add_argument('--target', dest='target', default="report", action='append',
                     help="""\
 Stop when the named target is completed instead of running the whole
 pipeline.  The default target is "final-report".  Pass "--target=help"
@@ -106,6 +97,11 @@ pipeline.""")
 parser.add_argument('--clustersub', dest="clustersub", default=False,
                     help="""\
 Should we submit this Snakejob to an SGE cluster?
+""")
+
+parser.add_argument('--jobs', dest="jobs", default=1,
+                    help="""\
+Define the max number of jobs that can be submitted in parallel
 """)
 
 parser.add_argument('--graph', dest='graph',
@@ -137,18 +133,11 @@ Print commands being executed by snakemake.""")
 
 args = parser.parse_args()
 
-# --- PREPARE config: --------------------------------
-   
-config = prep_configfile( args.config_defaults,
-                          args.config_userin,
-                          args.config_npSM,
-                          args.clustersub )
+# --- PREPARE CONFIG: --------------------------------
 
-# @@@ DEBUGGING: REMOVE THIS:
-# quit()
+config = prep_configfile( args )
 
-# --- Validate that pipeline can be executed:
-
+# --- VALIDATE THAT PIPELINE CAN BE EXECUTED:
 # check for write access to refgenome dir
 DIR_REFGENOME             = config['ref']['Genome_DIR']
 
@@ -161,48 +150,17 @@ if ( not os.access(DIR_REFGENOME, os.W_OK) ):
    else:
       print("Refgenome index files are present. Continuing... ")
 
-# --- Create symbolic links to PATHIN --- should be performed by rule at this point:
-# 
-# if ( input_data_type == "raw_minION"):
-#    # the snakemake rules defined in the following included script assume
-#    # that the minION output has been "chunked" into sequential files, and
-#    # will have to be reassembled.
-#    include   : os.path.join( config["scripts"]["script_folder"], config["scripts"]["rules_chunks"] )
-# 
-#    for sample in config["samplelist"]:
-# 
-#        # get subdir for this sample:
-#        samplePATH = os.path.join(config["PATHIN"], config["samplelist"][sample]["subdir"] )
-# 
-#        # linke to each chunk directly:
-#        for linkindex in config["samplelist"][sample]["chunkdirlist"]:
-#           linkname = sample + "_" + str(linkindex) + config['samplelist'][sample]["fastq_suffix"]
-# 
-# 
-#           source   = getPathCase( samplePATH, "fastq", "pass",config["samplelist"][sample]["fastq_prefix"] + str(linkindex) +  config["samplelist"][sample]["fastq_suffix"], "raw_minION")
-# 
-#           makelink(  source, os.path.join( config["PATHOUT"], config["samplelist"][sample]["subdir"], SUBDIR_SYMLINKS, linkname) )
-# 
-# 
-# elif( input_data_type == "fastq"):
-#    # Do some other stuff
-#    include   : os.path.join( config["scripts"]["script_folder"], config["scripts"]["rules_wholefastq"] )
-# 
-#    for sample in config["samplelist"]:
-# 
-#        # get subdir for this sample:
-#        samplePATH = os.path.join(config["PATHIN"], config["samplelist"][sample]["subdir"] )
-# 
-#        linkname = sample + config['samplelist'][sample]["fastq_suffix"]
-#        makelink( os.path.join(samplePATH, config["samplelist"][sample]["fastq_prefix"] + config["samplelist"][sample]["fastq_suffix"] ), os.path.join( config["PATHOUT"], config["samplelist"][sample]["subdir"], SUBDIR_SYMLINKS, linkname))
-# 
-# else:
-#    print("Unrecognized input data format. Terminating.")
-#    exit(1)
-# 
+# TODO: ADD more validation steps here: (e.g. paths/config/etc.)
 
-# --- Define command to run Snakemake with ---------
+# --- IFF VALIDATION PASSES: SPLASH NANOPIPER LOGO
+if not NANOPIPER_UGLY:
+    with open( PATH_NANOPIPER_EXEC+"dev/Pretty.txt") as g:
+        print(g.read())
+    print( "VERSION: " + open(PATH_NANOPIPER_EXEC+"dev/VERSION").read() )
+    print( "Copyright, B. Osberg, BIMSB MDC, 2019\n")
 
+
+# --- DEFINE SNAKEMAKE COMMAND  ---------
 
 command = [
     os.path.join(GUIX_PROFILE, ".guix-profile", "bin", "snakemake"),
@@ -211,7 +169,8 @@ command = [
     "--jobs={}".format( str(config['execution']['jobs']) ),
 ]
 
-if ( args.clustersub ):
+# --- CHECK FOR CLUSTERSUB STATUS ---------
+if ( config["execution"]["clustersub"] ):
 # Jobs to be submitted to an SGE cluster:
 
     print("Commencing snakemake run submission to cluster", flush=True, file=sys.stderr)
@@ -219,11 +178,11 @@ if ( args.clustersub ):
     # cluster_config generation is handled in func_defs.
     # generate_cluster_configuration( config )
 
-    # Check if a particular queue has been specified: 
+    # Check if a particular queue has been specified:
     if ( ('queue' in config['execution']['cluster'] )  or ( 'queue' in config['execution']['rules']['__default__'] )):
         queue_selection_string = " -q {cluster.queue} "
 	# User has defined queue name(s) --either generally, or rule-specific.
-	# in either case, generate_cluster_configuration() (defined above) has 
+	# in either case, generate_cluster_configuration() (defined above) has
         # already printed the apropriate queue name to each rule.
         queue_selection_string = " -q {cluster.queue} "
     else :
@@ -248,13 +207,13 @@ if ( args.clustersub ):
         else:
             raise
 
-    # create path for Snakemake e/o logfiles: 
+    # create path for Snakemake e/o logfiles:
     ClusterLogsDir = os.path.join(config['PATHOUT'], 'cluster_log_files')
     os.makedirs( ClusterLogsDir , exist_ok=True)
 
 
     # define qsub command:
-    # The following were removed (and might be necessary): 
+    # The following were removed (and might be necessary):
     # " -v R_LIBS_USER "
     # "--jobscript={}/qsub-template.sh".format(config['locations']['pkglibexecdir']),
     qsub = "qsub -e " + ClusterLogsDir + " -o " + ClusterLogsDir + " -v PATH -v GUIX_LOCPATH  %s -l h_stack={cluster.h_stack} -l h_vmem={cluster.MEM} %s -b y -pe smp {cluster.nthreads} -cwd" % ( queue_selection_string, contact_email_string)
@@ -266,9 +225,10 @@ if ( args.clustersub ):
         "--latency-wait={}".format(config['execution']['cluster']['missing-file-timeout'])
     ]
 else:
-# Jobs to be submitted on local machine:
+    # --- IF FALSE, THEN SUBMIT LOCALLY: ------------------
     print("Commencing snakemake run submission locally", flush=True, file=sys.stderr)
 
+# --- APPEND ADDITIONAL ARGUMENTS: ------------------------
 command.append("--rerun-incomplete")
 if args.graph:
     # Only output dag graph:
@@ -289,8 +249,8 @@ else:
         command.append("--verbose")
     if args.printshellcmds:
         command.append("--printshellcmds")
-    if args.target and 'help' in args.target:
-        command.append("help")
 
-    # Now actually execute the pipeline:
+# --- SNAKEMAKE SUBMISSION COMMAND: -----------------------
     subprocess.run(command)
+
+#    print("\n Process complete, thank you for using Nanopiper.\n")

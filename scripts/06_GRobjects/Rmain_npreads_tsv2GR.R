@@ -62,7 +62,7 @@ suppressPackageStartupMessages( library(GenomicRanges) )
 suppressPackageStartupMessages( library(dplyr)         )
 source(Rfuncs_tsv2GRconv)
 
-dat_all         = get_event_dat( Event_file_list = Ealign_files, 
+dat_all         = get_event_dat( Event_file_list = Ealign_files,
                                  logFile         = logFile )
 
 read_list_final = unique( dat_all$read_index  )
@@ -92,7 +92,7 @@ dat_finite_stranded = assign_strand( dat_finite, perform_sanity_checks = TRUE )
 # ================================================
 # Split by read
 
-ReadList_finite_stranded  <- split( dat_finite_stranded, 
+ReadList_finite_stranded  <- split( dat_finite_stranded,
                                     dat_finite_stranded$read_index )
 
 # ================================================

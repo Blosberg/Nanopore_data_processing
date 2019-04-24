@@ -48,21 +48,6 @@ def getPathCase( mainpath, subd1, subd2, filename, input_data_type ):
     return( result )
 
 # --------------------------------------------------------------
-
-# def makelink(src, target):
-#     if not os.path.isfile(src):
-#         bail("ERROR: Refusing to link non-existent file %s" % src)
-#     elif not os.path.isdir(os.path.dirname(target)):
-#         bail("%s or subdirectory does not exist for linking  " % target)
-#     else:
-#         try:
-#             # os.symlink( "point_to_here",  "from_here" )
-#             os.symlink(src, target)
-#         except FileExistsError:
-#             pass
-# 
-# --------------------------------------------------------------
-
 def get_chunkfiles( samplename, DIR, prefix_string, suffix_string, quoted):
     Sample_indices_str     = config["samplelist"][samplename]["chunkdirlist"]
     FILES_list = [ os.path.join( DIR, prefix_string + samplename + "_" + chunk + suffix_string ) for chunk in Sample_indices_str ]
@@ -73,11 +58,29 @@ def get_chunkfiles( samplename, DIR, prefix_string, suffix_string, quoted):
 
 # --------------------------------------------------------------
 
-def prep_configfile( config_defaults, config_userin, config_npSM_out, clustersub ):
+def prep_configfile( args ):
     # Create the SM config file, from default, and user-defined inputs:
+
+    config_defaults = args.config_defaults
+    config_userin   = args.config_userin
+    config_npSM     = args.config_npSM
 
     config = yaml.safe_load(open(config_defaults, 'r'))
     update_config( config, yaml.safe_load( open( config_userin, 'r')))
+
+    config["execution"]["MM2_align_option"] = config["options"]["minimap2"][config["ReadType"]]
+
+    if args.clustersub:
+        # This is false by default, so over-writing will only happen
+        # if user has set this to true
+        config["execution"]["clustersub"] = args.clustersub
+
+    if (args.jobs > 1 ):
+        # Again, this will be 1 by default. Only over-written with active CL input
+        config["execution"]["jobs"] = args.jobs
+
+    if not args.target == "report":
+        config["execution"]["target_out"] = args.target
 
     if len(set(config["samplelist"])) != len(config["samplelist"]):
         raise Exception("sampleIDs are not unique.")
@@ -85,7 +88,7 @@ def prep_configfile( config_defaults, config_userin, config_npSM_out, clustersub
     for sample in config["samplelist"]:
 
        #  --------- Populate the "chunk" list of reads for each sample : ---------
-       DATPATH = os.path.join( config["PATHIN"], config["samplelist"][sample]["sampledir"], config["samplelist"][sample].get( "fast5dir", config["fast5dir_default"] ) ) 
+       DATPATH = os.path.join( config["PATHIN"], config["samplelist"][sample]["sampledir"], config["samplelist"][sample].get( "fast5dir", config["fast5dir_default"] ) )
 
        # i.e. the list of subdirectories within this path:
        unsorted_stringlist =  [entry.name for entry in os.scandir( DATPATH ) if entry.is_dir()]
@@ -108,7 +111,7 @@ def prep_configfile( config_defaults, config_userin, config_npSM_out, clustersub
 
     # If we are currently runing a SGE cluster submission, then
     # prepare a cluster-config file (specifying mem/time/etc. for each job)
-    if( clustersub ):
+    if( config["execution"]["clustersub"] ):
        generate_cluster_configuration( config )
 
     #  --------- Now dump the config dictionary to the output path : ------------
@@ -117,7 +120,7 @@ def prep_configfile( config_defaults, config_userin, config_npSM_out, clustersub
     del config["execution"]["cluster"]
     del config["execution"]["rules"]
 
-    with open(config_npSM_out, 'w') as outfile:
+    with open(config_npSM, 'w') as outfile:
         dumps = json.dumps( config,
                             indent=4, sort_keys=False,
                             separators=(",",": "),
