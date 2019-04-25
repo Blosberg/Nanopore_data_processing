@@ -3,9 +3,6 @@
 # For optimization, model_mean/model_stdv columns are omitted to conserve space.
 
 
-# @@@ TODO: generalize this as an input boolean (see issue #9 on GH):
-data_is_RNA=TRUE
-
 ## Collect arguments
 args <- commandArgs(TRUE)
 
@@ -77,7 +74,7 @@ if( !( identical( as.numeric(c(1:Nreads)) , as.numeric(read_list_final) )  ))
 # ========================================================================================
 # output the "poremodel" data - so we have the model data saved
 if ( ! is.null( output_poremodel ))
-  { writeout_pore_model( dat_all, output_poremodel ) }
+  { writeout_pore_model( dat_all, output_poremodel, strand_type="RNA" ) }
 
 # ========================================================================================
 # remove non-finite entries:

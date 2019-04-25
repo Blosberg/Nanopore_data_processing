@@ -12,7 +12,6 @@ nanopolish = config["progs"]["nanopolish"]
 RefTranscriptome   = config["ref"]["Transcriptome"]
 GENOME_VERSION     = config["ref"]["Genome_version"]
 RmdReportScript    = os.path.join(config["scripts"]["script_folder"],"final_report","Nanopore_report.Rmd")
-input_data_type    = config["input_data_type"]
 
 Rmain_tsv2GRL     = os.path.join( config["scripts"]["script_folder"], config["scripts"]["Rmain_tsv2GRconv"] )
 Rfuncs_tsv2GRL    = os.path.join( config["scripts"]["script_folder"], config[ "scripts"]["Rfuncs_tsv2GRconv"] )
@@ -74,7 +73,6 @@ for sampleLoopi_targets in config["samplelist"]:
 
 #---  DEBUGGING:
 #------------------------------------------------------
-# print("input_data_type = " + config["input_data_type"])
 # print("target out = " + config["execution"]["target_out"])
 # IPython.embed()
 # print("---- last check before rules: ------ ")

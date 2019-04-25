@@ -10,9 +10,9 @@ rule create_kmer_histlist:
     output:
         RDS_histlist       = os.path.join( config["PATHOUT"], "{wckmerhist_sampleDir}", SUBDIR_GR, "{wckmerhist_samplename}_kmer_histlist.rds")
     params:
-        current_histmin=50,
-        current_histmax=150,
-        current_histres=0.5,
+        current_histmin=config["execution"]["currenthist_minrange"],
+        current_histmax=config["execution"]["currenthist_maxrange"],
+        current_histres=config["execution"]["currenthist_res"],
         RDS_GRLreads_in=os.path.join( config["PATHOUT"], "{wckmerhist_sampleDir}", SUBDIR_GR, "{wckmerhist_samplename}_reads_GRL.rds"),
         RDS_histlist_out=os.path.join( config["PATHOUT"], "{wckmerhist_sampleDir}", SUBDIR_GR, "{wckmerhist_samplename}_kmer_histlist.rds"),
         k=5

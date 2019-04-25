@@ -53,6 +53,9 @@
            "contact-email": "none",
            "args": ""
            },
+   "currenthist_minrange": 50,
+   "currenthist_maxrange": 150,
+   "currenthist_res": 0.5,
         "rules":{
            "diffmeth":
               {

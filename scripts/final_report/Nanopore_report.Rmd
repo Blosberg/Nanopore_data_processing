@@ -41,19 +41,15 @@ cat(paste('Raw current data from the nanopore device was imported from the follo
 <!-------  Load alignment data and reference transcripts: -------> 
 
 ```{r import_data, echo=FALSE}
-algn = readGAlignments(fin_readalignment_bam, use.names=TRUE, param=ScanBamParam(tag="NM", what="mapq"))
-algn_cigartable = cigarOpTable(cigar(algn))
-gap_index = which(colnames( algn_cigartable ) =="D" )
-gap_indices = c( which( colnames( algn_cigartable ) =="I" ), which(colnames( algn_cigartable ) =="D")  )
+# algn = readGAlignments(fin_readalignment_bam, use.names=TRUE, param=ScanBamParam(tag="NM", what="mapq"))
+# algn_cigartable = cigarOpTable(cigar(algn))
+# gap_index = which(colnames( algn_cigartable ) =="D" )
+# gap_indices = c( which( colnames( algn_cigartable ) =="I" ), which(colnames( algn_cigartable ) =="D")  )
 
-GRalgn  = as(algn, 'GRanges')
-GRLalgn = as(algn, 'GRangesList')
-
-GRob      = readRDS(fin_GRLreads)
-
-GRLalgn   = GRob$Events_GRL_splitbyread
-GRalgn    = unlist( GRangesList( GRLalgn ) )
-flattened = GRob$Flattened_reads
+GRob       = readRDS( fin_GRLreads ) 
+GRLalgn    = GRob$Events_GRL_splitbyread
+GRalgn     = unlist( GRangesList( GRLalgn ) )
+flattened  = GRob$Flattened_reads
 
 
 GRalgn$num_mismatches = GRalgn$NM  - ( algn_cigartable[ , gap_indices[1]] +algn_cigartable[ , gap_indices[2]])

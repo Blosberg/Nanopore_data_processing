@@ -209,8 +209,9 @@ sanity_check_tbl_spec_position  <- function( readposn_tbl_in        = stop("read
 
 # ===============================================================
 # Save the observed model_parameters:
-writeout_pore_model  <- function( event_dat = stop("read_GR_in must be provided"),
-                                  fout      = stop("output must be provided")
+writeout_pore_model  <- function( event_dat   = stop("read_GR_in must be provided"),
+                                  fout        = stop("output must be provided"),
+                                  strand_type = "RNA"
                                 )
 {
 model_dat = split( event_dat,
@@ -229,7 +230,7 @@ colnames(model_dat) <- c("mean", "stdv")
 
 model_dat <- model_dat[ rownames(model_dat) != "NNNNN", ]
 
-if( data_is_RNA )
+if( strand_type == "RNA" )
   { rownames(model_dat) <- gsub("T", "U", rownames(model_dat) ) }
 
 write.table( model_dat,
