@@ -42,7 +42,7 @@
    },
    "execution":{
         "jobs": 1,
-        "clustersub":0,
+        "clustersub": false,
         "target_out": "report",
         "nice": 0,
         "FlattenReads": "TRUE",
@@ -51,21 +51,21 @@
            "missing-file-timeout": 120,
            "stack": 128M,
            "contact-email": "none",
+           "cluster_config_file": "cluster_conf.json",
+           "specify_q": false,
            "args": ""
            },
-   "currenthist_minrange": 50,
-   "currenthist_maxrange": 150,
-   "currenthist_res": 0.5,
+
+        "currenthist_minrange": 50,
+        "currenthist_maxrange": 150,
+        "currenthist_res": 0.5,
+
         "rules":{
-           "diffmeth":
+           "__default__":
               {
-             "threads": 1,
-             "memory": 30G
-              },
-           "final_report":
-              {
-             "threads": 1,
-             "memory": 40G
+              "threads": 1,
+              "memory": 30G,
+              "h_stack": "128M"
               },
            "make_report":
               {

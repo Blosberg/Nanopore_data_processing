@@ -52,17 +52,17 @@ GRalgn     = unlist( GRangesList( GRLalgn ) )
 flattened  = GRob$Flattened_reads
 
 
-GRalgn$num_mismatches = GRalgn$NM  - ( algn_cigartable[ , gap_indices[1]] +algn_cigartable[ , gap_indices[2]])
-
-#ref    ==> reference set of transcript ranges
-ref_GR    = rtracklayer::import.gff(fin_Transcript) 
-ref_exons_GR               =  subset(ref_GR,    type == 'exon') 
-ref_exons_by_transcript    =  split(ref_exons_GR, ref_exons_GR$transcript_id )
-
-sample_read_cum_width      = sum(  width( GRLalgn ) )
-ref_transcript_cum_width   = sum(  width( ref_exons_by_transcript ) )
-
-maxfreq = max(table(GRalgn$mapq) )
+# GRalgn$num_mismatches = GRalgn$NM  - ( algn_cigartable[ , gap_indices[1]] +algn_cigartable[ , gap_indices[2]])
+# 
+# #ref    ==> reference set of transcript ranges
+# ref_GR    = rtracklayer::import.gff(fin_Transcript) 
+# ref_exons_GR               =  subset(ref_GR,    type == 'exon') 
+# ref_exons_by_transcript    =  split(ref_exons_GR, ref_exons_GR$transcript_id )
+# 
+# sample_read_cum_width      = sum(  width( GRLalgn ) )
+# ref_transcript_cum_width   = sum(  width( ref_exons_by_transcript ) )
+# 
+# maxfreq = max(table(GRalgn$mapq) )
 ```
 
 

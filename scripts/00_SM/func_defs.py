@@ -113,12 +113,13 @@ def prep_configfile( args ):
     # prepare a cluster-config file (specifying mem/time/etc. for each job)
     if( config["execution"]["clustersub"] ):
        generate_cluster_configuration( config )
+    else:
+       del config["execution"]["cluster"]
+
+    # In either case, SMconfig file doesn't need these.
+    del config["execution"]["rules"]
 
     #  --------- Now dump the config dictionary to the output path : ------------
-
-    # SMconfig file doesn't need these.
-    del config["execution"]["cluster"]
-    del config["execution"]["rules"]
 
     with open(config_npSM, 'w') as outfile:
         dumps = json.dumps( config,
@@ -136,36 +137,16 @@ def generate_cluster_configuration( config ):
 
     cluster_conf = {}
     for rule in rules:
-        if 'queue' in config['execution']['cluster']:
-            # --- User has supplied general queue name for all rules---
-            if 'queue' in rules[rule]:
-              bail("ERROR: 'queue' multiply defined in settings file.") #AND per rule ->error
-            else:
-              cluster_conf[rule] = {
-              'nthreads': rules[rule]['threads'],
-              'MEM':      rules[rule]['memory'],
-              'queue':    config['execution']['cluster']['queue'],
-              'h_stack':  config['execution']['cluster']['stack']
-              }
-        elif ( 'queue' in rules[rule] ):
-            # --- User has supplied a queue for this specific rule.
-            if not 'queue' in rules['__default__']:
-              bail("ERROR: submission queue specified per rule with no default.")
-            cluster_conf[rule] = {
-              'nthreads': rules[rule]['threads'],
-              'MEM':      rules[rule]['memory'],
-              'queue':    rules[rule]['queue'],
-              'h_stack':  config['execution']['cluster']['stack']
-              }
-        else:
-              # --- User has provided no information on queue for this rule -> default.
-              cluster_conf[rule] = {
-              'nthreads': rules[rule]['threads'],
-              'MEM':      rules[rule]['memory'],
-              'h_stack':  config['execution']['cluster']['stack']
-              }
 
-    cluster_config_file = "cluster_conf.json"
+        cluster_conf[rule] ={
+                "nthreads": rules[rule].get( "threads", rules["__default__"]["threads"] ),
+                "MEM":      rules[rule].get( "memory",  rules["__default__"]["memory"]  ),
+                "h_stack":  rules[rule].get( "h_stack", rules["__default__"]["h_stack"] ),
+                "queue":    rules[rule].get( "queue",   rules["__default__"].get("queue", "all") )
+                }
+
+    cluster_config_file = config["execution"]["cluster"]["cluster_config_file"]
+
     with open(cluster_config_file, 'w') as outfile:
         dumps = json.dumps(cluster_conf,
                            indent=4, sort_keys=True,

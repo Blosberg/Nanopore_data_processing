@@ -21,7 +21,7 @@
 # --- Import necessary modules -----------------------------
 
 import argparse
-import os, sys, json, csv, yaml
+import os, sys, errno, json, csv, yaml
 from os import path
 from snakemake.utils import update_config
 import shutil, filecmp
@@ -178,13 +178,12 @@ if ( config["execution"]["clustersub"] ):
     # cluster_config generation is handled in func_defs.
     # generate_cluster_configuration( config )
 
-    # Check if a particular queue has been specified:
-    if ( ('queue' in config['execution']['cluster'] )  or ( 'queue' in config['execution']['rules']['__default__'] )):
+    # rules will generally always have a "queue" name and the default is "all".
+    # The following condition determines whether we should actually USE this
+    # label to direct jobs to a specific queue on the cluster:
+    if ( config["execution"]["cluster"]["specify_q"]  ):
         queue_selection_string = " -q {cluster.queue} "
-	# User has defined queue name(s) --either generally, or rule-specific.
-	# in either case, generate_cluster_configuration() (defined above) has
-        # already printed the apropriate queue name to each rule.
-        queue_selection_string = " -q {cluster.queue} "
+        # direct jobs to specific queues on the cluster:
     else :
         # User has supplied no q value -> let SGE pick the the default.
         queue_selection_string = ""
@@ -201,7 +200,7 @@ if ( config["execution"]["clustersub"] ):
     try:
         subprocess.call(["qsub", "-help"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     except OSError as e:
-        if e.errno == os.errno.ENOENT:
+        if e.errno == errno.ENOENT:
             print("Error: Your system does not seem to support cluster submission.\nReason: Could not find qsub executable.", file=sys.stderr)
             exit(1)
         else:
@@ -216,12 +215,12 @@ if ( config["execution"]["clustersub"] ):
     # The following were removed (and might be necessary):
     # " -v R_LIBS_USER "
     # "--jobscript={}/qsub-template.sh".format(config['locations']['pkglibexecdir']),
-    qsub = "qsub -e " + ClusterLogsDir + " -o " + ClusterLogsDir + " -v PATH -v GUIX_LOCPATH  %s -l h_stack={cluster.h_stack} -l h_vmem={cluster.MEM} %s -b y -pe smp {cluster.nthreads} -cwd" % ( queue_selection_string, contact_email_string)
+    qsub = "qsub -e " + ClusterLogsDir + " -o " + ClusterLogsDir + " -v PATH -v $GUIX_LOCPATH  %s -l h_stack={cluster.h_stack} -l h_vmem={cluster.MEM} %s -b y -pe smp {cluster.nthreads} -cwd" % ( queue_selection_string, contact_email_string)
     if config['execution']['cluster']['args']:
         qsub += " " + config['execution']['cluster']['args']
     command += [
-        "--cluster-config={}".format(cluster_config_file),
-        "--cluster={}".format(qsub),
+        "--cluster-config={}".format( config["execution"]["cluster"]["cluster_config_file"] ),
+        "--cluster {}".format(qsub),
         "--latency-wait={}".format(config['execution']['cluster']['missing-file-timeout'])
     ]
 else:
@@ -251,6 +250,10 @@ else:
         command.append("--printshellcmds")
 
 # --- SNAKEMAKE SUBMISSION COMMAND: -----------------------
-    subprocess.run(command)
+# DEBUGGING: REMOVE THIS:
+    print(" YOU'RE in a DEBUGGING BRANCH: command = ")
+    print( " ".join(command) ) 
+
+#    subprocess.run(command)
 
 #    print("\n Process complete, thank you for using Nanopiper.\n")
