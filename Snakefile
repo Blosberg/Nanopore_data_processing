@@ -9,7 +9,6 @@ MM2        = config["progs"]["minimap"]
 SAMTOOLS   = config["progs"]["SAMTOOLS"]
 nanopolish = config["progs"]["nanopolish"]
 
-RefTranscriptome   = config["ref"]["Transcriptome"]
 GENOME_VERSION     = config["ref"]["Genome_version"]
 RmdReportScript    = os.path.join(config["scripts"]["script_folder"],"final_report","Nanopore_report.Rmd")
 
@@ -17,6 +16,8 @@ Rmain_tsv2GRL     = os.path.join( config["scripts"]["script_folder"], config["sc
 Rfuncs_tsv2GRL    = os.path.join( config["scripts"]["script_folder"], config[ "scripts"]["Rfuncs_tsv2GRconv"] )
 
 R_build_histlist_main   = os.path.join( config["scripts"]["script_folder"], config["scripts"]["Rmain_build_histlist"] )
+
+Rmain_overlap_reads_RsoI = os.path.join( config["scripts"]["script_folder"], config["scripts"]["Rmain_overlap_reads_RsoI"] )
 
 #------------------------------------------------------
 # --- Define output directories
@@ -26,7 +27,8 @@ SUBDIR_ALIGNED_MINIMAP    = "02_MM_aligned_chunks/"
 SUBDIR_FILTERED_MINIMAP   = "03_MM_filtered_chunks/"
 SUBDIR_SORTED_MINIMAPPED  = "04_MM_sortedbam/"
 SUBDIR_EVENTALIGN         = "05_eventalign/"
-SUBDIR_GR                 = "06_GRobjects"
+SUBDIR_GR                 = "06_GRobjects/"
+SUBDIR_GRproc             = "07_GRprocessing/"
 SUBDIR_REPORT             = "Final_report/"
 
 DIR_REFGENOME             = config['ref']['Genome_DIR']
@@ -54,6 +56,10 @@ for sampleLoopi_targets in config["samplelist"]:
    elif ( config["execution"]["target_out"] == "histlist" ):
       OUTPUT_FILES.extend(
                           [ os.path.join( config["PATHOUT"], config["samplelist"][sampleLoopi_targets]["sampledir"], SUBDIR_GR, sampleLoopi_targets + "_kmer_histlist.rds") ]
+                          )
+   elif ( config["execution"]["target_out"] == "ROI_olap" ):
+      OUTPUT_FILES.extend(
+                          [ os.path.join( config["PATHOUT"], config["samplelist"][sampleLoopi_targets]["sampledir"], SUBDIR_GRproc, sampleLoopi_targets + "_read_ROI_olap.rds") ]
                           )
    elif ( config["execution"]["target_out"] == "reads_GRL" ):
       OUTPUT_FILES.extend(
@@ -101,7 +107,6 @@ rule make_report:
     # build the final output report in html format
     input:
         aligned_reads_bam = os.path.join( config["PATHOUT"], "{wcreport_sampleDir}", SUBDIR_SORTED_MINIMAPPED, "{wcreport_samplename}.sorted.bam"),
-        transcriptome     = RefTranscriptome,
         GRLreads          = os.path.join( config["PATHOUT"], "{wcreport_sampleDir}", SUBDIR_GR, "{wcreport_samplename}_reads_GRL.rds")
     output:
         os.path.join( config["PATHOUT"], "{wcreport_sampleDir}", SUBDIR_REPORT, "{wcreport_samplename}_report.html")
@@ -115,10 +120,34 @@ rule make_report:
     shell:
         " Rscript -e  '{params} "
         " fin_readalignment_bam = \"{input.aligned_reads_bam}\"; "
-        " fin_Transcript        = \"{input.transcriptome}\";"
+        " fin_RsoI              = \"{input.transcriptome}\";"
         " fin_GRLreads          = \"{input.GRLreads}\";"
-        " Genome_version        =\"{GENOME_VERSION}\"; "
+        " Genome_version        = \"{GENOME_VERSION}\"; "
         " rmarkdown::render(\"{RmdReportScript}\", output_file = \"{output}\" ) ' "
+#------------------------------------------------------
+rule overlap_reads_w_RsoI:
+    # Process the aligned reads and filter for only those
+    # that overlap with the regions of interest.
+    input:
+        reads             = os.path.join( config["PATHOUT"], "{wcReadROI_olap_sampleDir}", SUBDIR_GR, "{wcReadROI_olap_samplename}_reads_GRL.rds")
+    output:
+        readROI_olaps     = os.path.join( config["PATHOUT"], "{wcReadROI_olap_sampleDir}", SUBDIR_GRproc, "{wcReadROI_olap_samplename}_read_ROI_olap.rds")
+    params:
+        reads_in          = os.path.join( config["PATHOUT"], "{wcReadROI_olap_sampleDir}", SUBDIR_GR, "{wcReadROI_olap_samplename}_reads_GRL.rds"),
+        path_RsoI         = config["ref"]["RsoI"],
+        pathout_ROI_olaps = os.path.join( config["PATHOUT"], "{wcReadROI_olap_sampleDir}", SUBDIR_GRproc, "{wcReadROI_olap_samplename}_read_ROI_olap.rds"),
+        samplename        = "{wcReadROI_olap_samplename}"
+    log:
+        logFile           = os.path.join( config["PATHOUT"], "{wcReadROI_olap_sampleDir}", SUBDIR_GRproc, "{wcReadROI_olap_samplename}_read_ROI_olap.log")
+    message:
+        fmt("Overlap reads from {input.reads} with Regions of interest.")
+    shell:
+        nice('Rscript', [ Rmain_overlap_reads_RsoI,
+                          "--pathin_reads={params.reads_in}",
+                          "--pathin_RsoI={params.path_RsoI}",
+                          "--pathout_alignedreads={params.pathout_ROI_olaps}",
+                          "--samplename={params.samplename}",
+                          "--logFile={log.logFile}"] )
 
 #------------------------------------------------------
 rule np_event_align:

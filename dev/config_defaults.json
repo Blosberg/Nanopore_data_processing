@@ -6,9 +6,9 @@
   "ReadType":     "ONT_Direct_RNA",
 
   "ref": {
-          "Transcriptome"  : "/scratch/AG_Akalin/refGenomes/hg19_canon/170317_Homo_sapiens.GRCh37.87.chr.gtf",
           "Genome_DIR"     : "/scratch/AG_Akalin/refGenomes/hg19_canon/",
-          "Genome_version" : "hg19_canon"
+          "Genome_version" : "hg19_canon",
+          "RsoI": ""
           },
 
    "progs": {
@@ -19,6 +19,7 @@
    "scripts": {
         "script_folder":            "/home/bosberg/projects/nanopiper/scripts/",
         "Rmain_build_histlist":     "06_GRobjects/Rmain_build_currenthistlist_from_GRL_reads.R",
+        "Rmain_overlap_reads_RsoI": "07_GRprocessing/Rmain_olap_reads_w_RsOI.R",
         "Rmain_tsv2GRconv":         "06_GRobjects/Rmain_npreads_tsv2GR.R",
         "Rfuncs_tsv2GRconv":        "06_GRobjects/Rfuncs_npreads_tsv2GR.R",
         "pyfunc_defs":              "00_SM/func_defs.py",

@@ -207,7 +207,7 @@ if ( config["execution"]["clustersub"] ):
             raise
 
     # create path for Snakemake e/o logfiles:
-    ClusterLogsDir = os.path.join(config['PATHOUT'], 'cluster_log_files')
+    ClusterLogsDir = os.path.join(config['PATHOUT'], 'cluster_log_files/')
     os.makedirs( ClusterLogsDir , exist_ok=True)
 
 
@@ -220,7 +220,7 @@ if ( config["execution"]["clustersub"] ):
         qsub += " " + config['execution']['cluster']['args']
     command += [
         "--cluster-config={}".format( config["execution"]["cluster"]["cluster_config_file"] ),
-        "--cluster {}".format(qsub),
+        "--cluster={}".format(qsub),
         "--latency-wait={}".format(config['execution']['cluster']['missing-file-timeout'])
     ]
 else:
@@ -250,10 +250,10 @@ else:
         command.append("--printshellcmds")
 
 # --- SNAKEMAKE SUBMISSION COMMAND: -----------------------
-# DEBUGGING: REMOVE THIS:
-    print(" YOU'RE in a DEBUGGING BRANCH: command = ")
-    print( " ".join(command) ) 
+# DEBUGGING option:
+#    print(" DEBUGGING: command = ")
+#    print( command )
 
-#    subprocess.run(command)
+    subprocess.run(command)
 
 #    print("\n Process complete, thank you for using Nanopiper.\n")
