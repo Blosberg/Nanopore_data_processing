@@ -5,7 +5,7 @@ date:   "10/16/2017"
 output:  html_document
 ---
 
-The following is a nanopore processing output document. 
+The following is a nanopore processing output document.
 
 ```{r setup, include=FALSE}
 # source("https://bioconductor.org/biocLite.R")
@@ -27,7 +27,7 @@ GRobj_empty=( file.info(fin_GRLreads)$size == 0 )
 ```
 
 To produce this report, genome-aligned reads were obtained from the fiel : `r fin_GRLreads`
-and aligned against the genome `r Genome_version`. 
+and aligned against the genome `r Genome_version`.
 Aligned reads were then compared to the reference transcriptome database stored in the following file: `r fin_Transcript`.
 
 
@@ -35,45 +35,41 @@ Aligned reads were then compared to the reference transcriptome database stored 
 cat('This pipeline has the capability to analyze raw current data from the nanopore device, however, for the present data set, the pipeline was unable to find any file containing current data; as such, these results will be omitted from the report.')
 ```
 ```{r paragraph_GRobj_notempty, results='asis', echo=FALSE, eval=!GRobj_empty }
-cat(paste('Raw current data from the nanopore device was imported from the following GRanges object file:', fin_GRLreads)) 
+cat(paste('Raw current data from the nanopore device was imported from the following GRanges object file:', fin_GRLreads))
 ```
 
-<!-------  Load alignment data and reference transcripts: -------> 
+<!-------  Load alignment data and reference transcripts: ------->
 
 ```{r import_data, echo=FALSE}
-algn = readGAlignments(fin_readalignment_bam, use.names=TRUE, param=ScanBamParam(tag="NM", what="mapq"))
-algn_cigartable = cigarOpTable(cigar(algn))
-gap_index = which(colnames( algn_cigartable ) =="D" )
-gap_indices = c( which( colnames( algn_cigartable ) =="I" ), which(colnames( algn_cigartable ) =="D")  )
+# algn = readGAlignments(fin_readalignment_bam, use.names=TRUE, param=ScanBamParam(tag="NM", what="mapq"))
+# algn_cigartable = cigarOpTable(cigar(algn))
+# gap_index = which(colnames( algn_cigartable ) =="D" )
+# gap_indices = c( which( colnames( algn_cigartable ) =="I" ), which(colnames( algn_cigartable ) =="D")  )
 
-GRalgn  = as(algn, 'GRanges')
-GRLalgn = as(algn, 'GRangesList')
-
-GRob      = readRDS(fin_GRLreads)
-
-GRLalgn   = GRob$Events_GRL_splitbyread
-GRalgn    = unlist( GRangesList( GRLalgn ) )
-flattened = GRob$Flattened_reads
+GRob       = readRDS( fin_GRLreads )
+GRLalgn    = GRob$Events_GRL_splitbyread
+GRalgn     = unlist( GRangesList( GRLalgn ) )
+flattened  = GRob$Flattened_reads
 
 
-GRalgn$num_mismatches = GRalgn$NM  - ( algn_cigartable[ , gap_indices[1]] +algn_cigartable[ , gap_indices[2]])
-
-#ref    ==> reference set of transcript ranges
-ref_GR    = rtracklayer::import.gff(fin_Transcript) 
-ref_exons_GR               =  subset(ref_GR,    type == 'exon') 
-ref_exons_by_transcript    =  split(ref_exons_GR, ref_exons_GR$transcript_id )
-
-sample_read_cum_width      = sum(  width( GRLalgn ) )
-ref_transcript_cum_width   = sum(  width( ref_exons_by_transcript ) )
-
-maxfreq = max(table(GRalgn$mapq) )
+# GRalgn$num_mismatches = GRalgn$NM  - ( algn_cigartable[ , gap_indices[1]] +algn_cigartable[ , gap_indices[2]])
+#
+# #ref    ==> reference set of transcript ranges
+# ref_GR    = rtracklayer::import.gff(fin_Transcript)
+# ref_exons_GR               =  subset(ref_GR,    type == 'exon')
+# ref_exons_by_transcript    =  split(ref_exons_GR, ref_exons_GR$transcript_id )
+#
+# sample_read_cum_width      = sum(  width( GRLalgn ) )
+# ref_transcript_cum_width   = sum(  width( ref_exons_by_transcript ) )
+#
+# maxfreq = max(table(GRalgn$mapq) )
 ```
 
 
-<!---- ========================================================= ----> 
+<!---- ========================================================= ---->
 ## Correspondence with reference transcriptome:
 
-We first consider the mapping of base-called NP data with the reference genome. The mapping quality, $MAPQ$ is defined as $-10 \ {\rm log}_{10}\left[ {\rm Prob \{\, mapping\, position\, wrong\} } \right]$, with higher values implying greater confidence in the correct alignment. This quantity has a lower bound of 0, and is rounded to the nearest integer; computation allows for this quantity to be theoretically as high as 255, though all realistic data will have $MAPQ$ values significantly lower than this. A histogram of the $MAPQ$ values obtained from the present data set is provided below. 
+We first consider the mapping of base-called NP data with the reference genome. The mapping quality, $MAPQ$ is defined as $-10 \ {\rm log}_{10}\left[ {\rm Prob \{\, mapping\, position\, wrong\} } \right]$, with higher values implying greater confidence in the correct alignment. This quantity has a lower bound of 0, and is rounded to the nearest integer; computation allows for this quantity to be theoretically as high as 255, though all realistic data will have $MAPQ$ values significantly lower than this. A histogram of the $MAPQ$ values obtained from the present data set is provided below.
 
 
 ```{r mismatches_below_above, echo=FALSE}
@@ -83,8 +79,8 @@ half_prob=-10*log10(0.5) # -- This is the MAPQ value corresponding to 50% chance
 below_thresh=which( GRalgn$mapq < half_prob)
 above_thresh=which( GRalgn$mapq >= half_prob )
 
-hist(GRalgn$num_mismatches[ GRalgn$mapq < half_prob ], xlab = "number of mismatches", ylab=" frequency", main ="mapq below cutoff") 
-hist(GRalgn$num_mismatches[ GRalgn$mapq >= half_prob ], xlab = "number of mismatches", ylab=" frequency", main ="mapq above cutoff") 
+hist(GRalgn$num_mismatches[ GRalgn$mapq < half_prob ], xlab = "number of mismatches", ylab=" frequency", main ="mapq below cutoff")
+hist(GRalgn$num_mismatches[ GRalgn$mapq >= half_prob ], xlab = "number of mismatches", ylab=" frequency", main ="mapq above cutoff")
 
 hist( (algn_cigartable[below_thresh,1]-GRalgn[below_thresh]$num_mismatches ) /algn_cigartable[below_thresh,1],  xlab = "percentage of accurate calls", freq=FALSE, main="accuracy -mapping below threshold" )
 
@@ -92,7 +88,7 @@ hist( (algn_cigartable[above_thresh,1]-GRalgn[above_thresh]$num_mismatches ) /al
 
 
 hist( GRalgn$mapq, max(GRalgn$mapq)+1, main = "Mapping Quality Histogram", xlab = "MAPQ")
-hist( GRalgn$num_mismatches, xlab = "number of mismatches", ylab=" frequency", main ="mismatches") 
+hist( GRalgn$num_mismatches, xlab = "number of mismatches", ylab=" frequency", main ="mismatches")
 
 
 lines( c(half_prob,half_prob), c(0,maxfreq) , col="red", lwd=2)
@@ -102,8 +98,8 @@ legend( "topright" ,legend="50% confident alignment",col="red", lwd=2 )
 
 Below we see a breakdown of transcriptome by chromosome
 ```{r chrom_breakdown, echo=FALSE}
-barplot( table(seqnames(GRalgn)), 
-         main="Transcript prevalence by chromosome", 
+barplot( table(seqnames(GRalgn)),
+         main="Transcript prevalence by chromosome",
          ylab="Freq" )
 
 ```
@@ -115,11 +111,11 @@ Note that a $MAPQ$ value of $0$ implies a low-confidence alignment. Reads withou
 # N.B. GRLalgn contains all possible alignments --some of which are repeated for a single read_id
 # Now check for overlaps with reference transcriptome data:
 olap_pairs  = get_olap_pairs_n_scores( GRLalgn,
-                                       ref_exons_by_transcript, 
-                                       sample_read_cum_width, 
+                                       ref_exons_by_transcript,
+                                       sample_read_cum_width,
                                        ref_transcript_cum_width )
 
-#-- select a unique entry for each read_id that represents the best possible pairing 
+#-- select a unique entry for each read_id that represents the best possible pairing
 #-- among all pairs of alignments and reference transcripts-- and compile a GRlist of such best matches
 olaps_scordered               = olap_pairs[ order( olap_pairs$score, decreasing=TRUE ) ]
 first_occurance_bool          = !duplicated(olaps_scordered$sample_transcript_id)
@@ -129,7 +125,7 @@ best_pairs                    = olaps_scordered [first_occurance_bool ]
 ```{r further_data, echo=FALSE}
 #-- Get some supplementary data:
 transcript_overlaps_best              = best_pairs
-transcript_overlaps_best$N_readexons  = elementNROWS( GRLalgn[ best_pairs$queryHits ] ) 
+transcript_overlaps_best$N_readexons  = elementNROWS( GRLalgn[ best_pairs$queryHits ] )
 transcript_overlaps_best$cum_width    = sum( width(   GRLalgn[ best_pairs$queryHits ] ) )
 
 GR_original_matches                   = match(transcript_overlaps_best$sample_transcript_id, names(GRalgn))
@@ -164,13 +160,13 @@ maxfreq    = max(table(transcript_overlaps_best$mapq) )
 lines( c(half_prob,half_prob), c(0,maxfreq) , col="red", lwd=2)
 legend( "topright" ,legend="50% confident alignment",col="red", lwd=2 )
 
-plot(   c(transcript_overlaps_best$score, rep(0,Nread_noref) ), 
-        xlab= "index", 
-        ylab="overlap score" , 
+plot(   c(transcript_overlaps_best$score, rep(0,Nread_noref) ),
+        xlab= "index",
+        ylab="overlap score" ,
         main="Read transcript overlap \n with reference (scordered)" )
 ```
 
-<!---- collect info on number of exons in each transcript: ----> 
+<!---- collect info on number of exons in each transcript: ---->
 ## Exon number:
 We consider the number of distinct exons from each read, and how this complexity impacts the score of the consistency between these reads and the reference trancsriptome.
 
@@ -186,38 +182,38 @@ meanmapq_v_Nex=matrix(0,M,1) #-- mean mapping quality as a funtion of exon numbe
 fracmapq_v_Nex=matrix(0,M,1) #-- fraction of reads above 50% alignment confidence (as a function of # exons.)
 
 histcount = table( transcript_overlaps_best$N_readexons )
-  
+
 for ( i in c(1:M) )
   {
-  
-  mean_score_v_Nex[i]  = mean( 
+
+  mean_score_v_Nex[i]  = mean(
                              transcript_overlaps_best$score[ which (
                                      transcript_overlaps_best$N_readexons == i ) ] )
 
-    
+
   meanmapq_v_Nex[i]  =  mean( transcript_overlaps_best$mapq[ which(transcript_overlaps_best$N_readexons == i ) ] )
 
   #take fraction of reads of Nexon==i that have mapping quality >50% divided by the total number of such reads
-  fracmapq_v_Nex[i]  = ( length( which( transcript_overlaps_best$mapq[ which(transcript_overlaps_best$N_readexons == i )  ] > half_prob) ) )  / length( which(transcript_overlaps_best$N_readexons == i ) ) 
-  
+  fracmapq_v_Nex[i]  = ( length( which( transcript_overlaps_best$mapq[ which(transcript_overlaps_best$N_readexons == i )  ] > half_prob) ) )  / length( which(transcript_overlaps_best$N_readexons == i ) )
+
   }
 
-# par(mfrow=c(2,1)) 
-barplot( log10( table( transcript_overlaps_best$N_readexons ) ) , 
-         xlab = "", 
-         ylab=expression('Log'[10]*'[freq.]') 
+# par(mfrow=c(2,1))
+barplot( log10( table( transcript_overlaps_best$N_readexons ) ) ,
+         xlab = "",
+         ylab=expression('Log'[10]*'[freq.]')
          )
 
-par(mfrow=c(1,1)) 
-# plot( meanmapq_v_Nex , 
+par(mfrow=c(1,1))
+# plot( meanmapq_v_Nex ,
 #       ylim = c(0, max(meanmapq_v_Nex) ),
-#       xlab = "number of exons", 
+#       xlab = "number of exons",
 #       ylab = "mean MAPQ",
 #       main = "mapping quality"
-#     ) 
-plot(fracmapq_v_Nex, 
+#     )
+plot(fracmapq_v_Nex,
      ylim = c(0, 1),
-     col  ="red", 
+     col  ="red",
      lwd=2,
      xlab = "number of exons",
      ylab = "mapped to ref. genome with > 50% confidence"
@@ -225,16 +221,16 @@ plot(fracmapq_v_Nex,
 legend( "bottomright" ,legend=" >50% confidence",col="red", lwd=2 )
 ```
 
-Again, as a function of number of exons, we consider the 
+Again, as a function of number of exons, we consider the
 ```{r exon_num_and_scores, echo=FALSE}
-plot( 
-      mean_score_v_Nex , 
+plot(
+      mean_score_v_Nex ,
       ylim = c(0,1),
-      xlab = "number of exons", 
+      xlab = "number of exons",
       ylab = "Transcriptome overlap score",
       main = "olap score vs. number of exons"
-    ) 
-```         
+    )
+```
 
 
 <!----------------------------------------------------------------------->
@@ -254,7 +250,7 @@ GRLalgn_norefhit= GRLalgn[ reads_no_reftrans_hits ]
 algn_norefhit_reduced = reduce( unlist( GRLalgn_norefhit) )
 
 #-- look for histogram of overlaps:
-hitcount_pairs  = findOverlaps( algn_norefhit_reduced, GRLalgn_norefhit) 
+hitcount_pairs  = findOverlaps( algn_norefhit_reduced, GRLalgn_norefhit)
 
 #--count how many times each reduced GRange was hit:
 algn_norefhit_reduced$hits = table( queryHits(hitcount_pairs ) )
@@ -273,7 +269,7 @@ novel_pairs     = findOverlaps( GRLalgn_norefhit , algn_NOVEL_reduced )
 ```
 
 N.B. THE METHODOLOGY FOR THIS SECTION NEEDS TO BE GENERALIZED: need to come up with a way to choose the read-coverage threshold (red horizontal line) in an objective, reproducible way.
-Below is a plot of the observed number of hits across the regions that were not represented in the reference transcriptome. 
+Below is a plot of the observed number of hits across the regions that were not represented in the reference transcriptome.
 The red line delineates read hits that are considered significant enough to be treated as 'novel' transcripts, using a significance threshold of `r readcov_THRESH`.
 
 ```{r unreffed_reads_significance, echo=FALSE, eval= length(algn_norefhit_reduced) > 0 }
@@ -286,8 +282,8 @@ plot( algn_norefhit_reduced$hits,
       ylab="coverage",
       xlab="index")
 # points(maxindex,yplotmax, axes=TRUE)
-lines( c(1, length( algn_norefhit_reduced)),c(readcov_THRESH,readcov_THRESH), 
-       col="red", 
+lines( c(1, length( algn_norefhit_reduced)),c(readcov_THRESH,readcov_THRESH),
+       col="red",
        lwd=2 )
 
 ```
@@ -299,7 +295,7 @@ These novel and significant transcripts are summarized in the following set of G
 NOVEL  = GRLalgn_norefhit[ queryHits( novel_pairs ) ]
 ```
 
-In total, there were `r length( reduce(unlist(NOVEL) ) )` such locii identified from `r length( unique(names(NOVEL) ))` distinct reads. 
+In total, there were `r length( reduce(unlist(NOVEL) ) )` such locii identified from `r length( unique(names(NOVEL) ))` distinct reads.
 ```{r print_novels_to_screen, echo=TRUE}
 NOVEL
 ```

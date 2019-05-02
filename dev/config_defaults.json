@@ -1,32 +1,128 @@
 {
-  "fastq_suffix": "fastq",
-  "Flatten": "TRUE",
+  "fastq_suffix": ".fastq",
+  "fast5dir_default":"fast5/pass/",
+  "fastqdir_default":"fastq/pass/",
 
-  "target_out": "flatreads_GRL",
+  "ReadType":     "ONT_Direct_RNA",
 
   "ref": {
-          "Transcriptome"  : "/scratch/AG_Akalin/refGenomes/hg19_canon/170317_Homo_sapiens.GRCh37.87.chr.gtf",
           "Genome_DIR"     : "/scratch/AG_Akalin/refGenomes/hg19_canon/",
-          "Genome_version" : "hg19_canon"
+          "Genome_version" : "hg19_canon",
+          "RsoI": ""
           },
 
    "progs": {
-        "minimap":    "./dev/guix/.guix-profile/bin/minimap2",
-        "nanopolish": "./dev/guix/.guix-profile/bin/nanopolish",
-        "SAMTOOLS":   "./dev/guix/.guix-profile/bin/samtools"
+        "minimap":    "minimap2",
+        "nanopolish": "nanopolish",
+        "SAMTOOLS":   "samtools"
             },
    "scripts": {
-        "script_folder":            "/home/bosberg/projects/nanopore/scripts/",
+        "script_folder":            "/home/bosberg/projects/nanopiper/scripts/",
         "Rmain_build_histlist":     "06_GRobjects/Rmain_build_currenthistlist_from_GRL_reads.R",
-        "Rmain_flattenreads":       "06_GRobjects/Rmain_flatten_reads.R",
-        "Rfuncs_flattenreads":      "06_GRobjects/Rfuncs_flatten_reads.R",
+        "Rmain_overlap_reads_RsoI": "07_GRprocessing/Rmain_olap_reads_w_RsOI.R",
         "Rmain_tsv2GRconv":         "06_GRobjects/Rmain_npreads_tsv2GR.R",
         "Rfuncs_tsv2GRconv":        "06_GRobjects/Rfuncs_npreads_tsv2GR.R",
         "pyfunc_defs":              "00_SM/func_defs.py",
         "rules_chunks":             "00_SM/rules_chunks.py",
         "rules_wholefastq":         "00_SM/rules_wholefastq.py"
             },
+
+   "options":{
+        "minimap2":{
+             "PacBio_genome":           "-ax map-pb         ",
+             "ONT_genome":              "-ax map-ont        ",
+             "PacBio_CCS_genome":       "-ax asm20          ",
+             "short_genome_paired_end": "-ax sr             ",
+             "spliced_long":            "-ax splice         ",
+             "ONT_Direct_RNA":          "-ax splice -uf -k14",
+             "Final_PacBio":            "-ax splice -uf -C5 ",
+             "xspecies_asm2asm":        "-cx asm5           ",
+             "PacBio_overlap":          "-x ava-pb          ",
+             "ONT_overlap":             "-x ava-ont         "
+        }
+   },
    "execution":{
-        "nice": "0"
-            }
-}
+        "jobs": 1,
+        "clustersub": false,
+        "target_out": "report",
+        "nice": 0,
+        "FlattenReads": "TRUE",
+        "type": "RNA",
+        "cluster":{
+           "missing-file-timeout": 120,
+           "stack": 128M,
+           "contact-email": "none",
+           "cluster_config_file": "cluster_conf.json",
+           "specify_q": false,
+           "args": ""
+           },
+
+        "currenthist_minrange": 50,
+        "currenthist_maxrange": 150,
+        "currenthist_res": 0.5,
+
+        "rules":{
+           "__default__":
+              {
+              "threads": 1,
+              "memory": 30G,
+              "h_stack": "128M"
+              },
+           "make_report":
+              {
+              "threads": 1,
+              "memory": 30G
+              },
+           "np_event_align":
+              {
+              "threads": 1,
+              "memory": 30G
+              },
+           "index_sortedbam":
+              {
+              "threads": 1,
+              "memory": 30G
+              },
+           "np_index":
+              {
+              "threads": 1,
+              "memory": 30G
+              },
+           "create_kmer_histlist":
+              {
+              "threads": 1,
+              "memory": 30G
+              },
+           "create_readcurrent_GRL_obj":
+              {
+              "threads": 1,
+              "memory": 30G
+              },
+           "merge_bam_files":
+              {
+              "threads": 1,
+              "memory": 30G
+              },
+           "convert_sort_minimap":
+              {
+              "threads": 1,
+              "memory": 30G
+              },
+           "filter_nonaligned_minimap":
+              {
+              "threads": 1,
+              "memory": 30G
+              },
+           "align_minimap":
+              {
+              "threads": 1,
+              "memory": 30G
+              },
+           "minimizer":
+              {
+              "threads": 1,
+              "memory": 30G
+              }
+           }
+        }
+   }

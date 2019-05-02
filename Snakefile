@@ -2,142 +2,45 @@
 import os, sys, json, csv, yaml
 import argparse
 
-# import IPython;
-
-#-----------------------------------------------------------------
-#--- Define settings for config file -----------------------------
-
-# import default settings:
-config_defaults="dev/config_defaults.json"
-config = yaml.safe_load(open(config_defaults, 'r'))
-
-include: os.path.join( config["scripts"]["script_folder"], config["scripts"]["pyfunc_defs"] )
-
-# import user-supplied settings, over-writing as necessary
-config_userin="config.json"
-update_config( config, yaml.safe_load( open( config_userin, 'r')))
-
-# look in the path provided for each sample and build a list of "chunks" in
-# each case.  these are just directory names and should be simply numbers
-# (0,1,2,...)
-for sLoop_countchunks in config["samplelist"]:
-    # set path within this sample's data set to look for chunks
-    DATPATH = os.path.join(config["PATHIN"], config["samplelist"][sLoop_countchunks]["subdir"], "fast5", "pass" )
-
-    # define a list of these subentries:
-    unsorted_stringlist =  [ entry.name for entry in os.scandir( DATPATH ) if entry.is_dir() ]
-    intlist = list( map(int, unsorted_stringlist) )
-    intlist.sort()
-
-    config["samplelist"][sLoop_countchunks]["chunkdirlist"] = list( map(str, intlist))
-
-
-# store a log of the config file we just built:
-config_log="configlog_out.json"
-
-with open(config_log, 'w') as outfile:
-    dumps = json.dumps(config,
-                       indent=4,
-                       sort_keys=True,
-                       separators=(",",": "),
-                       ensure_ascii=True)
-    outfile.write(dumps)
-
-
 # ------------------------------------------------------
-#--- Define Dependencies:
-
+# --- Define Dependencies:
 
 MM2        = config["progs"]["minimap"]
 SAMTOOLS   = config["progs"]["SAMTOOLS"]
 nanopolish = config["progs"]["nanopolish"]
 
-RefTranscriptome   = config["ref"]["Transcriptome"]
 GENOME_VERSION     = config["ref"]["Genome_version"]
 RmdReportScript    = os.path.join(config["scripts"]["script_folder"],"final_report","Nanopore_report.Rmd")
-input_data_type    = config["input_data_type"]
 
-R_tables2GR_main     = os.path.join( config["scripts"]["script_folder"], config["scripts"]["Rmain_tsv2GRconv"] )
-R_tables2GR_funcs    = os.path.join( config[ "scripts"]["script_folder"], config[ "scripts"]["Rfuncs_tsv2GRconv"] )
-
-R_flattenreads_main  = os.path.join( config["scripts"]["script_folder"], config["scripts"]["Rmain_flattenreads"] )
-R_flattenreads_funcs = os.path.join( config["scripts"]["script_folder"], config["scripts"]["Rfuncs_flattenreads"] )
+Rmain_tsv2GRL     = os.path.join( config["scripts"]["script_folder"], config["scripts"]["Rmain_tsv2GRconv"] )
+Rfuncs_tsv2GRL    = os.path.join( config["scripts"]["script_folder"], config[ "scripts"]["Rfuncs_tsv2GRconv"] )
 
 R_build_histlist_main   = os.path.join( config["scripts"]["script_folder"], config["scripts"]["Rmain_build_histlist"] )
 
+Rmain_overlap_reads_RsoI = os.path.join( config["scripts"]["script_folder"], config["scripts"]["Rmain_overlap_reads_RsoI"] )
+
 #------------------------------------------------------
-#--- Define output directories
+# --- Define output directories
 
 SUBDIR_SYMLINKS           = "01_symlinks_fastqindex_chunks/"
 SUBDIR_ALIGNED_MINIMAP    = "02_MM_aligned_chunks/"
 SUBDIR_FILTERED_MINIMAP   = "03_MM_filtered_chunks/"
 SUBDIR_SORTED_MINIMAPPED  = "04_MM_sortedbam/"
 SUBDIR_EVENTALIGN         = "05_eventalign/"
-SUBDIR_GR                 = "06_GRobjects"
+SUBDIR_GR                 = "06_GRobjects/"
+SUBDIR_GRproc             = "07_GRprocessing/"
 SUBDIR_REPORT             = "Final_report/"
 
 DIR_REFGENOME             = config['ref']['Genome_DIR']
 
 #------------------------------------------------------
-#--- Check that the pipeline can be executed:
+# --- Include function definitions and rules
 
-# check for write access to refgenome dir
-if ( not os.access(DIR_REFGENOME, os.W_OK) ):
-   print("Write access to refgenome folder is denied. Checking if necessary indexing files already exist: ... ")
-
-   if( not os.path.isfile(DIR_REFGENOME , config['ref']['Genome_version'] + ".mmi")):
-      bail("minimap index files not found, and cannot be created. Aborting")
-
-   else:
-      print("Refgenome index files are present. Continuing... ")
-
-#--- Create symbolic links to PATHIN so that indexing/etc can be performed in
-# written pathout
-
-if ( input_data_type == "raw_minION"):
-   # the snakemake rules defined in the following included script assume
-   # that the minION output has been "chunked" into sequential files, and
-   # will have to be reassembled.
-   include   : os.path.join( config["scripts"]["script_folder"], config["scripts"]["rules_chunks"] )
-
-   for sLooplinki in config["samplelist"]:
-
-#       os.makedirs( os.path.join( config["PATHOUT"], config["samplelist"][sLooplinki]["subdir"], SUBDIR_SYMLINKS),  exist_ok=True)
-
-       # get subdir for this sample:
-       samplePATH = os.path.join( config["PATHIN"], config["samplelist"][sLooplinki]["subdir"] )
-
-#       # linke to each chunk directly:
-#       for linkindex in config["samplelist"][sLooplinki]["chunkdirlist"]:
-#          linkname = sLooplinki + "_" + str(linkindex) + "." + config["fastq_suffix"]
-#
-#          target   = getPathCase( samplePATH, "fastq", "pass",config["samplelist"][sLooplinki]["fastq_prefix"] + str(linkindex) + "." +  config["fastq_suffix"], "raw_minION")
-#
-#          linkloc  = os.path.join( config["PATHOUT"], config["samplelist"][sLooplinki]["subdir"], SUBDIR_SYMLINKS, linkname)
-#
-#          makelink(  target, linkloc )
-
-
-elif( input_data_type == "fastq"):
-   # Do some other stuff
-   include   : os.path.join( config["scripts"]["script_folder"], config["scripts"]["rules_wholefastq"] )
-
-   for sLoop2linki in config["samplelist"]:
-
-       # get subdir for this sample:
-       samplePATH = os.path.join(config["PATHIN"], config["samplelist"][sLoop2linki]["subdir"] )
-
-       linkname = sLoop2linki + config['samplelist'][sLoop2linki]["fastq_suffix"]
-#       makelink( os.path.join(samplePATH, config["samplelist"][sLoop2linki]["fastq_prefix"] + config["samplelist"][sLoop2linki]["fastq_suffix"] ), os.path.join( config["PATHOUT"], config["samplelist"][sLoop2linki]["subdir"], SUBDIR_SYMLINKS, linkname))
-
-
-else:
-   print("Unrecognized input data format. Terminating.")
-   exit(1)
-
+include: os.path.join( config["scripts"]["script_folder"], config["scripts"]["pyfunc_defs"] )
+include: os.path.join( config["scripts"]["script_folder"], config["scripts"]["rules_chunks"] )
 
 #------------------------------------------------------
-#--- Define output (target) files:
+# --- Define output (target) files:
 
 # Initialize empty list
 OUTPUT_FILES = []
@@ -146,39 +49,37 @@ OUTPUT_FILES = []
 for sampleLoopi_targets in config["samplelist"]:
 
    # @@@ TODO: implement sample-dependent targets with defaults.
-   if ( config["target_out"] == "report" ):
+   if ( config["execution"]["target_out"] == "report" ):
       OUTPUT_FILES.extend(
-                          [ os.path.join( config["PATHOUT"], config["samplelist"][sampleLoopi_targets]["subdir"], SUBDIR_REPORT, "" + sampleLoopi_targets + "_report.html") ]
+                          [ os.path.join( config["PATHOUT"], config["samplelist"][sampleLoopi_targets]["sampledir"], SUBDIR_REPORT, "" + sampleLoopi_targets + "_report.html") ]
                           )
-   elif ( config["target_out"] == "histlist" ):
+   elif ( config["execution"]["target_out"] == "histlist" ):
       OUTPUT_FILES.extend(
-                          [ os.path.join( config["PATHOUT"], config["samplelist"][sampleLoopi_targets]["subdir"], SUBDIR_GR, sampleLoopi_targets + "_kmer_histlist.rds") ]
+                          [ os.path.join( config["PATHOUT"], config["samplelist"][sampleLoopi_targets]["sampledir"], SUBDIR_GR, sampleLoopi_targets + "_kmer_histlist.rds") ]
                           )
-   elif ( config["target_out"] == "flatreads_GRL" ):
+   elif ( config["execution"]["target_out"] == "ROI_olap" ):
       OUTPUT_FILES.extend(
-                          [ os.path.join( config["PATHOUT"], config["samplelist"][sampleLoopi_targets]["subdir"], SUBDIR_GR,  sampleLoopi_targets + "_reads_flat_GRL.rds") ]
+                          [ os.path.join( config["PATHOUT"], config["samplelist"][sampleLoopi_targets]["sampledir"], SUBDIR_GRproc, sampleLoopi_targets + "_read_ROI_olap.rds") ]
+                          )
+   elif ( config["execution"]["target_out"] == "reads_GRL" ):
+      OUTPUT_FILES.extend(
+                          [ os.path.join( config["PATHOUT"], config["samplelist"][sampleLoopi_targets]["sampledir"], SUBDIR_GR, sampleLoopi_targets + "_reads_GRL.rds") ]
+                          )
+   elif ( config["execution"]["target_out"] == "mergedbam" ):
+      OUTPUT_FILES.extend(
+                          [ os.path.join( config["PATHOUT"], config["samplelist"][sampleLoopi_targets]["sampledir"], SUBDIR_SORTED_MINIMAPPED, sampleLoopi_targets + ".sorted.bam") ]
                          )
-   elif ( config["target_out"] == "reads_GRL" ):
+   elif ( config["execution"]["target_out"] == "aligned_chunks"):
       OUTPUT_FILES.extend(
-                          [ os.path.join( config["PATHOUT"], config["samplelist"][sampleLoopi_targets]["subdir"], SUBDIR_GR, sampleLoopi_targets + "_reads_GRL.rds") ]
-                          )
-   elif ( config["target_out"] == "mergedbam" ):
-      OUTPUT_FILES.extend(
-                          [ os.path.join( config["PATHOUT"], config["samplelist"][sampleLoopi_targets]["subdir"], SUBDIR_SORTED_MINIMAPPED, sampleLoopi_targets + ".sorted.bam") ]
-                         )
-   elif ( config["target_out"] == "aligned_chunks"):
-      OUTPUT_FILES.extend(
-                          get_chunkfiles( sampleLoopi_targets, os.path.join( config["PATHOUT"], config["samplelist"][sampleLoopi_targets]["subdir"], SUBDIR_ALIGNED_MINIMAP) ,  "", ".sam", 0 )
+                          get_chunkfiles( sampleLoopi_targets, os.path.join( config["PATHOUT"], config["samplelist"][sampleLoopi_targets]["sampledir"], SUBDIR_ALIGNED_MINIMAP) ,  "", ".sam", 0 )
                          )
    else:
-      print("Unrecognized target output file format: ", config["target_out"], " ... Terminating.")
+      print("Unrecognized target output file format: ", config["execution"]["target_out"], " ... Terminating.")
       exit(1)
-
 
 #---  DEBUGGING:
 #------------------------------------------------------
-# print("input_data_type = " + config["input_data_type"])
-# print("target out = " + config["target_out"])
+# print("target out = " + config["execution"]["target_out"])
 # IPython.embed()
 # print("---- last check before rules: ------ ")
 # print ( "len(OUTPUT_FILES)=")
@@ -206,7 +107,6 @@ rule make_report:
     # build the final output report in html format
     input:
         aligned_reads_bam = os.path.join( config["PATHOUT"], "{wcreport_sampleDir}", SUBDIR_SORTED_MINIMAPPED, "{wcreport_samplename}.sorted.bam"),
-        transcriptome     = RefTranscriptome,
         GRLreads          = os.path.join( config["PATHOUT"], "{wcreport_sampleDir}", SUBDIR_GR, "{wcreport_samplename}_reads_GRL.rds")
     output:
         os.path.join( config["PATHOUT"], "{wcreport_sampleDir}", SUBDIR_REPORT, "{wcreport_samplename}_report.html")
@@ -220,10 +120,34 @@ rule make_report:
     shell:
         " Rscript -e  '{params} "
         " fin_readalignment_bam = \"{input.aligned_reads_bam}\"; "
-        " fin_Transcript        = \"{input.transcriptome}\";"
+        " fin_RsoI              = \"{input.transcriptome}\";"
         " fin_GRLreads          = \"{input.GRLreads}\";"
-        " Genome_version        =\"{GENOME_VERSION}\"; "
+        " Genome_version        = \"{GENOME_VERSION}\"; "
         " rmarkdown::render(\"{RmdReportScript}\", output_file = \"{output}\" ) ' "
+#------------------------------------------------------
+rule overlap_reads_w_RsoI:
+    # Process the aligned reads and filter for only those
+    # that overlap with the regions of interest.
+    input:
+        reads             = os.path.join( config["PATHOUT"], "{wcReadROI_olap_sampleDir}", SUBDIR_GR, "{wcReadROI_olap_samplename}_reads_GRL.rds")
+    output:
+        readROI_olaps     = os.path.join( config["PATHOUT"], "{wcReadROI_olap_sampleDir}", SUBDIR_GRproc, "{wcReadROI_olap_samplename}_read_ROI_olap.rds")
+    params:
+        reads_in          = os.path.join( config["PATHOUT"], "{wcReadROI_olap_sampleDir}", SUBDIR_GR, "{wcReadROI_olap_samplename}_reads_GRL.rds"),
+        path_RsoI         = config["ref"]["RsoI"],
+        pathout_ROI_olaps = os.path.join( config["PATHOUT"], "{wcReadROI_olap_sampleDir}", SUBDIR_GRproc, "{wcReadROI_olap_samplename}_read_ROI_olap.rds"),
+        samplename        = "{wcReadROI_olap_samplename}"
+    log:
+        logFile           = os.path.join( config["PATHOUT"], "{wcReadROI_olap_sampleDir}", SUBDIR_GRproc, "{wcReadROI_olap_samplename}_read_ROI_olap.log")
+    message:
+        fmt("Overlap reads from {input.reads} with Regions of interest.")
+    shell:
+        nice('Rscript', [ Rmain_overlap_reads_RsoI,
+                          "--pathin_reads={params.reads_in}",
+                          "--pathin_RsoI={params.path_RsoI}",
+                          "--pathout_alignedreads={params.pathout_ROI_olaps}",
+                          "--samplename={params.samplename}",
+                          "--logFile={log.logFile}"] )
 
 #------------------------------------------------------
 rule np_event_align:
@@ -233,8 +157,8 @@ rule np_event_align:
     input:
         sortedbam             = os.path.join( config["PATHOUT"], "{wcEvalign_sampleDir}", SUBDIR_SORTED_MINIMAPPED, "bam_chunks", "{wcEvalign_samplename}_{wcEvalign_chunk}.sorted.bam"),
         NOTCALLED_indexedbam  = os.path.join( config["PATHOUT"], "{wcEvalign_sampleDir}", SUBDIR_SORTED_MINIMAPPED, "bam_chunks", "{wcEvalign_samplename}_{wcEvalign_chunk}.sorted.bam.bai"),
-        fastq_file            = os.path.join( config["PATHOUT"], "{wcEvalign_sampleDir}", SUBDIR_SYMLINKS,  "{wcEvalign_samplename}_{wcEvalign_chunk}." +config["fastq_suffix"]),
-        fastq_npi             = os.path.join( config["PATHOUT"], "{wcEvalign_sampleDir}", SUBDIR_SYMLINKS,  "{wcEvalign_samplename}_{wcEvalign_chunk}." + config["fastq_suffix"] + ".index"),
+        fastq_file            = os.path.join( config["PATHOUT"], "{wcEvalign_sampleDir}", SUBDIR_SYMLINKS,  "{wcEvalign_samplename}_{wcEvalign_chunk}" +config["fastq_suffix"]),
+        fastq_npi             = os.path.join( config["PATHOUT"], "{wcEvalign_sampleDir}", SUBDIR_SYMLINKS,  "{wcEvalign_samplename}_{wcEvalign_chunk}" + config["fastq_suffix"] + ".index"),
         refgenome_fasta       = os.path.join( DIR_REFGENOME, config['ref']['Genome_version']+ ".fa" ),
         NOTCALLED_bwt         = os.path.join( DIR_REFGENOME, config['ref']['Genome_version']+ ".fa.bwt"),
         NOTCALLED_pac         = os.path.join( DIR_REFGENOME, config['ref']['Genome_version']+ ".fa.pac")

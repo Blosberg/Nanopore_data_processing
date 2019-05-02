@@ -3,9 +3,6 @@
 # For optimization, model_mean/model_stdv columns are omitted to conserve space.
 
 
-# @@@ TODO: generalize this as an input boolean (see issue #9 on GH):
-data_is_RNA=TRUE
-
 ## Collect arguments
 args <- commandArgs(TRUE)
 
@@ -62,7 +59,7 @@ suppressPackageStartupMessages( library(GenomicRanges) )
 suppressPackageStartupMessages( library(dplyr)         )
 source(Rfuncs_tsv2GRconv)
 
-dat_all         = get_event_dat( Event_file_list = Ealign_files, 
+dat_all         = get_event_dat( Event_file_list = Ealign_files,
                                  logFile         = logFile )
 
 read_list_final = unique( dat_all$read_index  )
@@ -77,7 +74,7 @@ if( !( identical( as.numeric(c(1:Nreads)) , as.numeric(read_list_final) )  ))
 # ========================================================================================
 # output the "poremodel" data - so we have the model data saved
 if ( ! is.null( output_poremodel ))
-  { writeout_pore_model( dat_all, output_poremodel ) }
+  { writeout_pore_model( dat_all, output_poremodel, strand_type="RNA" ) }
 
 # ========================================================================================
 # remove non-finite entries:
@@ -92,7 +89,7 @@ dat_finite_stranded = assign_strand( dat_finite, perform_sanity_checks = TRUE )
 # ================================================
 # Split by read
 
-ReadList_finite_stranded  <- split( dat_finite_stranded, 
+ReadList_finite_stranded  <- split( dat_finite_stranded,
                                     dat_finite_stranded$read_index )
 
 # ================================================

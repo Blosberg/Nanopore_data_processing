@@ -4,23 +4,23 @@ let s:so_save = &so | let s:siso_save = &siso | set so=0 siso=0
 let v:this_session=expand("<sfile>:p")
 silent only
 silent tabonly
-cd /clusterhome/bosberg/projects/nanopore
 if expand('%') == '' && !&modified && line('$') <= 1 && getline(1) == ''
   let s:wipebuf = bufnr('%')
 endif
 set shortmess=aoO
-badd +0 Snakefile
+badd +207 nanopiper.py
+badd +4 Snakefile
+badd +174 scripts/00_SM/func_defs.py
+badd +5 config.json
 badd +0 scripts/00_SM/rules_chunks.py
-badd +0 scripts/00_SM/func_defs.py
-badd +0 config.json
-badd +0 dev/config_defaults.json
 argglobal
 silent! argdel *
+$argadd nanopiper.py
 $argadd Snakefile
 set stal=2
 tabnew
 tabnext -1
-edit Snakefile
+edit nanopiper.py
 set splitbelow splitright
 wincmd _ | wincmd |
 vsplit
@@ -38,52 +38,36 @@ set winwidth=1
 wincmd =
 argglobal
 setlocal fdm=expr
-setlocal fde=FoldSnakemake()
+setlocal fde=FoldPythonMain()
 setlocal fmr={{{,}}}
 setlocal fdi=#
 setlocal fdl=0
 setlocal fml=1
 setlocal fdn=20
 setlocal fen
-48
+21
 normal! zo
-69
+32
 normal! zo
 140
 normal! zo
-178
+163
 normal! zo
-227
+172
 normal! zo
-let s:l = 56 - ((55 * winheight(0) + 24) / 48)
+231
+normal! zo
+255
+normal! zo
+let s:l = 258 - ((46 * winheight(0) + 25) / 50)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-56
-normal! 0
+258
+normal! 066|
 wincmd w
 argglobal
-if bufexists('scripts/00_SM/rules_chunks.py') | buffer scripts/00_SM/rules_chunks.py | else | edit scripts/00_SM/rules_chunks.py | endif
-setlocal fdm=expr
-setlocal fde=FoldSnakemake()
-setlocal fmr={{{,}}}
-setlocal fdi=#
-setlocal fdl=0
-setlocal fml=1
-setlocal fdn=20
-setlocal fen
-66
-normal! zo
-93
-normal! zo
-let s:l = 76 - ((3 * winheight(0) + 12) / 24)
-if s:l < 1 | let s:l = 1 | endif
-exe s:l
-normal! zt
-76
-normal! 0135|
-wincmd w
-argglobal
+2argu
 if bufexists('scripts/00_SM/func_defs.py') | buffer scripts/00_SM/func_defs.py | else | edit scripts/00_SM/func_defs.py | endif
 setlocal fdm=expr
 setlocal fde=FoldPythonFuncdefs()
@@ -93,21 +77,41 @@ setlocal fdl=0
 setlocal fml=1
 setlocal fdn=20
 setlocal fen
-let s:l = 1 - ((0 * winheight(0) + 11) / 23)
+76
+normal! zo
+let s:l = 124 - ((18 * winheight(0) + 12) / 25)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-1
+124
 normal! 0
 wincmd w
-2wincmd w
+argglobal
+2argu
+if bufexists('config.json') | buffer config.json | else | edit config.json | endif
+setlocal fdm=expr
+setlocal fde=FoldSnakemake()
+setlocal fmr={{{,}}}
+setlocal fdi=#
+setlocal fdl=0
+setlocal fml=1
+setlocal fdn=20
+setlocal fen
+let s:l = 2 - ((1 * winheight(0) + 12) / 24)
+if s:l < 1 | let s:l = 1 | endif
+exe s:l
+normal! zt
+2
+normal! 02|
+wincmd w
+3wincmd w
 wincmd =
 tabnext
-edit config.json
+edit Snakefile
 set splitbelow splitright
 wincmd _ | wincmd |
-split
-1wincmd k
+vsplit
+1wincmd h
 wincmd w
 wincmd t
 set winminheight=0
@@ -116,15 +120,17 @@ set winminwidth=0
 set winwidth=1
 wincmd =
 argglobal
+1argu
+if bufexists('Snakefile') | buffer Snakefile | else | edit Snakefile | endif
 setlocal fdm=expr
-setlocal fde=FoldPythonFuncdefs()
+setlocal fde=FoldSnakemake()
 setlocal fmr={{{,}}}
 setlocal fdi=#
 setlocal fdl=0
 setlocal fml=1
 setlocal fdn=20
 setlocal fen
-let s:l = 1 - ((0 * winheight(0) + 11) / 23)
+let s:l = 1 - ((0 * winheight(0) + 25) / 50)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
@@ -132,21 +138,22 @@ normal! zt
 normal! 0
 wincmd w
 argglobal
-if bufexists('dev/config_defaults.json') | buffer dev/config_defaults.json | else | edit dev/config_defaults.json | endif
+1argu
+if bufexists('scripts/00_SM/rules_chunks.py') | buffer scripts/00_SM/rules_chunks.py | else | edit scripts/00_SM/rules_chunks.py | endif
 setlocal fdm=expr
-setlocal fde=FoldPythonFuncdefs()
+setlocal fde=FoldSnakemake()
 setlocal fmr={{{,}}}
 setlocal fdi=#
 setlocal fdl=0
 setlocal fml=1
 setlocal fdn=20
 setlocal fen
-let s:l = 22 - ((21 * winheight(0) + 12) / 24)
+let s:l = 10 - ((9 * winheight(0) + 25) / 50)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-22
-normal! 010|
+10
+normal! 0
 wincmd w
 wincmd =
 tabnext 1
