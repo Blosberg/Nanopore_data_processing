@@ -61,7 +61,7 @@ output$aligned_reads = list()
 output$N_g_filtered  = list()
 output$sampleName    = argsL$sampleName
 output$RefRegionName = argsL$regionName
-output$top_N_g       = RsoI_in$Num_g_select
+
 
 # ========================================================
 # count how many groupings of loci we are considering.

@@ -16,10 +16,11 @@
    "ref":{
           "Genome_DIR"     : "/scratch/AG_Akalin/refGenomes/hg19_canon/",
           "Genome_version" : "hg19_canon",
-          "RsoI_abspath": "/scratch/AG_Akalin/bosberg/Stability/",
+          "RsoI_abspath": "/scratch/AG_Akalin/bosberg/nanopore/ref/Regions_of_interest/",
           "RsoI": {
               "stab_100":"stabilityseg_hg19_M100.rds",
-              "stab_50":"stabilityseg_hg19_M50.rds"
+              "stab_50":"stabilityseg_hg19_M50.rds",
+              "MM_2pO":"MM_2po_Ill.rds"
           }
 
    },
