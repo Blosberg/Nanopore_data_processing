@@ -248,6 +248,7 @@ plot_histogram_overlap <- function(   hist1    = stop("hist1 must be provided"),
 plot_single_histogram <- function(   hist     = stop("hist1 must be provided"),
                                      seq      = NULL,
                                      col_in   = rgb( 1,      0,     0,   alpha=0.5 ),
+                                     xlab_in  = "Current [pA]",
                                      add      = FALSE
 )
 {
@@ -269,7 +270,7 @@ plot_single_histogram <- function(   hist     = stop("hist1 must be provided"),
            0),
         col = "black",
         type="l",
-        xlab = "Current [pA]",
+        xlab = xlab_in,
         ylab = "prob.",
         main = seq
   )  } else {

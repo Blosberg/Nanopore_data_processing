@@ -59,7 +59,7 @@ for sampleLoopi_targets in config["samplelist"]:
                           )
    elif ( config["execution"]["target_out"] == "ROI_olap" ):
       OUTPUT_FILES.extend(
-                          [ os.path.join( config["PATHOUT"], config["samplelist"][sampleLoopi_targets]["sampledir"], SUBDIR_GRproc, sampleLoopi_targets + "_read_ROI_olap.rds") ]
+                          [ os.path.join( config["PATHOUT"], config["samplelist"][sampleLoopi_targets]["sampledir"], SUBDIR_GRproc, sampleLoopi_targets + "_read_ROIolap_"+ region +".rds") for region in config["ref"]["RsoI"]  ]
                           )
    elif ( config["execution"]["target_out"] == "reads_GRL" ):
       OUTPUT_FILES.extend(
@@ -106,15 +106,15 @@ rule all:
 rule make_report:
     # build the final output report in html format
     input:
-        aligned_reads_bam = os.path.join( config["PATHOUT"], "{wcreport_sampleDir}", SUBDIR_SORTED_MINIMAPPED, "{wcreport_samplename}.sorted.bam"),
-        GRLreads          = os.path.join( config["PATHOUT"], "{wcreport_sampleDir}", SUBDIR_GR, "{wcreport_samplename}_reads_GRL.rds")
+        aligned_reads_bam = os.path.join( config["PATHOUT"], "{wcreport_sampleDir}", SUBDIR_SORTED_MINIMAPPED, "{wcreport_sampleName}.sorted.bam"),
+        GRLreads          = os.path.join( config["PATHOUT"], "{wcreport_sampleDir}", SUBDIR_GR, "{wcreport_sampleName}_reads_GRL.rds")
     output:
-        os.path.join( config["PATHOUT"], "{wcreport_sampleDir}", SUBDIR_REPORT, "{wcreport_samplename}_report.html")
+        os.path.join( config["PATHOUT"], "{wcreport_sampleDir}", SUBDIR_REPORT, "{wcreport_sampleName}_report.html")
     params:
         " readcov_THRESH = 10;   ",
         " yplotmax = 10000; "
     log:
-        logfile = os.path.join( config["PATHOUT"], "{wcreport_sampleDir}", SUBDIR_REPORT, "final_report_{wcreport_samplename}.log")
+        logfile = os.path.join( config["PATHOUT"], "{wcreport_sampleDir}", SUBDIR_REPORT, "final_report_{wcreport_sampleName}.log")
     message:
         fmt("Compiling final report")
     shell:
@@ -124,67 +124,77 @@ rule make_report:
         " fin_GRLreads          = \"{input.GRLreads}\";"
         " Genome_version        = \"{GENOME_VERSION}\"; "
         " rmarkdown::render(\"{RmdReportScript}\", output_file = \"{output}\" ) ' "
+
 #------------------------------------------------------
+rule create_kmer_histlist:
+    # Take a read-separated list of events, and assemble a histogram of
+    # current values for each unique kmer observed.
+    input:
+        RDS_GRLreads       = os.path.join( config["PATHOUT"], "{wckmerhist_sampleDir}", SUBDIR_GR, "{wckmerhist_samplename}_reads_GRL.rds")
+    output:
+        RDS_histlist       = os.path.join( config["PATHOUT"], "{wckmerhist_sampleDir}", SUBDIR_GR, "{wckmerhist_samplename}_kmer_histlist.rds")
+    params:
+        current_histmin=config["execution"]["currenthist_minrange"],
+        current_histmax=config["execution"]["currenthist_maxrange"],
+        current_histres=config["execution"]["currenthist_res"],
+        RDS_GRLreads_in=os.path.join( config["PATHOUT"], "{wckmerhist_sampleDir}", SUBDIR_GR, "{wckmerhist_samplename}_reads_GRL.rds"),
+        RDS_histlist_out=os.path.join( config["PATHOUT"], "{wckmerhist_sampleDir}", SUBDIR_GR, "{wckmerhist_samplename}_kmer_histlist.rds"),
+        k=5
+    log:
+        logfile=os.path.join( config["PATHOUT"], "{wckmerhist_sampleDir}", SUBDIR_GR, "{wckmerhist_samplename}_histlist.log")
+    message:
+        fmt("Build list of histograms for unique kmers in dataset.")
+    shell:
+        nice('Rscript', [ R_build_histlist_main,
+                          "--current_histmin={params.current_histmin}",
+                          "--current_histmax={params.current_histmax}",
+                          "--current_histres={params.current_histres}",
+                          "--rds_fin_readdat={params.RDS_GRLreads_in}",
+                          "--rds_fout_histlist={params.RDS_histlist_out}",
+                          "--k={params.k}",
+                          "--logfile={log.logfile}",] )
+
+#------------------------------------------------------
+
 rule overlap_reads_w_RsoI:
     # Process the aligned reads and filter for only those
     # that overlap with the regions of interest.
     input:
-        reads             = os.path.join( config["PATHOUT"], "{wcReadROI_olap_sampleDir}", SUBDIR_GR, "{wcReadROI_olap_samplename}_reads_GRL.rds")
+        reads_in          = os.path.join( config["PATHOUT"], "{wcReadROI_olap_sampleDir}", SUBDIR_GR, "{wcReadROI_olap_sampleName}_reads_GRL.rds"),
+        Refregion_in      = lambda wc: os.path.join( config["ref"]["RsoI_abspath"], config["ref"]["RsoI"][wc.wcReadROI_regionName])
     output:
-        readROI_olaps     = os.path.join( config["PATHOUT"], "{wcReadROI_olap_sampleDir}", SUBDIR_GRproc, "{wcReadROI_olap_samplename}_read_ROI_olap.rds")
+        readROI_olaps     = os.path.join( config["PATHOUT"],  "{wcReadROI_olap_sampleDir}",  SUBDIR_GRproc, "{wcReadROI_olap_sampleName}_read_ROIolap_{wcReadROI_regionName}.rds" )
     params:
-        reads_in          = os.path.join( config["PATHOUT"], "{wcReadROI_olap_sampleDir}", SUBDIR_GR, "{wcReadROI_olap_samplename}_reads_GRL.rds"),
-        path_RsoI         = config["ref"]["RsoI"],
-        pathout_ROI_olaps = os.path.join( config["PATHOUT"], "{wcReadROI_olap_sampleDir}", SUBDIR_GRproc, "{wcReadROI_olap_samplename}_read_ROI_olap.rds"),
-        samplename        = "{wcReadROI_olap_samplename}"
+        sampleName        = "{wcReadROI_olap_sampleName}",
+        regionName        = "{wcReadROI_regionName}"
     log:
-        logFile           = os.path.join( config["PATHOUT"], "{wcReadROI_olap_sampleDir}", SUBDIR_GRproc, "{wcReadROI_olap_samplename}_read_ROI_olap.log")
+        logFile           = os.path.join( config["PATHOUT"], "{wcReadROI_olap_sampleDir}", SUBDIR_GRproc, "{wcReadROI_olap_sampleName}_{wcReadROI_regionName}_read_ROI_olap.log")
     message:
-        fmt("Overlap reads from {input.reads} with Regions of interest.")
+        fmt("Overlap reads from {input.reads_in} with region of interest {input.Refregion_in}.")
     shell:
         nice('Rscript', [ Rmain_overlap_reads_RsoI,
-                          "--pathin_reads={params.reads_in}",
-                          "--pathin_RsoI={params.path_RsoI}",
-                          "--pathout_alignedreads={params.pathout_ROI_olaps}",
-                          "--samplename={params.samplename}",
+                          "--pathin_reads={input.reads_in}",
+                          "--pathin_RsoI={input.Refregion_in}",
+                          "--pathout_alignedreads={output.readROI_olaps}",
+                          "--sampleName={params.sampleName}",
+                          "--regionName={params.regionName}",
                           "--logFile={log.logFile}"] )
 
 #------------------------------------------------------
-rule np_event_align:
-    # Align the events to the reference genome.
-    # The wildcard "chunk" can simply be "full", in cases
-    # where there are no chunks
+
+rule minimizer:
+    # Create indexed version of reference genome for fast
+    # alignment with minimap2 later:
     input:
-        sortedbam             = os.path.join( config["PATHOUT"], "{wcEvalign_sampleDir}", SUBDIR_SORTED_MINIMAPPED, "bam_chunks", "{wcEvalign_samplename}_{wcEvalign_chunk}.sorted.bam"),
-        NOTCALLED_indexedbam  = os.path.join( config["PATHOUT"], "{wcEvalign_sampleDir}", SUBDIR_SORTED_MINIMAPPED, "bam_chunks", "{wcEvalign_samplename}_{wcEvalign_chunk}.sorted.bam.bai"),
-        fastq_file            = os.path.join( config["PATHOUT"], "{wcEvalign_sampleDir}", SUBDIR_SYMLINKS,  "{wcEvalign_samplename}_{wcEvalign_chunk}" +config["fastq_suffix"]),
-        fastq_npi             = os.path.join( config["PATHOUT"], "{wcEvalign_sampleDir}", SUBDIR_SYMLINKS,  "{wcEvalign_samplename}_{wcEvalign_chunk}" + config["fastq_suffix"] + ".index"),
-        refgenome_fasta       = os.path.join( DIR_REFGENOME, config['ref']['Genome_version']+ ".fa" ),
-        NOTCALLED_bwt         = os.path.join( DIR_REFGENOME, config['ref']['Genome_version']+ ".fa.bwt"),
-        NOTCALLED_pac         = os.path.join( DIR_REFGENOME, config['ref']['Genome_version']+ ".fa.pac")
+        refgenome_fasta  = os.path.join(DIR_REFGENOME , config['ref']['Genome_version']+ ".fa" )
     output:
-        Evaligned         = os.path.join( config["PATHOUT"], "{wcEvalign_sampleDir}", SUBDIR_EVENTALIGN, "tsv_chunks", 'Ealign_{wcEvalign_samplename}_{wcEvalign_chunk}.tsv' )
+        refgenome_mmiref = os.path.join(DIR_REFGENOME , config['ref']['Genome_version']+ ".mmi")
+    params:
+        options = " -d  "
     log:
-        logfile  = os.path.join( config["PATHOUT"], "{wcEvalign_sampleDir}", SUBDIR_EVENTALIGN, "tsv_chunks", 'Ealign_{wcEvalign_samplename}_{wcEvalign_chunk}.log')
-    message: """---- Align events from sample {wildcards.wcEvalign_samplename}, chunk {wildcards.wcEvalign_chunk} to the genome ----"""
+        os.path.join( DIR_REFGENOME, config['ref']['Genome_version'], "_mmi2_minimizer_creation.log")
+    message:
+        fmt("Creating minimizer index of reference genome for minimap2.")
     shell:
-        " {nanopolish} eventalign --reads {input.fastq_file} --bam {input.sortedbam} --genome {input.refgenome_fasta} --scale-events  > {output}  2> {log.logfile} "
-
-#------------------------------------------------------
-# rule quickcheck: (TODO)
-#------------------------------------------------------
-
-rule index_sortedbam:
-    # Index the sorted bam file with samtools
-    input:
-        sortedbam  = os.path.join( config["PATHOUT"], "{wcindexbam_sampleDir}", SUBDIR_SORTED_MINIMAPPED, "bam_chunks", "{wcindexbam_samplename}_{wcindexbam_chunk}.sorted.bam")
-    output:
-        indexedbam = os.path.join( config["PATHOUT"], "{wcindexbam_sampleDir}", SUBDIR_SORTED_MINIMAPPED, "bam_chunks", "{wcindexbam_samplename}_{wcindexbam_chunk}.sorted.bam.bai")
-    log:
-        logfile    = os.path.join( config["PATHOUT"], "{wcindexbam_sampleDir}", SUBDIR_SORTED_MINIMAPPED, "bam_chunks", '{wcindexbam_samplename}_{wcindexbam_chunk}_samtoolsindex.log')
-    message: """---- index the bam files for {wildcards.wcindexbam_samplename} chunk {wildcards.wcindexbam_chunk} ----"""
-    shell:
-        " {SAMTOOLS} index  {input.sortedbam}  2> {log.logfile} "
-
-#------------------------------------------------------
+        "{MM2} {params.options}  {output} {input} 2> {log}"
 

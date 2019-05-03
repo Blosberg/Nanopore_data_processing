@@ -8,7 +8,9 @@
   "ref": {
           "Genome_DIR"     : "/scratch/AG_Akalin/refGenomes/hg19_canon/",
           "Genome_version" : "hg19_canon",
-          "RsoI": ""
+          "RsoI_abspath": "/scratch/AG_Akalin/bosberg/Stability/",
+          "RsoI": {   }
+
           },
 
    "progs": {
