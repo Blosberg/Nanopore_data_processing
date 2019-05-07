@@ -65,6 +65,11 @@ def prep_configfile( args ):
     config_userin   = args.config_userin
     config_npSM     = args.config_npSM
 
+    if ( not os.path.isfile(config_defaults) ):
+        bail("Cannot find default configfile: " + config_defaults + "  " )
+    if ( not os.path.isfile(config_userin)  ):
+        bail("Cannot find configfile: " + config_userin + "  " )
+
     config = yaml.safe_load(open(config_defaults, 'r'))
     update_config( config, yaml.safe_load( open( config_userin, 'r')))
 

@@ -73,7 +73,7 @@ parser.add_argument('-config_defaults', nargs='?', default=PATH_NANOPIPER_EXEC+'
 The config file of default values --to be overwritten as needed.
 """)
 
-parser.add_argument( '-c', '-config_userin', dest='config_userin', nargs='?', default=PATH_NANOPIPER_EXEC+'./config.json',
+parser.add_argument( '-c', '-config_userin', dest='config_userin', nargs='?', default=PATH_NANOPIPER_EXEC+'config.json',
                     help="""\
 The config file supplied by the user, to overwrite defaults as needed.
 """)
