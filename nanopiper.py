@@ -73,7 +73,7 @@ parser.add_argument('-config_defaults', nargs='?', default=PATH_NANOPIPER_EXEC+'
 The config file of default values --to be overwritten as needed.
 """)
 
-parser.add_argument( '-c', '-config_userin', dest='config_userin', nargs='?', default=PATH_NANOPIPER_EXEC+'./config.json',
+parser.add_argument( '-c', '-config_userin', dest='config_userin', nargs='?', default=PATH_NANOPIPER_EXEC+'config.json',
                     help="""\
 The config file supplied by the user, to overwrite defaults as needed.
 """)
@@ -215,7 +215,7 @@ if ( config["execution"]["clustersub"] ):
     # The following were removed (and might be necessary):
     # " -v R_LIBS_USER "
     # "--jobscript={}/qsub-template.sh".format(config['locations']['pkglibexecdir']),
-    qsub = "qsub -e " + ClusterLogsDir + " -o " + ClusterLogsDir + " -v PATH -v GUIX_LOCPATH  %s -l h_stack={cluster.h_stack} -l h_vmem={cluster.MEM} %s -b y -pe smp {cluster.nthreads} -cwd" % ( queue_selection_string, contact_email_string)
+    qsub = "qsub -e " + ClusterLogsDir + " -o " + ClusterLogsDir + " -V  %s -l h_stack={cluster.h_stack} -l h_vmem={cluster.MEM} %s -b y -pe smp {cluster.nthreads} -cwd" % ( queue_selection_string, contact_email_string)
     if config['execution']['cluster']['args']:
         qsub += " " + config['execution']['cluster']['args']
     command += [
@@ -253,7 +253,7 @@ else:
 # DEBUGGING option:
 #    print(" DEBUGGING: command = ")
 #    print( command )
-
+#
     subprocess.run(command)
 #
 #    print("\n Process complete, thank you for using Nanopiper.\n")

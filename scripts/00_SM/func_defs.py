@@ -65,6 +65,11 @@ def prep_configfile( args ):
     config_userin   = args.config_userin
     config_npSM     = args.config_npSM
 
+    if ( not os.path.isfile(config_defaults) ):
+        bail("Cannot find default configfile: " + config_defaults + "  " )
+    if ( not os.path.isfile(config_userin)  ):
+        bail("Cannot find configfile: " + config_userin + "  " )
+
     config = yaml.safe_load(open(config_defaults, 'r'))
     update_config( config, yaml.safe_load( open( config_userin, 'r')))
 
@@ -113,11 +118,11 @@ def prep_configfile( args ):
     # prepare a cluster-config file (specifying mem/time/etc. for each job)
     if( config["execution"]["clustersub"] ):
        generate_cluster_configuration( config )
+       del config["execution"]["cluster"]["rules"]
     else:
        del config["execution"]["cluster"]
 
     # In either case, SMconfig file doesn't need these.
-    del config["execution"]["rules"]
 
     #  --------- Now dump the config dictionary to the output path : ------------
 
@@ -133,7 +138,7 @@ def prep_configfile( args ):
 # --------------------------------------------------------------
 
 def generate_cluster_configuration( config ):
-    rules = config['execution']['rules']
+    rules = config["execution"]["cluster"]["rules"]
 
     cluster_conf = {}
     for rule in rules:

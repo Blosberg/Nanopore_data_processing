@@ -2,35 +2,46 @@
 # BEGIN RULES
 # -----------------------------------------------------
 
-rule create_kmer_histlist:
-    # Take a read-separated list of events, and assemble a histogram of
-    # current values for each unique kmer observed.
+
+rule np_event_align:
+    # Align the events to the reference genome.
+    # The wildcard "chunk" can simply be "full", in cases
+    # where there are no chunks
     input:
-        RDS_GRLreads       = os.path.join( config["PATHOUT"], "{wckmerhist_sampleDir}", SUBDIR_GR, "{wckmerhist_samplename}_reads_GRL.rds")
+        sortedbam             = os.path.join( config["PATHOUT"], "{wcEvalign_sampleDir}", SUBDIR_SORTED_MINIMAPPED, "bam_chunks", "{wcEvalign_sampleName}_{wcEvalign_chunk}.sorted.bam"),
+        NOTCALLED_indexedbam  = os.path.join( config["PATHOUT"], "{wcEvalign_sampleDir}", SUBDIR_SORTED_MINIMAPPED, "bam_chunks", "{wcEvalign_sampleName}_{wcEvalign_chunk}.sorted.bam.bai"),
+        fastq_file            = os.path.join( config["PATHOUT"], "{wcEvalign_sampleDir}", SUBDIR_SYMLINKS,  "{wcEvalign_sampleName}_{wcEvalign_chunk}" +config["fastq_suffix"]),
+        fastq_npi             = os.path.join( config["PATHOUT"], "{wcEvalign_sampleDir}", SUBDIR_SYMLINKS,  "{wcEvalign_sampleName}_{wcEvalign_chunk}" + config["fastq_suffix"] + ".index"),
+        refgenome_fasta       = os.path.join( DIR_REFGENOME, config['ref']['Genome_version']+ ".fa" ),
+        NOTCALLED_bwt         = os.path.join( DIR_REFGENOME, config['ref']['Genome_version']+ ".fa.bwt"),
+        NOTCALLED_pac         = os.path.join( DIR_REFGENOME, config['ref']['Genome_version']+ ".fa.pac")
     output:
-        RDS_histlist       = os.path.join( config["PATHOUT"], "{wckmerhist_sampleDir}", SUBDIR_GR, "{wckmerhist_samplename}_kmer_histlist.rds")
-    params:
-        current_histmin=config["execution"]["currenthist_minrange"],
-        current_histmax=config["execution"]["currenthist_maxrange"],
-        current_histres=config["execution"]["currenthist_res"],
-        RDS_GRLreads_in=os.path.join( config["PATHOUT"], "{wckmerhist_sampleDir}", SUBDIR_GR, "{wckmerhist_samplename}_reads_GRL.rds"),
-        RDS_histlist_out=os.path.join( config["PATHOUT"], "{wckmerhist_sampleDir}", SUBDIR_GR, "{wckmerhist_samplename}_kmer_histlist.rds"),
-        k=5
+        Evaligned         = os.path.join( config["PATHOUT"], "{wcEvalign_sampleDir}", SUBDIR_EVENTALIGN, "tsv_chunks", 'Ealign_{wcEvalign_sampleName}_{wcEvalign_chunk}.tsv' )
     log:
-        logfile=os.path.join( config["PATHOUT"], "{wckmerhist_sampleDir}", SUBDIR_GR, "{wckmerhist_samplename}_histlist.log")
-    message:
-        fmt("Build list of histograms for unique kmers in dataset.")
+        logfile  = os.path.join( config["PATHOUT"], "{wcEvalign_sampleDir}", SUBDIR_EVENTALIGN, "tsv_chunks", 'Ealign_{wcEvalign_sampleName}_{wcEvalign_chunk}.log')
+    message: """---- Align events from sample {wildcards.wcEvalign_sampleName}, chunk {wildcards.wcEvalign_chunk} to the genome ----"""
     shell:
-        nice('Rscript', [ R_build_histlist_main,
-                          "--current_histmin={params.current_histmin}",
-                          "--current_histmax={params.current_histmax}",
-                          "--current_histres={params.current_histres}",
-                          "--rds_fin_readdat={params.RDS_GRLreads_in}",
-                          "--rds_fout_histlist={params.RDS_histlist_out}",
-                          "--k={params.k}",
-                          "--logfile={log.logfile}",] )
+        " {nanopolish} eventalign --reads {input.fastq_file} --bam {input.sortedbam} --genome {input.refgenome_fasta} --scale-events  > {output}  2> {log.logfile} "
+
+#------------------------------------------------------
+# rule quickcheck: (TODO)
+#------------------------------------------------------
+
+rule index_sortedbam:
+    # Index the sorted bam file with samtools
+    input:
+        sortedbam  = os.path.join( config["PATHOUT"], "{wcindexbam_sampleDir}", SUBDIR_SORTED_MINIMAPPED, "bam_chunks", "{wcindexbam_sampleName}_{wcindexbam_chunk}.sorted.bam")
+    output:
+        indexedbam = os.path.join( config["PATHOUT"], "{wcindexbam_sampleDir}", SUBDIR_SORTED_MINIMAPPED, "bam_chunks", "{wcindexbam_sampleName}_{wcindexbam_chunk}.sorted.bam.bai")
+    log:
+        logfile    = os.path.join( config["PATHOUT"], "{wcindexbam_sampleDir}", SUBDIR_SORTED_MINIMAPPED, "bam_chunks", '{wcindexbam_sampleName}_{wcindexbam_chunk}_samtoolsindex.log')
+    message: """---- index the bam files for {wildcards.wcindexbam_sampleName} chunk {wildcards.wcindexbam_chunk} ----"""
+    shell:
+        " {SAMTOOLS} index  {input.sortedbam}  2> {log.logfile} "
+
 
 # -----------------------------------------------------
+
 rule create_readcurrent_GRL_obj:
     # produce GRangesList object of current data in .RDS format
     # from the .tsv files produced by eventalign
@@ -84,8 +95,8 @@ rule np_index:
     shell:
         " nice -19 {nanopolish} {params.options} {input.fast5_folder} {input.fastq_file} 2> {log.logfile} "
 
-
 # -----------------------------------------------------
+
 rule merge_bam_files:
     # combine the ~4000 reads from each minimap2
     # alignment into a single bam file
@@ -186,19 +197,4 @@ rule create_fqsymlink:
 #         guppy_basecaller -i <fast5_dir> -o <output_folder> -c dna_r9.4.1_450bps -x "cuda:0"
 #
 #------------------------------------------------------
-rule minimizer:
-    # Create indexed version of reference genome for fast
-    # alignment with minimap2 later:
-    input:
-        refgenome_fasta  = os.path.join(DIR_REFGENOME , config['ref']['Genome_version']+ ".fa" )
-    output:
-        refgenome_mmiref = os.path.join(DIR_REFGENOME , config['ref']['Genome_version']+ ".mmi")
-    params:
-        options = " -d  "
-    log:
-        os.path.join( DIR_REFGENOME, config['ref']['Genome_version'], "_mmi2_minimizer_creation.log")
-    message:
-        fmt("Creating minimizer index of reference genome for minimap2.")
-    shell:
-        "{MM2} {params.options}  {output} {input} 2> {log}"
 

@@ -8,7 +8,9 @@
   "ref": {
           "Genome_DIR"     : "/scratch/AG_Akalin/refGenomes/hg19_canon/",
           "Genome_version" : "hg19_canon",
-          "RsoI": ""
+          "RsoI_abspath": "/scratch/AG_Akalin/bosberg/Stability/",
+          "RsoI": {   }
+
           },
 
    "progs": {
@@ -48,81 +50,88 @@
         "nice": 0,
         "FlattenReads": "TRUE",
         "type": "RNA",
+
+        "currenthist_minrange": 50,
+        "currenthist_maxrange": 150,
+        "currenthist_res": 0.5,
+
         "cluster":{
            "missing-file-timeout": 120,
            "stack": 128M,
            "contact-email": "none",
            "cluster_config_file": "cluster_conf.json",
            "specify_q": false,
-           "args": ""
-           },
+           "args": "",
 
-        "currenthist_minrange": 50,
-        "currenthist_maxrange": 150,
-        "currenthist_res": 0.5,
-
-        "rules":{
-           "__default__":
-              {
-              "threads": 1,
-              "memory": 30G,
-              "h_stack": "128M"
-              },
-           "make_report":
-              {
-              "threads": 1,
-              "memory": 30G
-              },
-           "np_event_align":
-              {
-              "threads": 1,
-              "memory": 30G
-              },
-           "index_sortedbam":
-              {
-              "threads": 1,
-              "memory": 30G
-              },
-           "np_index":
-              {
-              "threads": 1,
-              "memory": 30G
-              },
-           "create_kmer_histlist":
-              {
-              "threads": 1,
-              "memory": 30G
-              },
-           "create_readcurrent_GRL_obj":
-              {
-              "threads": 1,
-              "memory": 30G
-              },
-           "merge_bam_files":
-              {
-              "threads": 1,
-              "memory": 30G
-              },
-           "convert_sort_minimap":
-              {
-              "threads": 1,
-              "memory": 30G
-              },
-           "filter_nonaligned_minimap":
-              {
-              "threads": 1,
-              "memory": 30G
-              },
-           "align_minimap":
-              {
-              "threads": 1,
-              "memory": 30G
-              },
-           "minimizer":
-              {
-              "threads": 1,
-              "memory": 30G
+           "rules":{
+              "__default__":
+                 {
+                 "threads": 1,
+                 "memory": 30G,
+                 "h_stack": "128M"
+                 },
+              "make_report":
+                 {
+                 "threads": 1,
+                 "memory": 30G
+                 },
+              "overlap_reads_w_RsoI":
+                 {
+                 "threads": 1,
+                 "memory": 50G
+                 },
+              "np_event_align":
+                 {
+                 "threads": 1,
+                 "memory": 30G
+                 },
+              "index_sortedbam":
+                 {
+                 "threads": 1,
+                 "memory": 30G
+                 },
+              "np_index":
+                 {
+                 "threads": 1,
+                 "memory": 30G
+                 },
+              "create_kmer_histlist":
+                 {
+                 "threads": 1,
+                 "memory": 30G
+                 },
+              "create_readcurrent_GRL_obj":
+                 {
+                 "threads": 1,
+                 "memory": 50G
+                 },
+              "merge_bam_files":
+                 {
+                 "threads": 1,
+                 "memory": 30G
+                 },
+              "convert_sort_minimap":
+                 {
+                 "threads": 1,
+                 "memory": 30G
+                 },
+              "filter_nonaligned_minimap":
+                 {
+                 "threads": 1,
+                 "memory": 30G
+                 },
+              "align_minimap":
+                 {
+                 "threads": 1,
+                 "memory": 30G
+                 },
+              "minimizer":
+                 {
+                 "threads": 1,
+                 "memory": 30G
+                 }
               }
            }
+
         }
    }

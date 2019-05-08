@@ -1,12 +1,30 @@
 # modification_analysis.R
 # ---Driver script for mod analysis.
 
-HEK_dataset <- "/scratch/AG_Akalin/bosberg/nanopore/pipeline_output/20180417_1233_HEK293_polyA_RNA/06_GRobjects/HEK293_polyA_reads_GRL.rds"
-HEK_RDSdat  <- readRDS(HEK_dataset)
+library(Gviz)
 
-IVunmod_dataset <- "/scratch/AG_Akalin/bosberg/nanopore/pipeline_output/20180913_1457_invitro_rps16_unmod/06_GRobjects/invitro_rps16_unmod_reads_GRL.rds"
-IVunmod_RDSdat  <- readRDS(IVunmod_dataset)
+Refgenome_path <- "/scratch/AG_Akalin/refGenomes/hg19_canon/hg19_canon.fa"
+hg19_ref       <-  readDNAStringSet( Refgenome_path )
+hg19_strack    <-  SequenceTrack(hg19_ref)
 
+
+
+# take reads that were aligned and putative modification sites:
+untreated_olaps_w_2po <- findOverlaps( HEK_untreated$aligned_reads$Ill_2pO , Miha_2po_sites )
+
+cov <- table( subjectHits( untreated_olaps_w_2po ))
+
+Ni = 63 # arbitrarily chosen: just need to plot something
+
+locus_i_olaps <- untreated_olaps_w_2po[ subjectHits(untreated_olaps_w_2po) == Ni ]
+
+# take just the reads that overlap:
+reads_of_interest <- HEK_untreated$aligned_reads$Ill_2pO[ queryHits( locus_i_olaps )  ]
+
+read_GR_in = reads_of_interest[[2]]
+ROI_in     = Miha_2po_sites[Ni]
+
+ 
 # ----- Executed previously: ------
 # HEK_rps_overlaps <- findOverlaps( HEK_RDSdat$allevents_GRL_splitbyread,  rps16_window)
 # HEK_rps16_reads  <- HEK_RDSdat$allevents_GRL_splitbyread[ queryHits(HEK_rps_overlaps) ]
@@ -16,8 +34,6 @@ rps16_window    <- readRDS("/home/bosberg/projects/nanopore/scripts/ref/rps16_wi
 rps16_range=GRanges( seqnames="chr19", strand ="-", ranges = IRanges( start = 39923777,  
                                                                       end   = 39926660)  )
 
-hg19_ref    <- readDNAStringSet("/scratch/AG_Akalin/refGenomes/hg19_canon/hg19_canon.fa")
-hg19_strack <- SequenceTrack(hg19_ref)
 
 
 #======================================
@@ -35,14 +51,6 @@ IVum_rps16_olaps   <-  findOverlaps( IVunmod_RDSdat$Events_GRL_splitbyread,
                                      rps16_range )
 IVum_rps16_subset  <- IVunmod_RDSdat$Events_GRL_splitbyread[ queryHits(IVum_rps16_olaps[1:400]) ]
 
-
-# Start the clock!
-ptm <- proc.time()
-IVum_rps16_signal  <- get_flat_signal_over_all_reads ( reads_GRL_in     = IVum_rps16_subset,
-                                                       target_range_GR  = rps16_range
-                                                     )
-# Stop the clock
-proc.time() - ptm
 
 #======================================
 
