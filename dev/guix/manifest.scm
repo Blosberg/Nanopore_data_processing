@@ -18,6 +18,7 @@
 "r-rmarkdown"
 "r-data-table"
 "r-rtracklayer"
+"r-colorout"
 "r-dplyr"
 ;; Mapping and mod-detection:
 "samtools"
