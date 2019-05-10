@@ -39,8 +39,12 @@ CITS_put =  GRanges( seqnames = CITS_rawdat$Chr ,
                     )
 
 #---- filter out mitochondrial alignments
-CIMS_put = sort( CIMS_put[ which( seqnames(CIMS_put) != "chrM") ] ) # 9411 locations
-CITS_put = sort( CITS_put[ which( seqnames(CITS_put) != "chrM") ] ) # 6543 locations
+# CIMS_put = sort( CIMS_put[ which( seqnames(CIMS_put) != "chrM") ] ) # 9411 locations
+# CITS_put = sort( CITS_put[ which( seqnames(CITS_put) != "chrM") ] ) # 6543 locations
+
+m6A_putlocs_Linder=list( "refdatName" = "m6A_putlocs_Linder",
+                         "assembly"="hg19",
+                         "Region_groups" = list( "CIMS"=  CIMS_put  , "CITS" = CITS_put )  )
 
 #  ================================================
 # convert GRanges object into something with/without mod.
@@ -74,7 +78,7 @@ modPairs = findOverlaps(reads_cits_putmod, CITS_put )
 if (  !identical( queryHits( modPairs), c(1:length(modPairs)) )
       ){ stop("non-consecutive modcorrespondencePairs") }
 
-# Create a meta-data column tracking the position of the modification within the kmer 
+# Create a meta-data column tracking the position of the modification within the kmer
 reads_cits_putmod$modposition   = start( CITS_put[ subjectHits(modPairs) ] ) - start( reads_cits_putmod[queryHits(modPairs)] ) +1
 
 # Now "align" the strands, in the sense that we set reference_kmer to the actual kmer
@@ -82,12 +86,12 @@ reads_cits_putmod$modposition   = start( CITS_put[ subjectHits(modPairs) ] ) - s
 reads_cits_putmod_strandAligned = strand_align(reads_cits_putmod)
 
 
-# result = eval ( 
-#  parse( 
+# result = eval (
+#  parse(
 #    text=paste0(
-#      "refgen$",seqnames(ROI_GR),"[",as.character(lo_end),":",as.character(hi_end),"]" 
-#    ) 
-#  ) 
+#      "refgen$",seqnames(ROI_GR),"[",as.character(lo_end),":",as.character(hi_end),"]"
+#    )
+#  )
 # )
 
 #  ================================================
@@ -99,14 +103,14 @@ pore_model_list <- setNames(split(pore_model, seq(nrow(pore_model))), rownames(p
 
 test  <- seq_spec_compare ( seq        = m6A_motif,
                                          criterion  = "CITS",
-                                         SOI_GR     = reads_cits_putmod, 
-                                         control_GR = reads_cits_nonmod 
+                                         SOI_GR     = reads_cits_putmod,
+                                         control_GR = reads_cits_nonmod
 )
 
 CITS_m6amotif_part <- seq_spec_compare ( seq        = m6A_motif,
                                          criterion  = "CITS",
-                                         SOI_GR     = reads_cits_putmod_strandAligned, 
-                                         control_GR = reads_cits_nonmod 
+                                         SOI_GR     = reads_cits_putmod_strandAligned,
+                                         control_GR = reads_cits_nonmod
 )
 
 
@@ -122,14 +126,14 @@ plot_seq_spec_comparison  ( CITS_m6amotif_part,
                             mincurrent = 100,
                             maxcurrent = 140,
                             res = 0.5,
-                            scale=TRUE )    
+                            scale=TRUE )
 
 plot_seq_spec_comparison  ( test,
                             pore_model = pore_model,
                             mincurrent = 100,
                             maxcurrent = 140,
                             res = 0.5,
-                            scale=TRUE )    
+                            scale=TRUE )
 
 # ===================================================================
 # now generalize the above to arbitrary sequence:
@@ -139,28 +143,28 @@ plot_seq_spec_comparison  ( test,
 as.character(seqnames(CIMS_put[1]))
 # This is how to get the sequence from the reference of a single GRange
 get_refgen_seqs (  refgen = hg19_ref,
-                   ROI_GR = CIMS_put[2], 
+                   ROI_GR = CIMS_put[2],
                    lead       = 2,
                    trail      = 2,
                    RNAstrand  = FALSE
 )
 # so now do it in a batch.
-CITs_sequences = sapply( 1:length(CITS_put), function(x) get_refgen_seqs( refgen = hg19_ref, 
-                                                                ROI_GR = CITS_put[x], 
-                                                                lead=2, 
-                                                                trail=2, 
-                                                                RNAstrand=FALSE)  
+CITs_sequences = sapply( 1:length(CITS_put), function(x) get_refgen_seqs( refgen = hg19_ref,
+                                                                ROI_GR = CITS_put[x],
+                                                                lead=2,
+                                                                trail=2,
+                                                                RNAstrand=FALSE)
               )
-CIMs_sequences = sapply( 1:length(CIMS_put), function(x) get_refgen_seqs( refgen = hg19_ref, 
-                                                                          ROI_GR = CIMS_put[x], 
-                                                                          lead=2, 
-                                                                          trail=2, 
-                                                                          RNAstrand=FALSE)  
+CIMs_sequences = sapply( 1:length(CIMS_put), function(x) get_refgen_seqs( refgen = hg19_ref,
+                                                                          ROI_GR = CIMS_put[x],
+                                                                          lead=2,
+                                                                          trail=2,
+                                                                          RNAstrand=FALSE)
 )
 
 #====
 
-CIMS_put_df = as.data.frame(CIMS_put) 
+CIMS_put_df = as.data.frame(CIMS_put)
 short_df=CIMS_put_df[1:10,]
 
 command = cbind("hg19_ref$", paste0(short_df$seqnames,"[" , as.character(short_df$start),"]" ))
