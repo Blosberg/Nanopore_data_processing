@@ -68,7 +68,6 @@ Nreads          = length( read_list_final     )
 if( !( identical( as.numeric(c(1:Nreads)) , as.numeric(read_list_final) )  ))
   {  writeLines("ERROR: final read list is not step-wise increasing", logFile );
      exit(1)
-
   }
 
 # ========================================================================================
@@ -93,7 +92,7 @@ ReadList_finite_stranded  <- split( dat_finite_stranded,
                                     dat_finite_stranded$read_index )
 
 # ================================================
-# Flatten overlapping read-events:
+# Convert table to GRanges list; flatten overlapping read-events iff Flatten_reads == TRUE
 
 GRL_out <- convert_tbl_readlist_to_GRL( Readlist_in   = ReadList_finite_stranded,
                                         Flatten_reads = Flatten_reads )

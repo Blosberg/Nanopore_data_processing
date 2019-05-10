@@ -129,6 +129,7 @@ flatten_read_tbl  <- function( read_tbl_in         = stop("read_GR_in must be pr
 
 
     # for each starting position, compact the events into a single observation.
+    #, so run lapply over the list of positions.
     return( data.table::rbindlist( lapply( read_tbl_in_splitby_pos,
                                            function(x) flatten_tbl_at_spec_position( readposn_tbl_in = x,
                                                                                      chr_in          = chr
@@ -138,19 +139,13 @@ flatten_read_tbl  <- function( read_tbl_in         = stop("read_GR_in must be pr
             )
     # ... and then return the whole r-binded list as the flattened read.
 
-
-    # N.b. The Above condenses individual commands provided here:
-    #
-    # read_GRL_in_splitby_startpos_flattened  <- lapply( ... )
-    # result <-data.table::rbindlist( read_GRL_in_splitby_startpos_flattened )
-    # return result.
 }
 
 # ===============================================================
 # Define, precisely, the one-element GRanges object for each position in the above function.
 flatten_tbl_at_spec_position  <- function( readposn_tbl_in        = stop("read_GR_in must be provided"),
-                                             chr_in                = stop("chr_in must be provided"),
-                                             perform_sanity_checks = FALSE
+                                           chr_in                = stop("chr_in must be provided"),
+                                           perform_sanity_checks = FALSE
                                           )
 {
 if( dim( readposn_tbl_in )[1] == 1 )
@@ -171,17 +166,17 @@ if( dim( readposn_tbl_in )[1] == 1 )
    # ^ redundant metadata columns omitted for efficiency.
 
   # duration of overlapping events:
-  event_length = sum(  readposn_tbl_in$event_length)
+  passage_time = sum(  readposn_tbl_in$event_length)
 
-  event_mean   = sum(  readposn_tbl_in$event_level_mean * event_length ) /event_length
-  event_stdv   = sqrt( sum( readposn_tbl_in$event_stdv*readposn_tbl_in$event_stdv * event_length ) / event_length )
+  event_mean   = sum(  readposn_tbl_in$event_level_mean * readposn_tbl_in$event_length ) /passage_time
+  event_stdv   = sqrt( sum( readposn_tbl_in$event_stdv*readposn_tbl_in$event_stdv * readposn_tbl_in$event_length ) / passage_time )
 
   output  <- readposn_tbl_in[1,]
 
   output$event_index      <- event_index_str
   output$event_level_mean <- event_mean
   output$event_stdv       <- event_stdv
-  output$event_length     <- event_length
+  output$event_length     <- passage_time
 
   return(output)
 }
@@ -277,11 +272,10 @@ get_event_dat  <- function( Event_file_list = stop("Datin must be provided"),
         header = TRUE
       ) #--- read in the current "chunk" of np data
 
-      dat_temp$read_index <-
-        dat_temp$read_index + readcount_offset  #--- offset the read_index values to ensure uniqueness
+      dat_temp$read_index <- dat_temp$read_index + readcount_offset  #--- offset the read_index values to ensure uniqueness
 
-      dat_all           =    rbind(dat_all, dat_temp)               #--- compile the chunks together
-      readcount_offset  =  (max(dat_all$read_index)  + 1)         #--- re-calculate the necessary offset
+      dat_all           =   rbind( dat_all, dat_temp )               #--- compile the chunks together
+      readcount_offset  =  (max(dat_all$read_index)  + 1)            #--- re-calculate the necessary offset
 
     }
 
@@ -289,8 +283,7 @@ get_event_dat  <- function( Event_file_list = stop("Datin must be provided"),
 
     # cast the read_indices as factors (to make unique values sequentially increasing), and then
     # cast them back into integers (since some read_indices have been removed for quality/alignment/etc. reasons
-    dat_all$read_index <-
-      as.numeric(as.factor(dat_all$read_index))
+    dat_all$read_index <- as.numeric(as.factor(dat_all$read_index))
 
 
     return(dat_all)
@@ -305,17 +298,16 @@ convert_tbl_readlist_to_GRL  <- function( Readlist_in   = stop("Readlist must be
   {
     # tic <- Sys.time()
     Flatreadlist <-
-      lapply(Readlist_in, function(x)
-        flatten_read_tbl (read_tbl_in   = x,
-                          perform_sanity_checks = FALSE))
+      lapply( Readlist_in, function(x)
+              flatten_read_tbl ( read_tbl_in   = x,
+                                 perform_sanity_checks = FALSE))
     # toc <- Sys.time()
 
     result <- GRangesList(lapply(Flatreadlist, function(x)
       GRanges(
-        seqnames = x$contig,
-        strand   = x$strand,
-        range    = IRanges(start = x$position + 1,
-                           end   = x$position + 5),
+        seqnames     = x$contig,
+        strand       = x$strand,
+        range        = x$position,
         read_index   = x$read_index,
         event_index  = x$event_index,
         event_mean   = x$event_level_mean,
@@ -327,10 +319,9 @@ convert_tbl_readlist_to_GRL  <- function( Readlist_in   = stop("Readlist must be
 
     result <- GRangesList( lapply( Readlist_in, function(x)
       GRanges(
-        seqnames = x$contig,
-        strand   = x$strand,
-        range    = IRanges(start = x$position + 1,
-                           end   = x$position + 5),
+        seqnames     = x$contig,
+        strand       = x$strand,
+        range        = x$position,
         read_index   = x$read_index,
         event_index  = x$event_index,
         event_mean   = x$event_level_mean,
