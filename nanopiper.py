@@ -212,8 +212,7 @@ if ( config["execution"]["clustersub"] ):
 
 
     # define qsub command:
-    # The following were removed (and might be necessary):
-    # " -v R_LIBS_USER "
+    # Note, the -V pass the entire environment to the compute node:
     # "--jobscript={}/qsub-template.sh".format(config['locations']['pkglibexecdir']),
     qsub = "qsub -e " + ClusterLogsDir + " -o " + ClusterLogsDir + " -V  %s -l h_stack={cluster.h_stack} -l h_vmem={cluster.MEM} %s -b y -pe smp {cluster.nthreads} -cwd" % ( queue_selection_string, contact_email_string)
     if config['execution']['cluster']['args']:

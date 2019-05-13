@@ -307,7 +307,8 @@ convert_tbl_readlist_to_GRL  <- function( Readlist_in   = stop("Readlist must be
       GRanges(
         seqnames     = x$contig,
         strand       = x$strand,
-        range        = x$position,
+        range        = IRanges( start = x$position,
+                                end   = x$position),
         read_index   = x$read_index,
         event_index  = x$event_index,
         event_mean   = x$event_level_mean,
@@ -321,7 +322,8 @@ convert_tbl_readlist_to_GRL  <- function( Readlist_in   = stop("Readlist must be
       GRanges(
         seqnames     = x$contig,
         strand       = x$strand,
-        range        = x$position,
+        range        = IRanges( start = x$position,
+                                end   = x$position),
         read_index   = x$read_index,
         event_index  = x$event_index,
         event_mean   = x$event_level_mean,

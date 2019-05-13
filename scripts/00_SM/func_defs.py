@@ -80,7 +80,7 @@ def prep_configfile( args ):
         # if user has set this to true
         config["execution"]["clustersub"] = args.clustersub
 
-    if (args.jobs > 1 ):
+    if ( int(args.jobs) > 1 ):
         # Again, this will be 1 by default. Only over-written with active CL input
         config["execution"]["jobs"] = args.jobs
 
