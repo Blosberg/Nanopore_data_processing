@@ -1,18 +1,26 @@
-{  
-  "PATHIN"  : "/scratch/AG_Akalin/bosberg/nanopore/data/testset/",
-  "PATHOUT" : "/scratch/AG_Akalin/bosberg/nanopore/pipeline_output/testset/",
+{
+  "PATHIN"  : "/fast/AG_Akalin/bosberg/nanopore/data/",
+  "PATHOUT" : "/fast/AG_Akalin/bosberg/nanopore/pipeline_output/",
 
-  "input_data_type":     "raw_minION",
+  "ReadType":     "ONT_Direct_RNA",
 
   "samplelist": {
-                "TESTSET0": { 
-                    "RUN_ID"    : "TESTSET0",
-                    "MAXSAMPLEi":  0,
-                    "fastq_prefix": "fastq_runid_TESTSET0_",
-                    "fastq_suffix": ".fastq"
-                          }
+                "TESTSET0": { "sampledir": "testset/"  }
                 },
 
-  "target_out": "reads_GRL"
+   "ref":{
+          "Genome_DIR"     : "/fast/AG_Akalin/refGenomes/hg19_canon/",
+          "Genome_version" : "hg19_canon",
+          "RsoI_abspath": "/fast/AG_Akalin/bosberg/nanopore/ref/Regions_of_interest/",
+          "RsoI": {
+             "m6A_put":  "m6A_putlocs_Linder.rds"
+          }
+   },
+
+   "execution":{
+        "target_out": "reads_GRL",
+        "jobs": 10,
+        "clustersub": true
+   }
 
 }

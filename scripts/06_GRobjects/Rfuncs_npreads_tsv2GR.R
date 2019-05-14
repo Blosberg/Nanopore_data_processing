@@ -46,29 +46,6 @@ assign_strand <-  function( Datin = stop("Datin must be provided"),
   return(ftest)
 }
 
-# -------------------------------------------------------------------------------
-plot_signal <-  function( Datin = stop("Datin must be provided") )
-{
-N=length( Datin )
-
-xvals   = c( 0,  sort( c( c(1:(N-1)) ,c(1:(N-1)) ) ), N )
-ymean   = unlist ( lapply( Datin , function(x) c(x$event_level_mean, x$event_level_mean ) ) )
-ystddev = unlist ( lapply( Datin , function(x) c(x$event_stdv,       x$event_stdv ) ) )
-
-
-plot(  xvals, ymean,
-       col="blue",
-       type="l",
-       lwd=2,
-       main = "current vs. event",
-       xlab = "event index",
-       ylab = "current" )
-
-lines( xvals, ymean-ystddev, col="blue", type="l", lwd=0.5 )
-lines( xvals, ymean+ystddev, col="blue", type="l", lwd=0.5 )
-
-}
-
 # ===============================================================
 # make sure the specific position parameters make sense.
 sanity_check_tbl_spec_position  <- function( readposn_tbl_in        = stop("read_GR_in must be provided")

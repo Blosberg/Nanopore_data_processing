@@ -99,6 +99,12 @@ parser.add_argument('--clustersub', dest="clustersub", default=False,
 Should we submit this Snakejob to an SGE cluster?
 """)
 
+parser.add_argument('--jobname', '--jn', dest="jobname", default="SM.{name}.{jobid}.sh",
+                    help="""\
+Name to assign to jobs in the queue.
+""")
+
+
 parser.add_argument('--jobs', dest="jobs", default=1,
                     help="""\
 Define the max number of jobs that can be submitted in parallel
@@ -167,7 +173,8 @@ command = [
     "--snakefile={}".format(snakefilename),
     "--configfile={}".format(args.config_npSM),
     "--jobs={}".format( str(config['execution']['jobs']) ),
-]
+    "--jobname={}".format(args.jobname)
+    ]
 
 # --- CHECK FOR CLUSTERSUB STATUS ---------
 if ( config["execution"]["clustersub"] ):

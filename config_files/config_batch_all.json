@@ -13,7 +13,6 @@
                 "HEK_4SU_IAA_pt2": { "sampledir": "20190130_1631_293_4Su_IAA_run2/"},
                 "HEK_4SU_pt1":{      "sampledir": "20190320_1414_4SU/"},
                 "HEK_4SU_pt1":{      "sampledir": "20190320_1728_4SU_run2/"}
-
                 },
 
    "ref":{
@@ -26,7 +25,6 @@
               "MihaM_2pO":"MihaM_2po_Ill.rds",
               "m6A_put":  "m6A_putlocs_Linder.rds"
           }
-
    },
 
    "execution":{
@@ -34,6 +32,5 @@
         "jobs": 10,
         "clustersub": false
    }
-
 
 }
