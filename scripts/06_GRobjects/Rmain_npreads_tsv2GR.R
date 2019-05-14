@@ -2,7 +2,6 @@
 # import nanopore data in .tsv format and output read-separated GRanges objects:
 # For optimization, model_mean/model_stdv columns are omitted to conserve space.
 
-
 ## Collect arguments
 args <- commandArgs(TRUE)
 
@@ -59,10 +58,10 @@ suppressPackageStartupMessages( library(GenomicRanges) )
 suppressPackageStartupMessages( library(dplyr)         )
 source(Rfuncs_tsv2GRconv)
 
-dat_all         = get_event_dat( Event_file_list = Ealign_files,
+table_dat       = get_event_dat( Event_file_list = Ealign_files,
                                  logFile         = logFile )
 
-read_list_final = unique( dat_all$read_index  )
+read_list_final = unique( table_dat$read_index  )
 Nreads          = length( read_list_final     )
 
 if( !( identical( as.numeric(c(1:Nreads)) , as.numeric(read_list_final) )  ))
@@ -73,29 +72,34 @@ if( !( identical( as.numeric(c(1:Nreads)) , as.numeric(read_list_final) )  ))
 # ========================================================================================
 # output the "poremodel" data - so we have the model data saved
 if ( ! is.null( output_poremodel ))
-  { writeout_pore_model( dat_all, output_poremodel, strand_type="RNA" ) }
+  { writeout_pore_model( table_dat, output_poremodel, strand_type="RNA" ) }
 
 # ========================================================================================
 # remove non-finite entries:
 
-dat_finite = dat_all [ which (! is.na (dat_all$event_level_mean) ), ]
+table_dat = table_dat [ which (! is.na (table_dat$event_level_mean) ), ]
 
 # =======================
 # Add strand information:
 
-dat_finite_stranded = assign_strand( dat_finite, perform_sanity_checks = TRUE )
+table_dat = assign_strand( table_dat, perform_sanity_checks = TRUE )
 
 # ================================================
 # Split by read
 
-ReadList_finite_stranded  <- split( dat_finite_stranded,
-                                    dat_finite_stranded$read_index )
+ReadList_finite_stranded  <- split( table_dat,
+                                    table_dat$read_index )
+
+rm( table_dat )
+gc()
 
 # ================================================
 # Convert table to GRanges list; flatten overlapping read-events iff Flatten_reads == TRUE
 
 GRL_out <- convert_tbl_readlist_to_GRL( Readlist_in   = ReadList_finite_stranded,
                                         Flatten_reads = Flatten_reads )
+rm( ReadList_finite_stranded )
+output=gc()
 
 # ================================================
 # BUILD GRanges OBJECT TO Process
