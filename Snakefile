@@ -103,7 +103,7 @@ rule all:
         fmt("Target output files:\n" + "\n".join(OUTPUT_FILES) + "\n" )
 
 #------------------------------------------------------
-rule make_report:
+rule compile_report:
     # build the final output report in html format
     input:
         aligned_reads_bam = os.path.join( config["PATHOUT"], "{wcreport_sampleDir}", SUBDIR_SORTED_MINIMAPPED, "{wcreport_sampleName}.sorted.bam"),
@@ -126,7 +126,7 @@ rule make_report:
         " rmarkdown::render(\"{RmdReportScript}\", output_file = \"{output}\" ) ' "
 
 #------------------------------------------------------
-rule create_kmer_histlist:
+rule bin_kmer_histlist:
     # Take a read-separated list of events, and assemble a histogram of
     # current values for each unique kmer observed.
     input:

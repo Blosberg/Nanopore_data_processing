@@ -2,7 +2,6 @@
 # BEGIN RULES
 # -----------------------------------------------------
 
-
 rule np_event_align:
     # Align the events to the reference genome.
     # The wildcard "chunk" can simply be "full", in cases
@@ -42,7 +41,7 @@ rule index_sortedbam:
 
 # -----------------------------------------------------
 
-rule create_readcurrent_GRL_obj:
+rule make_GRL_reads_obj:
     # produce GRangesList object of current data in .RDS format
     # from the .tsv files produced by eventalign
     # each entry of the list is a read:
@@ -163,7 +162,7 @@ rule align_minimap:
         "{MM2} {params} {input.mmiref} {input.fqlink} > {output}  2> {log}"
 
 #------------------------------------------------------
-rule create_fqsymlink:
+rule symlink_fq:
     # create symlink to data:
     input:
         chunk_src     = lambda wc: os.path.join( config["PATHIN"], wc.wcfqlink_sampleDir, "fastq", "pass", config["samplelist"][wc.wcfqlink_samplename]["fastq_prefix"] + wc.wcfqlink_chunk + config["fastq_suffix"] )

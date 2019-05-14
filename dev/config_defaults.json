@@ -70,15 +70,25 @@
                  "memory": 30G,
                  "h_stack": "128M"
                  },
-              "make_report":
+              "compile_report":
                  {
                  "threads": 1,
                  "memory": 30G
                  },
-              "overlap_reads_w_RsoI":
+              "bin_kmer_histlist":
+                 {
+                 "threads": 1,
+                 "memory": 30G
+                 },
+               "overlap_reads_w_RsoI":
                  {
                  "threads": 1,
                  "memory": 50G
+                 },
+              "minimizer":
+                 {
+                 "threads": 1,
+                 "memory": 30G
                  },
               "np_event_align":
                  {
@@ -90,20 +100,15 @@
                  "threads": 1,
                  "memory": 30G
                  },
+             "make_GRL_reads_obj":
+                 {
+                 "threads": 1,
+                 "memory": 80G
+                 },
               "np_index":
                  {
                  "threads": 1,
                  "memory": 30G
-                 },
-              "create_kmer_histlist":
-                 {
-                 "threads": 1,
-                 "memory": 30G
-                 },
-              "create_readcurrent_GRL_obj":
-                 {
-                 "threads": 1,
-                 "memory": 50G
                  },
               "merge_bam_files":
                  {
@@ -121,11 +126,6 @@
                  "memory": 30G
                  },
               "align_minimap":
-                 {
-                 "threads": 1,
-                 "memory": 30G
-                 },
-              "minimizer":
                  {
                  "threads": 1,
                  "memory": 30G
