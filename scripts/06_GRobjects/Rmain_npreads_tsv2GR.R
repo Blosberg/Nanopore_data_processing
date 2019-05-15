@@ -91,7 +91,7 @@ ReadList_finite_stranded  <- split( table_dat,
                                     table_dat$read_index )
 
 rm( table_dat )
-gc()
+MemLog = gc( verbose = FALSE )
 
 # ================================================
 # Convert table to GRanges list; flatten overlapping read-events iff Flatten_reads == TRUE
@@ -99,7 +99,7 @@ gc()
 GRL_out <- convert_tbl_readlist_to_GRL( Readlist_in   = ReadList_finite_stranded,
                                         Flatten_reads = Flatten_reads )
 rm( ReadList_finite_stranded )
-output=gc()
+MemLog = gc( verbose = FALSE )
 
 # ================================================
 # BUILD GRanges OBJECT TO Process
