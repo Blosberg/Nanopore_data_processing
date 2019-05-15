@@ -1,42 +1,7 @@
 # -----------------------------------------------------
 # BEGIN RULES
 # -----------------------------------------------------
-
-rule np_event_align:
-    # Align the events to the reference genome.
-    # The wildcard "chunk" can simply be "full", in cases
-    # where there are no chunks
-    input:
-        sortedbam             = os.path.join( config["PATHOUT"], "{wcEvalign_sampleDir}", SUBDIR_SORTED_MINIMAPPED, "bam_chunks", "{wcEvalign_sampleName}_{wcEvalign_chunk}.sorted.bam"),
-        NOTCALLED_indexedbam  = os.path.join( config["PATHOUT"], "{wcEvalign_sampleDir}", SUBDIR_SORTED_MINIMAPPED, "bam_chunks", "{wcEvalign_sampleName}_{wcEvalign_chunk}.sorted.bam.bai"),
-        fastq_file            = os.path.join( config["PATHOUT"], "{wcEvalign_sampleDir}", SUBDIR_SYMLINKS,  "{wcEvalign_sampleName}_{wcEvalign_chunk}" +config["fastq_suffix"]),
-        fastq_npi             = os.path.join( config["PATHOUT"], "{wcEvalign_sampleDir}", SUBDIR_SYMLINKS,  "{wcEvalign_sampleName}_{wcEvalign_chunk}" + config["fastq_suffix"] + ".index"),
-        refgenome_fasta       = os.path.join( DIR_REFGENOME, config['ref']['Genome_version']+ ".fa" ),
-        NOTCALLED_bwt         = os.path.join( DIR_REFGENOME, config['ref']['Genome_version']+ ".fa.bwt"),
-        NOTCALLED_pac         = os.path.join( DIR_REFGENOME, config['ref']['Genome_version']+ ".fa.pac")
-    output:
-        Evaligned         = os.path.join( config["PATHOUT"], "{wcEvalign_sampleDir}", SUBDIR_EVENTALIGN, "tsv_chunks", 'Ealign_{wcEvalign_sampleName}_{wcEvalign_chunk}.tsv' )
-    log:
-        logfile  = os.path.join( config["PATHOUT"], "{wcEvalign_sampleDir}", SUBDIR_EVENTALIGN, "tsv_chunks", 'Ealign_{wcEvalign_sampleName}_{wcEvalign_chunk}.log')
-    message: """---- Align events from sample {wildcards.wcEvalign_sampleName}, chunk {wildcards.wcEvalign_chunk} to the genome ----"""
-    shell:
-        " {nanopolish} eventalign --reads {input.fastq_file} --bam {input.sortedbam} --genome {input.refgenome_fasta} --scale-events  > {output}  2> {log.logfile} "
-
-#------------------------------------------------------
-# rule quickcheck: (TODO)
-#------------------------------------------------------
-
-rule index_sortedbam:
-    # Index the sorted bam file with samtools
-    input:
-        sortedbam  = os.path.join( config["PATHOUT"], "{wcindexbam_sampleDir}", SUBDIR_SORTED_MINIMAPPED, "bam_chunks", "{wcindexbam_sampleName}_{wcindexbam_chunk}.sorted.bam")
-    output:
-        indexedbam = os.path.join( config["PATHOUT"], "{wcindexbam_sampleDir}", SUBDIR_SORTED_MINIMAPPED, "bam_chunks", "{wcindexbam_sampleName}_{wcindexbam_chunk}.sorted.bam.bai")
-    log:
-        logfile    = os.path.join( config["PATHOUT"], "{wcindexbam_sampleDir}", SUBDIR_SORTED_MINIMAPPED, "bam_chunks", '{wcindexbam_sampleName}_{wcindexbam_chunk}_samtoolsindex.log')
-    message: """---- index the bam files for {wildcards.wcindexbam_sampleName} chunk {wildcards.wcindexbam_chunk} ----"""
-    shell:
-        " {SAMTOOLS} index  {input.sortedbam}  2> {log.logfile} "
+# First: Here are rules associated with current alignment/analysis
 
 
 # -----------------------------------------------------
@@ -73,6 +38,28 @@ rule make_GRL_reads_obj:
 
 # -----------------------------------------------------
 
+rule np_event_align:
+    # Align the events to the reference genome.
+    # The wildcard "chunk" can simply be "full", in cases
+    # where there are no chunks
+    input:
+        sortedbam             = os.path.join( config["PATHOUT"], "{wcEvalign_sampleDir}", SUBDIR_SORTED_MINIMAPPED, "bam_chunks", "{wcEvalign_sampleName}_{wcEvalign_chunk}.sorted.bam"),
+        NOTCALLED_indexedbam  = os.path.join( config["PATHOUT"], "{wcEvalign_sampleDir}", SUBDIR_SORTED_MINIMAPPED, "bam_chunks", "{wcEvalign_sampleName}_{wcEvalign_chunk}.sorted.bam.bai"),
+        fastq_file            = os.path.join( config["PATHOUT"], "{wcEvalign_sampleDir}", SUBDIR_SYMLINKS,  "{wcEvalign_sampleName}_{wcEvalign_chunk}" +config["fastq_suffix"]),
+        fastq_npi             = os.path.join( config["PATHOUT"], "{wcEvalign_sampleDir}", SUBDIR_SYMLINKS,  "{wcEvalign_sampleName}_{wcEvalign_chunk}" + config["fastq_suffix"] + ".index"),
+        refgenome_fasta       = os.path.join( DIR_REFGENOME, config['ref']['Genome_version']+ ".fa" ),
+        NOTCALLED_bwt         = os.path.join( DIR_REFGENOME, config['ref']['Genome_version']+ ".fa.bwt"),
+        NOTCALLED_pac         = os.path.join( DIR_REFGENOME, config['ref']['Genome_version']+ ".fa.pac")
+    output:
+        Evaligned         = os.path.join( config["PATHOUT"], "{wcEvalign_sampleDir}", SUBDIR_EVENTALIGN, "tsv_chunks", 'Ealign_{wcEvalign_sampleName}_{wcEvalign_chunk}.tsv' )
+    log:
+        logfile  = os.path.join( config["PATHOUT"], "{wcEvalign_sampleDir}", SUBDIR_EVENTALIGN, "tsv_chunks", 'Ealign_{wcEvalign_sampleName}_{wcEvalign_chunk}.log')
+    message: """---- Align events from sample {wildcards.wcEvalign_sampleName}, chunk {wildcards.wcEvalign_chunk} to the genome ----"""
+    shell:
+        " {nanopolish} eventalign --reads {input.fastq_file} --bam {input.sortedbam} --genome {input.refgenome_fasta} --scale-events  > {output}  2> {log.logfile} "
+
+# -----------------------------------------------------
+
 rule np_index:
     # Index the reads and the fast5 files for nanopolish
     input:
@@ -93,6 +80,25 @@ rule np_index:
         fmt("Index the reads from chunk {wildcards.wcnpindex_chunk} against the fast5 files from the same.")
     shell:
         " nice -19 {nanopolish} {params.options} {input.fast5_folder} {input.fastq_file} 2> {log.logfile} "
+
+# ======================================================
+# Below here are all the rules necessary if all that is needed is an aligned
+# bam file from base-called data
+#
+# rule quickcheck: (TODO)
+# ======================================================
+
+rule index_sortedbam:
+    # Index the sorted bam file with samtools
+    input:
+        sortedbam  = os.path.join( config["PATHOUT"], "{wcindexbam_sampleDir}", SUBDIR_SORTED_MINIMAPPED, "bam_chunks", "{wcindexbam_sampleName}_{wcindexbam_chunk}.sorted.bam")
+    output:
+        indexedbam = os.path.join( config["PATHOUT"], "{wcindexbam_sampleDir}", SUBDIR_SORTED_MINIMAPPED, "bam_chunks", "{wcindexbam_sampleName}_{wcindexbam_chunk}.sorted.bam.bai")
+    log:
+        logfile    = os.path.join( config["PATHOUT"], "{wcindexbam_sampleDir}", SUBDIR_SORTED_MINIMAPPED, "bam_chunks", '{wcindexbam_sampleName}_{wcindexbam_chunk}_samtoolsindex.log')
+    message: """---- index the bam files for {wildcards.wcindexbam_sampleName} chunk {wildcards.wcindexbam_chunk} ----"""
+    shell:
+        " {SAMTOOLS} index  {input.sortedbam}  2> {log.logfile} "
 
 # -----------------------------------------------------
 
