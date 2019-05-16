@@ -63,9 +63,9 @@ GRL_chunk_files         <- unlist( strsplit(argsL$GRL_chunk_files,",")  )
 suppressPackageStartupMessages( library(GenomicRanges) )
 source(Rfuncs_tsv2GRconv)
 
-Nchunks         = length( readchunk_files )
+Nchunks         = length( GRL_chunk_files  )
 
-Combined_reads  = readRDS( readchunk_files[1] )
+Combined_reads  = readRDS( GRL_chunk_files[1] )
 
 if ( Nchunks >= 2 )
   {
@@ -75,68 +75,38 @@ if ( Nchunks >= 2 )
      Nreads  = length( Combined_reads$Events_GRL_splitbyread )
 
      # Read in the next chunk of data:
-     tempdat = readRDS( readchunk_files[i] )
+     tempdat = readRDS( GRL_chunk_files[i] )
 
      # sanity-check that the names are in order:
      # TODO: comment this line out for efficiency once we're convinced this works.
-     if( ! identical( as.character( unlist( lapply( tempdat_copy$Events_GRL_splitbyread, function(x) unique( x$read_index ) ) ) ), as.character( c(1:length( tempdat_copy$Events_GRL_splitbyread ) )  )  ) ){ stop(paste("Disordered names in reads of file: ", readchunk_files[i] ) ) }
+     if( ! identical( as.character( unlist( lapply( tempdat$Events_GRL_splitbyread, function(x) unique( x$read_index ) ) ) ), as.character( c(1:length( tempdat$Events_GRL_splitbyread ) )  )  ) ){ stop(paste("Disordered names in reads of file: ", GRL_chunk_files[i] ) ) }
 
      # offset the read index for each one of these:
      tempdat$Events_GRL_splitbyread  = lapply( tempdat$Events_GRL_splitbyread, function(x) offset_read_indices ( GRLchunk_in  = x, Nread_offset = Nreads ) )
-    
-     # Likewise offset the corresponding names: 
+
+     # Likewise offset the corresponding names:
      names( tempdat$Events_GRL_splitbyread )  <-  as.character( as.numeric( names(tempdat$Events_GRL_splitbyread) ) + Nreads )
-    
+
      # Now, absorb these reads into the "combined" data set
-     Combined_reads$Events_GRL_splitbyread <- c( Combined_reads$Events_GRL_splitbyread, tempdat$Events_GRL_splitbyread ) 
-     
+     Combined_reads$Events_GRL_splitbyread <- c( Combined_reads$Events_GRL_splitbyread, tempdat$Events_GRL_splitbyread )
+
      # cleanup memory
      MemLog = gc( verbose = FALSE )
      # and move on to the next one in the loop...
      }
   }
 
+# TODO: need to consolidate the individual poremodel files.
 # ========================================================================================
 # output the "poremodel" data - so we have the model data saved
-if ( ! is.null( output_poremodel ))
-  { writeout_pore_model( GRLdat_readsplit  = Combined_reads$Events_GRL_splitbyread,
-                         fout              = output_poremodel, 
-                         strand_type       = "RNA" ) }
+# if ( ! is.null( output_poremodel ))
+#   { writeout_pore_model( GRLdat_readsplit  = Combined_reads$Events_GRL_splitbyread,
+#                          fout              = output_poremodel,
+#                          strand_type       = "RNA" ) }
 
-# ========================================================================================
-# remove non-finite entries:
-
-table_dat = table_dat [ which (! is.na (table_dat$event_level_mean) ), ]
-
-# =======================
-# Add strand information:
-
-table_dat = assign_strand( table_dat, perform_sanity_checks = TRUE )
-
-# ================================================
-# Split by read
-
-ReadList_finite_stranded  <- split( table_dat,
-                                    table_dat$read_index )
-
-rm( table_dat )
-MemLog = gc( verbose = FALSE )
-
-# ================================================
-# Convert table to GRanges list; flatten overlapping read-events iff Flatten_reads == TRUE
-
-GRL_out <- convert_tbl_readlist_to_GRL( Readlist_in   = ReadList_finite_stranded,
-                                        Flatten_reads = Flatten_reads )
-rm( ReadList_finite_stranded )
-MemLog = gc( verbose = FALSE )
-
-# ================================================
-# BUILD GRanges OBJECT TO Process
 
 # output the GRL object to store reads:
-saveRDS( list( "samplename"             = samplename,
-               "Flattened_reads"        = Flatten_reads,
-               "Events_GRL_splitbyread" = GRL_out ),
-         file = output_reads_GRL  )
+saveRDS( Combined_reads,
+         file = GRL_reads_combined_out  )
 
 writeLines("script tables2GR complete: read list and model catalogue printed to output files. Now exiting normally.", logFile )
