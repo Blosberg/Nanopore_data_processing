@@ -181,16 +181,14 @@ sanity_check_tbl_spec_position  <- function( readposn_tbl_in        = stop("read
 
 # ===============================================================
 # Save the observed model_parameters:
-writeout_pore_model  <- function( GRLdat_readsplit  = stop("read_GR_in must be provided"),
-                                  fout              = stop("output must be provided"),
-                                  strand_type       = "RNA"
+writeout_pore_model  <- function( event_tbl    = stop("event_tbl must be provided"),
+                                  fout         = stop("output must be provided"),
+                                  strand_type  = "RNA"
                                 )
 {
 
-event_dat <- unlist ( GRLdat_readsplit )
-
-model_dat = split( event_dat,
-                   event_dat$model_kmer )
+model_dat = split( event_tbl,
+                   event_tbl$model_kmer )
 
 model_mean_list <- lapply( model_dat, function(x) unique(x$model_mean) )
 model_stdv_list <- lapply( model_dat, function(x) unique(x$model_stdv) )

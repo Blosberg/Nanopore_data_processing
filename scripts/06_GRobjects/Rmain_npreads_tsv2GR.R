@@ -42,6 +42,7 @@ names(argsL) <- argsDF$V1
 # e.g. (replace this list with actual arguments)
 Rfuncs_tsv2GRconv  <- argsL$Rfuncs_tsv2GRconv
 output_reads_GRL   <- argsL$output_reads_GRL
+output_poremodel   <- argsL$output_poremodel
 sampleName         <- argsL$sampleName
 Flatten_reads      <- argsL$Flatten_reads
 logFile            <- argsL$logFile

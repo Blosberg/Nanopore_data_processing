@@ -49,15 +49,6 @@ names(argsL) <- argsDF$V1
 # sink(out, type = "output")
 # sink(out, type = "message")
 
-#### TODO: DELETE THIS:
-# output from the previous rule:
-saveRDS( list( "sampleName"             = sampleName,
-               "Flattened_reads"        = Flatten_reads,
-               "Events_GRL_splitbyread" = GRL_out ),
-         file = output_reads_GRL  )
-##### DOWN TO HERE
-
-
 # Run Functions -----------------------------------------------------------
 
 # e.g. (replace this list with actual arguments)
@@ -99,6 +90,8 @@ if ( Nchunks >= 2 )
      # Now, absorb these reads into the "combined" data set
      Combined_reads$Events_GRL_splitbyread <- c( Combined_reads$Events_GRL_splitbyread, tempdat$Events_GRL_splitbyread ) 
      
+     # cleanup memory
+     MemLog = gc( verbose = FALSE )
      # and move on to the next one in the loop...
      }
   }
