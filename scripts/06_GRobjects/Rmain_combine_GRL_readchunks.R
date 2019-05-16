@@ -12,24 +12,15 @@ if(length(args) < 1) {
 ## Help section
 if("--help" %in% args) {
   cat("
-      Render to report
-                         "--Rfuncs_tsv2GRconv="+Rfuncs_tsv2GRL,
-                         "--GRL_reads_combined_out={output.GRL_reads_combined}",
-                         "--output_poremodel={output.poremodel}",
-                         "--sampleName={params.sampleName}",
-                         "--logFile={log}",
-                         "--poremodel_chunks={input.poremodel_chunks}",
-                         "--GRL_chunk_files={input.GRL_chunk_files}"] )
-
 
       Arguments:
-      Rfuncs_tsv2GRconv --script with function definitions used here.
+      Rfuncs_tsv2GRconv       --script with function definitions used here.
       GRL_reads_combined_out  -- combined (across all chunks) rds filename read-separated GRL output.
-      output_poremodel    -- rds filename with model date (for each model kmer) saved.
-      samplename          -- name of sample for documentation
-      logFile             -- filename to pipe output to
-      poremodel_chunks    -- Array of unique kmer models from each chunk.
-      GRL_chunk_files     -- array of files to use as input
+      output_poremodel        -- rds filename with model date (for each model kmer) saved.
+      samplename              -- name of sample for documentation
+      logFile                 -- filename to pipe output to
+      poremodel_chunks        -- Array of unique kmer models from each chunk.
+      GRL_chunk_files         -- array of files to use as input
 
       Example:
       ./test.R --arg1=1 --arg2='output.txt' --arg3=TRUE \n\n")
@@ -51,7 +42,6 @@ names(argsL) <- argsDF$V1
 
 # Run Functions -----------------------------------------------------------
 
-# e.g. (replace this list with actual arguments)
 Rfuncs_tsv2GRconv       <- argsL$Rfuncs_tsv2GRconv
 GRL_reads_combined_out  <- argsL$GRL_reads_combined_out
 # output_poremodel        <- argsL$output_poremodel
@@ -63,8 +53,10 @@ GRL_chunk_files         <- unlist( strsplit(argsL$GRL_chunk_files,",")  )
 suppressPackageStartupMessages( library(GenomicRanges) )
 source(Rfuncs_tsv2GRconv)
 
+# number of individual readGRL objects to be merged:
 Nchunks         = length( GRL_chunk_files  )
 
+# what will ultimately be the merger of all of them:
 Combined_reads  = readRDS( GRL_chunk_files[1] )
 
 if ( Nchunks >= 2 )
