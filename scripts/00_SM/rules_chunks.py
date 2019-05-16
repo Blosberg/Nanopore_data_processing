@@ -6,39 +6,41 @@
 # -----------------------------------------------------
 
 rule combine_GRL_read_chunks:
-    # produce GRangesList object of current data in .RDS format
-    # from the .tsv files produced by eventalign
-    # each entry of the list is a read:
+    # Combine the chunks of GRL read objects into a single structure:
     input:
-        GRL_read_chunks     = lambda wc: get_chunkfiles( wc.wc_sampleName, os.path.join( config["PATHOUT"], wc.wc_sampleDir, SUBDIR_GR, "GRL_chunks" ), "readchunk_", ".rds", False )
+        GRL_chunk_files     = lambda wc: get_chunkfiles( wc.wc_sampleName, os.path.join( config["PATHOUT"], wc.wc_sampleDir, SUBDIR_GR, "GRL_chunks" ), "readchunk_", ".rds", False ),
+#        poremodel_chunks    = lambda wc: get_chunkfiles( wc.wc_sampleName, os.path.join( config["PATHOUT"], wc.wc_sampleDir, SUBDIR_GR, "GRL_chunks" ), "poremodel_", ".tsv", False )
     output:
-        GRL_reads_combined  = os.path.join( config["PATHOUT"], "{wc_sampleDir}", SUBDIR_GR, "{wc_sampleName}_reads_GRL.rds"),
-        poremodel           = os.path.join( config["PATHOUT"], "{wc_sampleDir}", SUBDIR_GR, "{wc_sampleName}_poremodel.tsv")
+        GRL_reads_combined  = os.path.join( config["PATHOUT"], "{wc_sampleDir}", SUBDIR_GR, "{wc_sampleName}_reads_GRL.rds")
+#,        TODO: produce a single, unified poremodel tsv file.
+#        poremodel           = os.path.join( config["PATHOUT"], "{wc_sampleDir}", SUBDIR_GR, "{wc_sampleName}_poremodel.tsv")
     params:
         sampleName          = "{wc_sampleName}"
     log:
         os.path.join( config["PATHOUT"], "{wc_sampleDir}", SUBDIR_GR, "{wc_sampleName}_reads_GRL_conversion.log")
     message:
-        fmt( "Convert aligned NP reads from {input} to GRangesList object" )
+        fmt( "Combine GRL chunks into {output}" )
     shell:
         nice('Rscript', [ Rmain_tsv2GRL,
                          "--Rfuncs_tsv2GRconv="+Rfuncs_tsv2GRL,
-                         "--GRL_reads_combined={output.GRL_reads_combined}",
-                         "--output_poremodel={output.poremodel}",
+                         "--GRL_reads_combined_out={output.GRL_reads_combined}",
+#                         "--output_poremodel={output.poremodel}",
                          "--sampleName={params.sampleName}",
                          "--logFile={log}",
-                         "--GRL_chunk_files={input.GRL_read_chunks}"] )
+#                         "--poremodel_chunks={input.poremodel_chunks}",
+                         "--GRL_chunk_files={input.GRL_chunk_files}"] )
 
 # -----------------------------------------------------
 
 rule make_GRL_read_chunk_obj:
     # produce GRangesList object of current data in .RDS format
     # from the .tsv files produced by eventalign
-    # each entry of the list is a read:
+    # each entry of the list is a read. Rule executes once for every chunk
     input:
         Ealign_tsvfile    = os.path.join( config["PATHOUT"], "{wc_sampleDir}", SUBDIR_EVENTALIGN, "tsv_chunks", "Ealign_{wc_sampleName}_{wc_chunk}.tsv" )
     output:
-        GRLreads          = os.path.join( config["PATHOUT"], "{wc_sampleDir}", SUBDIR_GR, "GRL_chunks", "readchunk_{wc_sampleName}_{wc_chunk}.rds")
+        GRLreads          = os.path.join( config["PATHOUT"], "{wc_sampleDir}", SUBDIR_GR, "GRL_chunks", "readchunk_{wc_sampleName}_{wc_chunk}.rds"),
+        poremodel         = os.path.join( config["PATHOUT"], "{wc_sampleDir}", SUBDIR_GR, "GRL_chunks", "poremodel_{wc_sampleName}_{wc_chunk}.tsv")
     params:
         Flatten           = config["execution"]["FlattenReads"],
         sampleName        = "{wc_sampleName}"
@@ -50,7 +52,8 @@ rule make_GRL_read_chunk_obj:
         nice('Rscript', [ Rmain_tsv2GRL,
                          "--Rfuncs_tsv2GRconv="+Rfuncs_tsv2GRL,
                          "--output_reads_GRL={output.GRLreads}",
-                         "--samplename={params.sampleName}",
+                         "--output_poremodel={output.poremodel}",
+                         "--sampleName={params.sampleName}",
                          "--Flatten_reads={params.Flatten}",
                          "--logFile={log}",
                          "--Ealign_files={input.Ealign_tsvfile}"] )

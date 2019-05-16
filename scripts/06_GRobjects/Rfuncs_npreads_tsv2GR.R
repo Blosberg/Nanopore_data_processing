@@ -181,11 +181,14 @@ sanity_check_tbl_spec_position  <- function( readposn_tbl_in        = stop("read
 
 # ===============================================================
 # Save the observed model_parameters:
-writeout_pore_model  <- function( event_dat   = stop("read_GR_in must be provided"),
-                                  fout        = stop("output must be provided"),
-                                  strand_type = "RNA"
+writeout_pore_model  <- function( GRLdat_readsplit  = stop("read_GR_in must be provided"),
+                                  fout              = stop("output must be provided"),
+                                  strand_type       = "RNA"
                                 )
 {
+
+event_dat <- unlist ( GRLdat_readsplit )
+
 model_dat = split( event_dat,
                    event_dat$model_kmer )
 
@@ -312,4 +315,17 @@ convert_tbl_readlist_to_GRL  <- function( Readlist_in   = stop("Readlist must be
   }
 
   return ( result )
+}
+
+# ===============================================================
+# offset read_index in GRL chunk datasets:
+
+offset_read_indices  <- function( GRLchunk_in   = stop("GRLchunk must be provided"),
+                                  Nread_offset  = stop("Nread_offset must be provided")  )
+{
+GRLchunk_out            <- GRLchunk_in;
+GRLchunk_out$read_index <- GRLchunk_out$read_index + Nread_offset;
+
+return( GRLchunk_out )
+
 }
