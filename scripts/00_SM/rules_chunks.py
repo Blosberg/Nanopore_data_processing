@@ -3,38 +3,57 @@
 # -----------------------------------------------------
 # First: Here are rules associated with current alignment/analysis
 
-
 # -----------------------------------------------------
 
-rule make_GRL_reads_obj:
+rule combine_GRL_read_chunks:
     # produce GRangesList object of current data in .RDS format
     # from the .tsv files produced by eventalign
     # each entry of the list is a read:
     input:
-        tsvfile      = lambda wc: get_chunkfiles( wc.wcreadGRL_samplename, os.path.join( config["PATHOUT"], wc.wcreadGRL_sampleDir, SUBDIR_EVENTALIGN, "tsv_chunks" ), "Ealign_", ".tsv", False )
+        GRL_read_chunks     = lambda wc: get_chunkfiles( wc.wc_sampleName, os.path.join( config["PATHOUT"], wc.wc_sampleDir, SUBDIR_GR, "GRL_chunks" ), "readchunk_", ".rds", False )
     output:
-        GRLreads     = os.path.join( config["PATHOUT"], "{wcreadGRL_sampleDir}", SUBDIR_GR, "{wcreadGRL_samplename}_reads_GRL.rds"),
-        poremodel    = os.path.join( config["PATHOUT"], "{wcreadGRL_sampleDir}", SUBDIR_GR, "{wcreadGRL_samplename}_poremodel.tsv")
+        GRL_reads_combined  = os.path.join( config["PATHOUT"], "{wc_sampleDir}", SUBDIR_GR, "{wc_sampleName}_reads_GRL.rds"),
+        poremodel           = os.path.join( config["PATHOUT"], "{wc_sampleDir}", SUBDIR_GR, "{wc_sampleName}_poremodel.tsv")
     params:
-        Rfuncs_tsv2GRconv = Rfuncs_tsv2GRL,
-        output_reads_GRL  = os.path.join( config["PATHOUT"], "{wcreadGRL_sampleDir}", SUBDIR_GR, "{wcreadGRL_samplename}_reads_GRL.rds"),
-        output_poremodel  = os.path.join( config["PATHOUT"], "{wcreadGRL_sampleDir}", SUBDIR_GR, "{wcreadGRL_samplename}_poremodel.tsv"),
-        Flatten           = config["execution"]["FlattenReads"],
-        Ealign_files      = lambda wc: get_chunkfiles( wc.wcreadGRL_samplename, os.path.join( config["PATHOUT"], wc.wcreadGRL_sampleDir, SUBDIR_EVENTALIGN, "tsv_chunks" ), "Ealign_", ".tsv", True ),
-        samplename          = "{wcreadGRL_samplename}"
+        sampleName          = "{wc_sampleName}"
     log:
-        os.path.join( config["PATHOUT"], "{wcreadGRL_sampleDir}", SUBDIR_GR, "{wcreadGRL_samplename}_reads_GRL_conversion.log")
+        os.path.join( config["PATHOUT"], "{wc_sampleDir}", SUBDIR_GR, "{wc_sampleName}_reads_GRL_conversion.log")
+    message:
+        fmt( "Convert aligned NP reads from {input} to GRangesList object" )
+    shell:
+        nice('Rscript', [ Rmain_tsv2GRL,
+                         "--Rfuncs_tsv2GRconv="+Rfuncs_tsv2GRL,
+                         "--GRL_reads_combined={output.GRL_reads_combined}",
+                         "--output_poremodel={output.poremodel}",
+                         "--sampleName={params.sampleName}",
+                         "--logFile={log}",
+                         "--GRL_chunk_files={input.GRL_read_chunks}"] )
+
+# -----------------------------------------------------
+
+rule make_GRL_read_chunk_obj:
+    # produce GRangesList object of current data in .RDS format
+    # from the .tsv files produced by eventalign
+    # each entry of the list is a read:
+    input:
+        Ealign_tsvfile    = os.path.join( config["PATHOUT"], "{wc_sampleDir}", SUBDIR_EVENTALIGN, "tsv_chunks", "Ealign_{wc_sampleName}_{wc_chunk}.tsv" )
+    output:
+        GRLreads          = os.path.join( config["PATHOUT"], "{wc_sampleDir}", SUBDIR_GR, "GRL_chunks", "readchunk_{wc_sampleName}_{wc_chunk}.rds")
+    params:
+        Flatten           = config["execution"]["FlattenReads"],
+        sampleName        = "{wc_sampleName}"
+    log:
+        os.path.join( config["PATHOUT"], "{wc_sampleDir}", SUBDIR_GR,  "GRL_chunks","readchunk_{wc_sampleName}_{wc_chunk}.log")
     message:
         fmt("Convert aligned NP reads from {input} to GRangesList object")
     shell:
         nice('Rscript', [ Rmain_tsv2GRL,
-                         "--Rfuncs_tsv2GRconv={params.Rfuncs_tsv2GRconv}",
-                         "--output_reads_GRL={params.output_reads_GRL}",
-                         "--output_poremodel={params.output_poremodel}",
-                         "--samplename={params.samplename}",
+                         "--Rfuncs_tsv2GRconv="+Rfuncs_tsv2GRL,
+                         "--output_reads_GRL={output.GRLreads}",
+                         "--samplename={params.sampleName}",
                          "--Flatten_reads={params.Flatten}",
                          "--logFile={log}",
-                         "--Ealign_files={params.Ealign_files}"] )
+                         "--Ealign_files={input.Ealign_tsvfile}"] )
 
 # -----------------------------------------------------
 

@@ -48,7 +48,7 @@ OUTPUT_FILES = []
 # increment by sample:
 for sampleLoopi_targets in config["samplelist"]:
 
-   # @@@ TODO: implement sample-dependent targets with defaults.
+   # TODO: implement sample-dependent targets with defaults.
    if ( config["execution"]["target_out"] == "report" ):
       OUTPUT_FILES.extend(
                           [ os.path.join( config["PATHOUT"], config["samplelist"][sampleLoopi_targets]["sampledir"], SUBDIR_REPORT, "" + sampleLoopi_targets + "_report.html") ]
