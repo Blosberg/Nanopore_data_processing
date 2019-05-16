@@ -21,7 +21,7 @@ rule combine_GRL_read_chunks:
     message:
         fmt( "Combine GRL chunks into {output}" )
     shell:
-        nice('Rscript', [ Rmain_tsv2GRL,
+        nice('Rscript', [ Rmain_combine_readchunks,
                          "--Rfuncs_tsv2GRconv="+Rfuncs_tsv2GRL,
                          "--GRL_reads_combined_out={output.GRL_reads_combined}",
 #                         "--output_poremodel={output.poremodel}",
