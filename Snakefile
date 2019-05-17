@@ -12,11 +12,16 @@ nanopolish = config["progs"]["nanopolish"]
 GENOME_VERSION     = config["ref"]["Genome_version"]
 RmdReportScript    = os.path.join(config["scripts"]["script_folder"],"final_report","Nanopore_report.Rmd")
 
+# Rscripts that convert table tsv's into GRL objs and then combine them:
 Rmain_tsv2GRL     = os.path.join( config["scripts"]["script_folder"], config["scripts"]["Rmain_tsv2GRconv"] )
+Rmain_combine_readchunks = os.path.join( config["scripts"]["script_folder"], config["scripts"]["Rmain_combine_read_chunks"] )
+# Rscript with func defn's for the above
 Rfuncs_tsv2GRL    = os.path.join( config["scripts"]["script_folder"], config[ "scripts"]["Rfuncs_tsv2GRconv"] )
 
+# Rscript to create histograms of currents according to kmer
 R_build_histlist_main   = os.path.join( config["scripts"]["script_folder"], config["scripts"]["Rmain_build_histlist"] )
 
+# Rscript to overlap reads with RoIs
 Rmain_overlap_reads_RsoI = os.path.join( config["scripts"]["script_folder"], config["scripts"]["Rmain_overlap_reads_RsoI"] )
 
 #------------------------------------------------------
@@ -48,7 +53,7 @@ OUTPUT_FILES = []
 # increment by sample:
 for sampleLoopi_targets in config["samplelist"]:
 
-   # @@@ TODO: implement sample-dependent targets with defaults.
+   # TODO: implement sample-dependent targets with defaults.
    if ( config["execution"]["target_out"] == "report" ):
       OUTPUT_FILES.extend(
                           [ os.path.join( config["PATHOUT"], config["samplelist"][sampleLoopi_targets]["sampledir"], SUBDIR_REPORT, "" + sampleLoopi_targets + "_report.html") ]

@@ -19,14 +19,15 @@
         "SAMTOOLS":   "samtools"
             },
    "scripts": {
-        "script_folder":            "/home/bosberg/projects/nanopiper/scripts/",
-        "Rmain_build_histlist":     "06_GRobjects/Rmain_build_currenthistlist_from_GRL_reads.R",
-        "Rmain_overlap_reads_RsoI": "07_GRprocessing/Rmain_olap_reads_w_RsOI.R",
-        "Rmain_tsv2GRconv":         "06_GRobjects/Rmain_npreads_tsv2GR.R",
-        "Rfuncs_tsv2GRconv":        "06_GRobjects/Rfuncs_npreads_tsv2GR.R",
-        "pyfunc_defs":              "00_SM/func_defs.py",
-        "rules_chunks":             "00_SM/rules_chunks.py",
-        "rules_wholefastq":         "00_SM/rules_wholefastq.py"
+        "script_folder":             "/home/bosberg/projects/nanopiper/scripts/",
+        "Rmain_build_histlist":      "06_GRobjects/Rmain_build_currenthistlist_from_GRL_reads.R",
+        "Rmain_overlap_reads_RsoI":  "07_GRprocessing/Rmain_olap_reads_w_RsOI.R",
+        "Rmain_tsv2GRconv":          "06_GRobjects/Rmain_npreads_tsv2GR.R",
+        "Rmain_combine_read_chunks": "06_GRobjects/Rmain_combine_GRL_readchunks.R",
+        "Rfuncs_tsv2GRconv":         "06_GRobjects/Rfuncs_npreads_tsv2GR.R",
+        "pyfunc_defs":               "00_SM/func_defs.py",
+        "rules_chunks":              "00_SM/rules_chunks.py",
+        "rules_wholefastq":          "00_SM/rules_wholefastq.py"
             },
 
    "options":{

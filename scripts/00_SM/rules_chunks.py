@@ -1,6 +1,64 @@
 # -----------------------------------------------------
 # BEGIN RULES
 # -----------------------------------------------------
+# First: Here are rules associated with current alignment/analysis
+
+# -----------------------------------------------------
+
+rule combine_GRL_read_chunks:
+    # Combine the chunks of GRL read objects into a single structure:
+    input:
+        GRL_chunk_files     = lambda wc: get_chunkfiles( wc.wc_sampleName, os.path.join( config["PATHOUT"], wc.wc_sampleDir, SUBDIR_GR, "GRL_chunks" ), "readchunk_", ".rds", False ),
+#        poremodel_chunks    = lambda wc: get_chunkfiles( wc.wc_sampleName, os.path.join( config["PATHOUT"], wc.wc_sampleDir, SUBDIR_GR, "GRL_chunks" ), "poremodel_", ".tsv", False )
+    output:
+        GRL_reads_combined  = os.path.join( config["PATHOUT"], "{wc_sampleDir}", SUBDIR_GR, "{wc_sampleName}_reads_GRL.rds")
+#,        TODO: produce a single, unified poremodel tsv file.
+#        poremodel           = os.path.join( config["PATHOUT"], "{wc_sampleDir}", SUBDIR_GR, "{wc_sampleName}_poremodel.tsv")
+    params:
+        sampleName          = "{wc_sampleName}"
+    log:
+        os.path.join( config["PATHOUT"], "{wc_sampleDir}", SUBDIR_GR, "{wc_sampleName}_reads_GRL_conversion.log")
+    message:
+        fmt( "Combine GRL chunks into {output}" )
+    shell:
+        nice('Rscript', [ Rmain_combine_readchunks,
+                         "--Rfuncs_tsv2GRconv="+Rfuncs_tsv2GRL,
+                         "--GRL_reads_combined_out={output.GRL_reads_combined}",
+#                         "--output_poremodel={output.poremodel}",
+                         "--sampleName={params.sampleName}",
+                         "--logFile={log}",
+#                         "--poremodel_chunks={input.poremodel_chunks}",
+                         "--GRL_chunk_files={input.GRL_chunk_files}"] )
+
+# -----------------------------------------------------
+
+rule make_GRL_read_chunk_obj:
+    # produce GRangesList object of current data in .RDS format
+    # from the .tsv files produced by eventalign
+    # each entry of the list is a read. Rule executes once for every chunk
+    input:
+        Ealign_tsvfile    = os.path.join( config["PATHOUT"], "{wc_sampleDir}", SUBDIR_EVENTALIGN, "tsv_chunks", "Ealign_{wc_sampleName}_{wc_chunk}.tsv" )
+    output:
+        GRLreads          = os.path.join( config["PATHOUT"], "{wc_sampleDir}", SUBDIR_GR, "GRL_chunks", "readchunk_{wc_sampleName}_{wc_chunk}.rds"),
+        poremodel         = os.path.join( config["PATHOUT"], "{wc_sampleDir}", SUBDIR_GR, "GRL_chunks", "poremodel_{wc_sampleName}_{wc_chunk}.tsv")
+    params:
+        Flatten           = config["execution"]["FlattenReads"],
+        sampleName        = "{wc_sampleName}"
+    log:
+        os.path.join( config["PATHOUT"], "{wc_sampleDir}", SUBDIR_GR,  "GRL_chunks","readchunk_{wc_sampleName}_{wc_chunk}.log")
+    message:
+        fmt("Convert aligned NP reads from {input} to GRangesList object")
+    shell:
+        nice('Rscript', [ Rmain_tsv2GRL,
+                         "--Rfuncs_tsv2GRconv="+Rfuncs_tsv2GRL,
+                         "--output_reads_GRL={output.GRLreads}",
+                         "--output_poremodel={output.poremodel}",
+                         "--sampleName={params.sampleName}",
+                         "--Flatten_reads={params.Flatten}",
+                         "--logFile={log}",
+                         "--Ealign_files={input.Ealign_tsvfile}"] )
+
+# -----------------------------------------------------
 
 rule np_event_align:
     # Align the events to the reference genome.
@@ -21,55 +79,6 @@ rule np_event_align:
     message: """---- Align events from sample {wildcards.wcEvalign_sampleName}, chunk {wildcards.wcEvalign_chunk} to the genome ----"""
     shell:
         " {nanopolish} eventalign --reads {input.fastq_file} --bam {input.sortedbam} --genome {input.refgenome_fasta} --scale-events  > {output}  2> {log.logfile} "
-
-#------------------------------------------------------
-# rule quickcheck: (TODO)
-#------------------------------------------------------
-
-rule index_sortedbam:
-    # Index the sorted bam file with samtools
-    input:
-        sortedbam  = os.path.join( config["PATHOUT"], "{wcindexbam_sampleDir}", SUBDIR_SORTED_MINIMAPPED, "bam_chunks", "{wcindexbam_sampleName}_{wcindexbam_chunk}.sorted.bam")
-    output:
-        indexedbam = os.path.join( config["PATHOUT"], "{wcindexbam_sampleDir}", SUBDIR_SORTED_MINIMAPPED, "bam_chunks", "{wcindexbam_sampleName}_{wcindexbam_chunk}.sorted.bam.bai")
-    log:
-        logfile    = os.path.join( config["PATHOUT"], "{wcindexbam_sampleDir}", SUBDIR_SORTED_MINIMAPPED, "bam_chunks", '{wcindexbam_sampleName}_{wcindexbam_chunk}_samtoolsindex.log')
-    message: """---- index the bam files for {wildcards.wcindexbam_sampleName} chunk {wildcards.wcindexbam_chunk} ----"""
-    shell:
-        " {SAMTOOLS} index  {input.sortedbam}  2> {log.logfile} "
-
-
-# -----------------------------------------------------
-
-rule make_GRL_reads_obj:
-    # produce GRangesList object of current data in .RDS format
-    # from the .tsv files produced by eventalign
-    # each entry of the list is a read:
-    input:
-        tsvfile      = lambda wc: get_chunkfiles( wc.wcreadGRL_samplename, os.path.join( config["PATHOUT"], wc.wcreadGRL_sampleDir, SUBDIR_EVENTALIGN, "tsv_chunks" ), "Ealign_", ".tsv", False )
-    output:
-        GRLreads     = os.path.join( config["PATHOUT"], "{wcreadGRL_sampleDir}", SUBDIR_GR, "{wcreadGRL_samplename}_reads_GRL.rds"),
-        poremodel    = os.path.join( config["PATHOUT"], "{wcreadGRL_sampleDir}", SUBDIR_GR, "{wcreadGRL_samplename}_poremodel.tsv")
-    params:
-        Rfuncs_tsv2GRconv = Rfuncs_tsv2GRL,
-        output_reads_GRL  = os.path.join( config["PATHOUT"], "{wcreadGRL_sampleDir}", SUBDIR_GR, "{wcreadGRL_samplename}_reads_GRL.rds"),
-        output_poremodel  = os.path.join( config["PATHOUT"], "{wcreadGRL_sampleDir}", SUBDIR_GR, "{wcreadGRL_samplename}_poremodel.tsv"),
-        Flatten           = config["execution"]["FlattenReads"],
-        Ealign_files      = lambda wc: get_chunkfiles( wc.wcreadGRL_samplename, os.path.join( config["PATHOUT"], wc.wcreadGRL_sampleDir, SUBDIR_EVENTALIGN, "tsv_chunks" ), "Ealign_", ".tsv", True ),
-        samplename          = "{wcreadGRL_samplename}"
-    log:
-        os.path.join( config["PATHOUT"], "{wcreadGRL_sampleDir}", SUBDIR_GR, "{wcreadGRL_samplename}_reads_GRL_conversion.log")
-    message:
-        fmt("Convert aligned NP reads from {input} to GRangesList object")
-    shell:
-        nice('Rscript', [ Rmain_tsv2GRL,
-                         "--Rfuncs_tsv2GRconv={params.Rfuncs_tsv2GRconv}",
-                         "--output_reads_GRL={params.output_reads_GRL}",
-                         "--output_poremodel={params.output_poremodel}",
-                         "--samplename={params.samplename}",
-                         "--Flatten_reads={params.Flatten}",
-                         "--logFile={log}",
-                         "--Ealign_files={params.Ealign_files}"] )
 
 # -----------------------------------------------------
 
@@ -93,6 +102,25 @@ rule np_index:
         fmt("Index the reads from chunk {wildcards.wcnpindex_chunk} against the fast5 files from the same.")
     shell:
         " nice -19 {nanopolish} {params.options} {input.fast5_folder} {input.fastq_file} 2> {log.logfile} "
+
+# ======================================================
+# Below here are all the rules necessary if all that is needed is an aligned
+# bam file from base-called data
+#
+# rule quickcheck: (TODO)
+# ======================================================
+
+rule index_sortedbam:
+    # Index the sorted bam file with samtools
+    input:
+        sortedbam  = os.path.join( config["PATHOUT"], "{wcindexbam_sampleDir}", SUBDIR_SORTED_MINIMAPPED, "bam_chunks", "{wcindexbam_sampleName}_{wcindexbam_chunk}.sorted.bam")
+    output:
+        indexedbam = os.path.join( config["PATHOUT"], "{wcindexbam_sampleDir}", SUBDIR_SORTED_MINIMAPPED, "bam_chunks", "{wcindexbam_sampleName}_{wcindexbam_chunk}.sorted.bam.bai")
+    log:
+        logfile    = os.path.join( config["PATHOUT"], "{wcindexbam_sampleDir}", SUBDIR_SORTED_MINIMAPPED, "bam_chunks", '{wcindexbam_sampleName}_{wcindexbam_chunk}_samtoolsindex.log')
+    message: """---- index the bam files for {wildcards.wcindexbam_sampleName} chunk {wildcards.wcindexbam_chunk} ----"""
+    shell:
+        " {SAMTOOLS} index  {input.sortedbam}  2> {log.logfile} "
 
 # -----------------------------------------------------
 

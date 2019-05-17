@@ -19,7 +19,7 @@ if("--help" %in% args) {
       Rfuncs_tsv2GRconv --script with function definitions used here.
       output_reads_GRL    -- rds filename read-separated GRL output.
       output_poremodel    -- rds filename with model date (for each model kmer) saved.
-      samplename          -- name of sample for documentation
+      sampleName          -- name of sample for documentation
       Flatten_reads       -- Boolean: should we flatten the read events that overlap.
       logFile             -- filename to pipe output to
       Ealign_files        -- array of files to use as input
@@ -37,18 +37,13 @@ argsL     <- as.list(as.character(argsDF$V2))
 
 names(argsL) <- argsDF$V1
 
-# catch output and messages into log file
-# out <- file(argsL$logFile, open = "wt")
-# sink(out, type = "output")
-# sink(out, type = "message")
-
 # Run Functions -----------------------------------------------------------
 
 # e.g. (replace this list with actual arguments)
 Rfuncs_tsv2GRconv  <- argsL$Rfuncs_tsv2GRconv
-output_poremodel   <- argsL$output_poremodel
 output_reads_GRL   <- argsL$output_reads_GRL
-samplename         <- argsL$samplename
+output_poremodel   <- argsL$output_poremodel
+sampleName         <- argsL$sampleName
 Flatten_reads      <- argsL$Flatten_reads
 logFile            <- argsL$logFile
 Ealign_files       <- unlist( strsplit(argsL$Ealign_files,",")  )
@@ -105,7 +100,7 @@ MemLog = gc( verbose = FALSE )
 # BUILD GRanges OBJECT TO Process
 
 # output the GRL object to store reads:
-saveRDS( list( "samplename"             = samplename,
+saveRDS( list( "sampleName"             = sampleName,
                "Flattened_reads"        = Flatten_reads,
                "Events_GRL_splitbyread" = GRL_out ),
          file = output_reads_GRL  )
