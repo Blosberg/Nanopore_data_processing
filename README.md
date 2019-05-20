@@ -10,26 +10,26 @@
 
 --- 
 
-This pipeline proocesses nanopore date into reports, and aligned reads in bam or 
-GRangeslist format. 
+This pipeline proocesses nanopore date, aligns reads in bam and 
+GRangeslist format, and profiles raw current data along regions of interest. 
 
-Two forms of raw input are accepted, single base-called fastq files, and raw 
-data directly output from the minION device. In the latter case, reads are 
-typically binned into files of ~4000 reads each, and raw-current data is 
-preserved; analysis of the raw current values is performed. Incorporation of 
-this analysis is yet to be included in the final report (the contents of
-which are under continuing development).
+Generally, the pipeline is designed to work on raw data directly as it comes
+out of the minION device, although a branch for base-called reads is in
+progress. Reads are typically binned into "chunks" of ~4000 reads each, and
+analysis of the raw current values is performed in conjunction with alignment.
+A consolidated final report (the contents of which are under continuing
+development) is the ultimate goal.
 
 To run the program, first edit the config file `config.json`, as described
-below, and supply the Transcriptome file (with full path) against which you
-wish to compare the nanopore reads (if none is supplied, this section is simply
-skipped). You must also provide  the genome location, genome version and path
-to input and output folders.
+below, and supply a reference file (with full path) populated with regions of
+interest against which you wish to analyse the current of the reads (if none is
+supplied, this section is simply skipped). You must also provide  the genome
+location, genome version and path to input and output folders.
 
-The second step is to configure your executables. The assumption here is that
-you will be using guix; if you are working from the MDC in Berlin then
-everything is already setup for this purpose --otherwise, you may have to adapt
-the following steps to your system.  
+Before running the pipeline, you will need to configure your executables. The
+assumption here is that you will be using guix; if you are working from the MDC
+in Berlin then everything is already setup for this purpose --otherwise, you
+may have to adapt the following steps to your system.  
 
 Navigate to the repository's subfolder `dev/guix` and create your environment from
 the manifest file that is provided using the following command:
@@ -41,9 +41,9 @@ or, alternatively, just use:
 `source generate_env_from_manifest.sh`
 
 Since this file simply contains the above command. Guix will then go about
-configuring the executables that you will need to run the pipeline into a
-prepared environment which can then be used whenever you want. This will take
-some time, but only needs to be done once; go for lunch.  
+preparing the dependencies that you will need to run the pipeline in a
+bespoke environment which can then be used whenever you want. This will take
+some time, but only needs to be done once; go for lunch while it's running. 
 
 Once that's finished, for any future terminal session in which you want to run
 the pipeline, you should navigate to the `guix` subfolder and type: 
@@ -51,10 +51,10 @@ the pipeline, you should navigate to the `guix` subfolder and type:
 `source load_env.sh` 
 
 to load your environment. Assuming your config file is setup (see below), you
-should then simply be able to type `Snakemake` and everything will run. 
+should then  be able to run the pipeline (see below). 
 
-This pipeline is a work in progress, but feedback is welcome; if you encounter
-any problems, please email Brendan.Osberg@mdc-berlin.de
+This pipeline is a work in progress, (note the version number) and feedback is
+welcome; if you encounter any problems, please post an issue.
 
 ## config file 
 
@@ -64,21 +64,26 @@ any problems, please email Brendan.Osberg@mdc-berlin.de
 | ------------- |:-----------:|
 | PATHIN        | string: Required: location of source data. 
 | PATHOUT       | string: Required: location of output path to be written to. 
-| samplelist    | list of samples with identifying name (RUN_ID), number of bins (MAXSAMPLEi), and hashID (fastq_prefix), and file extension (fastq_suffix).
-| target_out | desired output format; the pipeline will proceed until it has accomplished the desired output; either a "bam", an RData file with "GR"anges, or a full html "report" (the latter being the default).
-| ref        | Various data related to the reference genome: "Transcriptome" -absolute path to the file with transcripts to compare to; "Genome_DIR": absolute path leading to the reference genome (fasta); and "Genome_version" (string), the name of the genome
-| scripts   | paths to various executables needed for the pipeline ( it is recommended to not change these.)
-| execution: nice | the degree to which your process is made "nice" to reduce congestion on your computation nodes (integer, max. 19.)
+| ReadType    | Type of read under analysis. For now, this should always be "ONT_Direct_RNA", but other strand types will be added in time. 
+| samplelist    | list of samples with identifying name (RUN_ID), and the "sampledir" which provides the name of the subdirectory for this dataset within "PATHIN".
+| ref           | data regarding the reference --e.g. "Genome_Dir": Path to the reference genome; "Genome_version": name thereof, "RsoI_abspath": path to the directory containing regions of interest. And finally, "RsoI": RDS file containing regions of interest (in a specialized format).
+| Execution     | target_out Desired output of the pipeline; e.g. a "bam"; the read data with alignment, in Granges List format "reads_GRL", among various other possibilities. "jobs": max number of rule executions to be run simultaneously. "clustersub": should this task be submitted to an SGE cluster (true/false).
+
+The remaining options can generally be left to their default values in `dev/config_defaults.json`
+
+## Temporary interpreter solution
+One last preparatory step must be taken before running the pipeline --it's an unfortunate, kludge solution that will hopefully be removed soon. 
+
+The first line in the file `nanopiper.py` reads `#!...` and what follows  must be replaced by your python interpreter. To find out what that is, type `which python`, and paste the result into the first line in nanopiper.py in place of what is currently there. 
+
+This is an ugly and temporary solution for which I apologize, and it will be removed soon.
 
 
-=====
+## Execution
 
-in the config file there are three variables to define:
-target_out can be one of three values: "bam, "GR", or "report", in that order of hierarchy.
-"bam": the script will stop when it has generated bam files
-"GR": the script will create the bam file and GRanges object with alignments (including current statistics)
-"report": both of the previous + the final html report 
+Once the above have been completed, you should be able to navigate to the folder in which you've saved this repository, and enter: 
 
-From that point, run the following:
+`./nanopiper.py -c config_batch_all.json -n`
 
-`$ snakemake `  
+The `-n` flag signifies a dry-run to confirm that everything is configured in place to run correctly. If no red errors appear when you do you this, then you are ready to run the real thing. 
+
