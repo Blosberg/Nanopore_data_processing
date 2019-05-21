@@ -161,7 +161,7 @@ plot_samplesignal_over_ROI <-  function( SampleName         = stop("Sample name 
                        as.character( start(ROI) ),
                        "-",
                        as.character( end(ROI)  ) ),
-         xlab = "reference position",
+         xlab = "reference sequence",
          xaxt="n",
          ylab = "current [pA]",
          ylim = c( mincurrent,
@@ -281,7 +281,7 @@ extract_poremodel_curves_from_sequence   <- function ( poremodel_ref = poremodel
     } else if( as.character( strand(ROI)) == "-" ){
       sequence = reverseComplement( get_sequence( refgen = refgen,
                                                    chr    = chr,
-                                                   range  = c( start(ROI)-k, end(ROI)-1 ) )
+                                                   range  = c( start(ROI)+1, end(ROI)+k ) )
                                    )
 
     } else{
