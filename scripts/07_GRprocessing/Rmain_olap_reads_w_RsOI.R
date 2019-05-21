@@ -40,7 +40,7 @@ suppressPackageStartupMessages( library(dplyr)         )
 
 # import the nanopore reads as GRL
 Readstruct_all_in      <- readRDS ( argsL$pathin_reads )
-reads <- Readstruct_all_in$Events_GRL_splitbyread
+reads                  <- Readstruct_all_in$Events_GRL_splitbyread
 
 # Define the regions of interest from the reference genome:
 # They will come in sets defined by Region_groups
@@ -51,7 +51,8 @@ if( ! file.exists( argsL$pathin_RsoI) )
   q(save="no")
 }
 
-  writeLines("Obtained ROI file; processing overlaps now.", argsL$logFile )
+  writeLines( "Obtained ROI file; processing overlaps now.",
+              argsL$logFile )
 
 
 RsoI_in           <- readRDS(  argsL$pathin_RsoI )
@@ -67,17 +68,26 @@ output$RefRegionName = argsL$regionName
 # count how many groupings of loci we are considering.
 N_locus_groupings = length( length( RsoI_in$Region_groups ) )
 
+# list the indices of reads that cover at least one ROI:
+read_indices_on_ROI = list()
 
 # Build aligned_reads list for alignment of reads to each subset of loci:
-for ( group in  c(1:length(( RsoI_in$Region_groups) ))  )
+for ( group in  names( RsoI_in$Region_groups )  )
   {
-  output$aligned_reads[[group]]  = reads[ queryHits ( findOverlaps( reads,
+  read_indices_on_ROI[[group]]   = queryHits ( findOverlaps( reads,
                                                                     RsoI_in$Region_groups[[group]]
                                                                    )
                                                      )
-                                         ]
+  # collect indices of reads that hit at least one ROI:
+  read_indices_on_ROI[[ group ]] = unique( read_indices_on_ROI[[ group ]] )
+
+  # filter for uniqueness:
+  output$aligned_reads[[group]] = reads[ read_indices_on_ROI[[ group ]] ]
+
+  # store the length.
   output$N_g_filtered[[group]]   = length( RsoI_in$Region_groups[[group]] )
-  }
+}
+
 names( output$aligned_reads ) <- names( RsoI_in$Region_groups )
 names( output$N_g_filtered  ) <- names( RsoI_in$Region_groups )
 
