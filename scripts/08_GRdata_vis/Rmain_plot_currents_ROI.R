@@ -1,5 +1,7 @@
 # Plot current from reads along RsoI:
 
+BLAMAROONY
+
 ## Collect arguments
 args <- commandArgs(TRUE)
 
@@ -42,105 +44,66 @@ suppressPackageStartupMessages( library(Biostrings) )
 
 # ======= DEBUGGING: DELETE THIS: ========
 argsL=list(
-"pathin_reads"   = "/Users/lana/Desktop/train_dat/olap_files/HEK_untreated_read_ROIolap_m6A_put.rds",  # path to Granges List structure with reads aligned to reference genome
-"pathin_RsoI"    = "/Users/lana/Desktop/train_dat/putmod_locs/m6A_putlocs_Linder.rds",                 # path to Granges list of regions of interest in the current study
-"pathin_refGen"  = "/Users/lana/Desktop/train_dat/refGenome/hg19_canon.fa.gz",                         # path to Granges list of regions of interest in the current study
-"pathout_plot"   = "/Users/lana/Desktop/train_dat/test_out/localtest.out",                             # where should we send the plots
-"logFile"        = "/Users/lana/Desktop/train_dat/test_out/localtest.log",                             # self-explanatory
+"pathin_reads"   = "/scratch/AG_Akalin/bosberg/nanopore/pipeline_output/20180417_1233_HEK293_polyA_RNA/07_GRprocessing/HEK_untreated_read_ROIolap_m6A_put.rds",  # path to Granges List structure with reads aligned to reference genome
+"pathin_RsoI"    = "/fast/AG_Akalin/bosberg/nanopore/ref/Regions_of_interest/m6A_putlocs_Linder.rds",                 # path to Granges list of regions of interest in the current study
+"pathin_refGen"  = "/fast/AG_Akalin/refGenomes/hg19_canon/hg19_canon.fa",                         # path to Granges list of regions of interest in the current study
+"pathout_plot"   = "/scratch/AG_Akalin/bosberg/nanopore/pipeline_output/20180417_1233_HEK293_polyA_RNA/08_testing/testplot",                             # where should we send the plots
+"logFile"        = "/scratch/AG_Akalin/bosberg/nanopore/pipeline_output/20180417_1233_HEK293_polyA_RNA/08_testing/test.log",                             # self-explanatory
 "assembly"       = "hg19",
-"sampleName"     = "HEK293_untreated",
+"poremodel_ref"  = "/clusterhome/bosberg/projects/nanopiper/dev/ref/pore_model_table.csv",
+"sampleName"     = "HEK293_untreated_testsession",
 "mincov_in"      = 10
 )
-suppressPackageStartupMessages( library(BSgenome.Hsapiens.UCSC.hg19 ) )
-ref_Genome    <- BSgenome.Hsapiens.UCSC.hg19
 group="CIMS"
 
 # ======= DEBUGGING: DOWN TO HERE: ========
+
+# overlaps CONVENTION: findoverlaps ( region of interest, reads        )
+#                                      < queryHits >    | < subjectHits >
+#                                     __________________|______________
+#                                       locus_i         |   read_i
+#                                       ...             |   ...
 
 # ========================================
 # Read in inputs:
 ref_Genome    <- readDNAStringSet( argsL$pathin_refGen )
 readdat       <- readRDS( argsL$pathin_reads )
 putloci       <- readRDS( argsL$pathin_RsoI  )
-
+poremodel     <- read.table( file = argsL$poremodel_ref,
+                             sep = "\t",
+                             header = TRUE
+                             )
 # ========================================
 # Read in inputs:
 
-# TODO: add sanity check that reference names agree.
-
-read_RoI_filtered_for_coverage <- filter_loci_coverage (  loci   = putloci$Region_groups,
+# reduce list of RsoI to those with sufficient coverage.
+loci_filtered_for_coverage <- filter_loci_for_coverage (  loci   = putloci$Region_groups,
                                                           reads  = readdat$aligned_reads,
-                                                          mincov = mincov_in
+                                                          mincov = argsL$mincov_in
                                                         )
-readdat$aligned_reads
 
+# NOW check overlaps of reads with only the _covered_ loci.
+#TODO: We run this overlaps more than once; if speedup is required later, eliminate this repetition.
+overlaps_by_group = lapply ( names( loci_filtered_for_coverage ), function(group)
+                               findOverlaps(  loci_filtered_for_coverage[[group]],
+                               readdat$aligned_reads[[group]] )
+                               )
+names( overlaps_by_group ) <- names( loci_filtered_for_coverage )
+# overlaps_by_group queryHits now references the indices of COVERED loci.
 
-chr_Locus = as.character( seqnames( Locus) )
-strand_Locus = as.character( unique( strand( read) ) )
+# i=1
+plot_samplesignal_over_ROI ( SampleName = argsL$sampleName,
+                             overlapping_reads  = readdat$aligned_reads[[group]][
+                                                                 subjectHits( overlaps_by_group[[group]][
+                                                                     queryHits( overlaps_by_group[[group]] ) == i ] ) ],
+                                         # Comment explaining the above lines.
+                                         # for plotting, we want to collect:
+                                         #                    ^ The subset of the reads
+                                         #                       ^ That are referenced as the subject
+                                         #                          ^ in an overlap-pair for which the query is the one we are looking at (i.e. ="i").
 
-plotframe = GRanges( seqnames = chr_Locus,
-                     strand   = strand_Locus,
-                     ranges   = IRanges( c( start(Locus):end(Locus) ) ,
-                                         end =  c( start(Locus):end(Locus) )  )
-                     )
-
-# take reads that were aligned and putative modification sites:
-reads_of_interest <- findOverlaps( HEK293_MM2po_reads$aligned_reads$Ill_2pO, Locus )
-
-# ================= ???? ======================
-
-i=1
-read = reads_of_interest[[i]]
-end(read) <- start(read)
-
-olaps = findOverlaps( plotframe, read )
-
-# plot a single read:
-plot( start(read[ subjectHits(olaps)] ),
-                read[ subjectHits( olaps )  ]$event_mean,
-      type = "l",
-      xlim = c( start(Locus),
-                end(Locus)),
-      main= paste(  SampleName, "\n",
-                    as.character( unique( seqnames(Locus) ) ),
-                    ":",
-                    as.character(start(Locus) ),
-                    "-",
-                    as.character( end(Locus)  ) ),
-      xlab = paste( "+ strand sequence." ),
-      xaxt="n",
-
-      ylim = c(mincurrent, maxcurrent),
-      ylab = "current[pA]",
-      col  = rgb( 0, 0, 1, 0.5 )
-      )
-
-# prepare the sequence tick-mark labels:
-xcoords = seq( start(Locus), end(Locus), 1 )
-xlabels = unlist( strsplit( as.character( ref_Genome$chr1[ start(Locus): end(Locus) ] ),
-                   split = "" ) )
-
-# apply the sequence tick-mark labels:
-for ( i  in c(1:length(xcoords)) )
-  { axis(1,
-       at = xcoords[i],
-       xlabels[i]
-       ) }
-
-#-----------add lines for subsequent reads (keeping the same boundaries, etc.):
-
-i=100
-read = reads_of_interest[[i]]
-end(read) <- start(read)
-
-olaps = findOverlaps( plotframe, read )
-
-# plot a single read:
-lines( start(read[ subjectHits(olaps)] ),
-                read[ subjectHits( olaps )  ]$event_mean,
-      col  = rgb( 0, 0, 1, 0.5 )
-      )
-
-
-
-
+                             refgen        = ref_Genome,
+                             ROI_raw       = loci_filtered_for_coverage[[group]][i],
+                             plotrange =  10,
+                             poremodel_ref = poremodel
+                           )
