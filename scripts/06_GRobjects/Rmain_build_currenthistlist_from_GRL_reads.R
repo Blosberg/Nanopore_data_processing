@@ -53,6 +53,9 @@ args <- commandArgs(trailingOnly=TRUE)
    {
      breakset = seq( current_histmin, current_histmax, current_histres)
 
+     GR_kmer_in$event_mean[ GR_kmer_in$event_mean < current_histmin ] <- current_histmin
+     GR_kmer_in$event_mean[ GR_kmer_in$event_mean > current_histmax ] <- current_histmax
+
      result <- hist( GR_kmer_in$event_mean,
                      breaks  = breakset,
                      plot    = FALSE
