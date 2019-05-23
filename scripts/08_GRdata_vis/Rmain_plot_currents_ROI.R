@@ -52,7 +52,8 @@ argsL=list(
 "assembly"       = "hg19",
 "poremodel_ref"  = "/clusterhome/bosberg/projects/nanopiper/dev/ref/pore_model_table.csv",
 "sampleName"     = "HEK293_untreated_testsession",
-"mincov_in"      = 10
+"mincov_in"      = 10,
+"plotrange_in"   = 10
 )
 group="CIMS"
 
@@ -91,21 +92,29 @@ overlaps_by_group = lapply ( names( loci_filtered_for_coverage ), function(group
 names( overlaps_by_group ) <- names( loci_filtered_for_coverage )
 # overlaps_by_group queryHits now references the indices of COVERED loci.
 
-plot_samplesignal_over_ROI ( SampleName = argsL$sampleName,
-                             overlapping_reads  = readdat$aligned_reads[[group]][
+i=9
+sampleROI_dat <-  get_sampledat_over_ROI ( SampleName         = argsL$sampleName,
+                                           overlapping_reads  = readdat$aligned_reads[[group]][
                                                                  subjectHits( overlaps_by_group[[group]][
                                                                      queryHits( overlaps_by_group[[group]] ) == i ] ) ],
-                                         # Comment explaining the above lines.
-                                         # for plotting, we want to collect:
-                                         #                    ^ The subset of the reads
-                                         #                       ^ That are referenced as the subject
-                                         #                          ^ in an overlap-pair for which the query is the one we are looking at (i.e. ="i").
+                                           # Comment explaining the above lines.
+                                           # for plotting, we want to collect:
+                                           #                     ^ The subset of the reads
+                                           #                        ^ That are referenced as the subject
+                                           #                           ^ in an overlap-pair for which the query is the one we are looking at (i.e. ="i").
 
-                             refgen        = ref_Genome,
-                             ROI_raw       = loci_filtered_for_coverage[[group]][i],
-                             plotrange =  10,
-                             poremodel_ref = poremodel
-                           )
+                                           refgen             = ref_Genome,
+                                           ROI_raw            = loci_filtered_for_coverage[[group]][i],
+                                           plotrange          = argsL$plotrange_in,
+                                           poremodel_ref      = poremodel
+                                         )
+
+plot_samplesignal_over_ROI( sampleROI_dat  = sampleROI_dat,
+                            refgen         = ref_Genome)
+
+plot_dwelltime_over_ROI( sampleROI_dat = sampleROI_dat,
+                         refgen        = ref_Genome,
+                         log           = TRUE )
 
 # =======================================
 i=0

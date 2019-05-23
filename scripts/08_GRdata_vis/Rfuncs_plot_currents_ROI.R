@@ -115,15 +115,15 @@ collect_ROI_coverage <-  function( group_loci     = stop("group loci must be pro
 # }
 # ===============================================================
 # --- plot the current lines from all the reads of a sample over a given region:
-plot_samplesignal_over_ROI <-  function( SampleName         = stop("Sample name must be provided"),
-                                         overlapping_reads  = stop("reads must be provided"),
-                                         refgen             = stop("Reference genome must be provided"),
-                                         ROI_raw            = stop("Region of Interest Grange must be provided"),
-                                         poremodel_ref      = stop("standard reference data must be provided."),
-                                         k                = 5,
-                                         plotrange        = 10,
-                                         mincurrent       = 50,
-                                         maxcurrent       = 150 )
+get_sampledat_over_ROI <-  function( SampleName         = stop("Sample name must be provided"),
+                                     overlapping_reads  = stop("reads must be provided"),
+                                     refgen             = stop("Reference genome must be provided"),
+                                     ROI_raw            = stop("Region of Interest Grange must be provided"),
+                                     poremodel_ref      = stop("standard reference data must be provided."),
+                                     k                  = 5,
+                                     plotrange          = 10,
+                                     mincurrent         = 50,
+                                     maxcurrent         = 150 )
 {
   # for these inputs, we know that the reads overlap at least once on the ROI, but we don't know where
   Nreads     = length( overlapping_reads )
@@ -132,35 +132,84 @@ plot_samplesignal_over_ROI <-  function( SampleName         = stop("Sample name 
   end(ROI)   <- end(ROI_raw)   + plotrange;
 
   # get number of x positions in the plotting domain:
-  Nxpos     = end( ROI ) - start( ROI ) + 1;
-  xvals     = c( start( ROI):end(ROI) )
-  chr       = as.character( unique( seqnames( ROI ) ) )
+  Nxpos      = end( ROI ) - start( ROI ) + 1;
+  xposn_vals = c( start( ROI):end(ROI) )
+  chr        = as.character( unique( seqnames( ROI ) ) )
 
   # Get standard plot
   # get_reference_strand # write a function here:
   # need to take reverse-compliment of ref genome for "-" strands
-  poremodel_Icurves <- extract_poremodel_curves_from_sequence ( poremodel_ref = poremodel_ref,
-                                                                refgen        = refgen,
-                                                                ROI           = ROI,
-                                                                strandtype    = "RNA"
-                                                               )
+  poremodel_metrics <- extract_poremodel_metrics_from_sequence ( poremodel_ref = poremodel_ref,
+                                                                 refgen        = refgen,
+                                                                 ROI           = ROI,
+                                                                 strandtype    = "RNA"
+                                                                )
+
+  # populate a matrix of current values at each position.
+  read_currents <- matrix( NA, Nreads, Nxpos )
+
+  # and grab dwell times while we're at it.
+  dwell_times <- matrix( NA, Nreads, Nxpos )
+
+  for (i in c(1:Nreads) )
+    {
+    # get just the segment of the read that overlaps
+    readseg_olaps <- findOverlaps( ROI,
+                                   overlapping_reads[[i]] );
+    # and then take just the segment of the read that is within the ROI:
+    readseg_ROI  <- overlapping_reads[[i]][ subjectHits( readseg_olaps ) ]
+
+    # assign corresponding values to the matrix (with possible NA breaks).
+    read_currents [i, start( readseg_ROI ) - xposn_vals[1] + 1 ]     = readseg_ROI$event_mean
+
+    dwell_times[i, start( readseg_ROI ) - xposn_vals[1] + 1 ] = readseg_ROI$event_length
+  }
+
+  # return the read-data in matrix form.
+  return( list( "SampleName"         = SampleName,
+                "ROI"                = ROI,
+                "xposn_vals"         = xposn_vals,
+                "poremodel_metrics"  = poremodel_metrics,
+                "read_currents"      = read_currents,
+                "dwell_times"        = dwell_times) )
+
+}
+
+# ===============================================================
+# --- plot the current lines from all the reads of a sample over a given region:
+plot_samplesignal_over_ROI<-  function( sampleROI_dat  = stop("aligned sampledat must be provided"),
+                                        refgen         = stop("refgen must be provided"),
+                                        mincurrent     = 50,
+                                        maxcurrent     = 150 )
+{
+  Nxpos = length( sampleROI_dat$xposn_vals)
+  Nreads = dim( sampleROI_dat$read_currents )[1]
+
+  poremodel_Icurves = matrix( 0,
+                              Nxpos,
+                              3 )
+  # now fill in the min/mean/max values into three columns of the output respectively.
+  poremodel_Icurves[,1] = sampleROI_dat$poremodel_metrics[,1] - sampleROI_dat$poremodel_metrics[,2]
+  poremodel_Icurves[,2] = sampleROI_dat$poremodel_metrics[,1]
+  poremodel_Icurves[,3] = sampleROI_dat$poremodel_metrics[,1] + sampleROI_dat$poremodel_metrics[,2]
+
 
   # Then plot a grey region between the +/- 1 std. dev. Everything after that should be "lines"
-  plot(  xvals,
+  plot(  sampleROI_dat$xposn_vals,
          poremodel_Icurves[ , 2],
          col=rgb(0, 0, 0, 0.5),
          type="l",
          lty = "dashed",
          lwd=2,
-         xlim = c( start(ROI),
-                   end(ROI) ),
+         xlim = c( min(sampleROI_dat$xposn_vals),
+                   max(sampleROI_dat$xposn_vals) ),
 
          main= paste(  SampleName, "\n",
                        chr,
                        ":",
-                       as.character( start(ROI) ),
+                       as.character( min(sampleROI_dat$xposn_vals) ),
                        "-",
-                       as.character( end(ROI)  ) ),
+                       as.character( max(sampleROI_dat$xposn_vals)  ) ),
          xlab = "reference sequence",
          xaxt="n",
          ylab = "current [pA]",
@@ -170,93 +219,58 @@ plot_samplesignal_over_ROI <-  function( SampleName         = stop("Sample name 
 
   # add reference sequence, complement, and directionality.
   add_sequence_tick_marks( refgen = refgen,
-                           Locus  = ROI )
+                           Locus  = sampleROI_dat$ROI )
 
   # plot a transparent polygon around the +/-1 std.dev region of the standard (expected) current values.
-  polygon( c( xvals, rev(xvals) ),
+  polygon( c( sampleROI_dat$xposn_vals, rev(sampleROI_dat$xposn_vals) ),
            c(  (poremodel_Icurves[ , 1]),
                rev(poremodel_Icurves[ , 3]) ),
-           col  = rgb(0, 0, 0, 0.1),
+           col  = rgb(0, 0, 0, 0.4),
            lty  = "blank"
           )
 
   #========  NOW PLOT THE READS THEMSELVES =========
   # Get the particular position within each read where it overlaps with the ROI
 
-  # populate a matrix of current values at each position.
-  yivals <- matrix( NA, Nreads, Nxpos )
-  for (i in c(1:Nreads) )
-    {
-    # get just the segment of the read that overlaps
-    readseg_olaps <- findOverlaps( ROI,
-                                   overlapping_reads[[i]] );
-    # and then take just the segment of the read that is within the ROI:
-    readseg_ROI  <- overlapping_reads[[i]][ subjectHits( readseg_olaps ) ]
-
-    # assign corresponding values to the matrix (with possible breaks).
-    yivals [i, start( readseg_ROI ) - xvals[1] + 1 ] = readseg_ROI$event_mean
-  }
 
     # and plot the mean current vals over this range:
     # positions in each read without current data are left "NA"
   # plot the rows of this matrix for each read
   for (i in c(1:Nreads) )
     {
-    lines( xvals,
-         yivals[i, ],
-         col    =rgb(0,0,1,0.5),
-         type   = "l",
-         lwd    = 1
-         )
+    lines( sampleROI_dat$xposn_vals,
+           sampleROI_dat$read_currents[i, ],
+           col    = rgb(0,0,1,0.5),
+           type   = "l",
+           lwd    = 1
+          )
     }
-}
 
+}
 # ===============================================================
 # --- plot the passage time of a sample over a given region:
-plot_lt_passage_over_ROI <-  function( SampleName         = stop("Sample name must be provided"),
-                                       overlapping_reads  = stop("reads must be provided"),
-                                       refgen             = stop("Reference genome must be provided"),
-                                       ROI_raw            = stop("Region of Interest Grange must be provided"),
-                                       plotrange        = 10,
-                                       min_T            = -6 ,
-                                       max_T            = -0.2 )
+plot_dwelltime_over_ROI <-  function( sampleROI_dat  = stop("aligned sampledat must be provided"),
+                                      refgen         = stop("Reference genome must be provided"),
+                                      log            = FALSE )
 {
-  # for these inputs, we know that the reads overlap at least once on the ROI, but we don't know where
-  Nreads     = length( overlapping_reads )
-  ROI        = ROI_raw
-  start(ROI) <- start(ROI_raw) - plotrange;
-  end(ROI)   <- end(ROI_raw)   + plotrange;
+  Nxpos  = length( sampleROI_dat$xposn_vals)
+  Nreads = dim( sampleROI_dat$dwell_times )[1]
 
-  # get number of x positions in the plotting domain:
-  Nxpos     = end( ROI ) - start( ROI ) + 1;
-  xvals     = c( start( ROI):end(ROI) )
-  chr       = as.character( unique( seqnames( ROI ) ) )
+  dwell_dat = sampleROI_dat$dwell_times
+  if( log )
+    { dwell_dat[!is.na(dwell_dat)] <- log( dwell_dat[!is.na(dwell_dat)]  ) }
 
-  #========  NOW PLOT THE READS THEMSELVES =========
-  # Get the particular position within each read where it overlaps with the ROI
+  min_T          = min( dwell_dat, na.rm = TRUE )
+  max_T          = max( dwell_dat, na.rm = TRUE )
 
-  # populate a matrix of current values at each position.
-  yivals <- matrix( NA, Nreads, Nxpos )
-  for (i in c(1:Nreads) )
-    {
-    # get just the segment of the read that overlaps
-    readseg_olaps <- findOverlaps( ROI,
-                                   overlapping_reads[[i]] );
-    # and then take just the segment of the read that is within the ROI:
-    readseg_ROI  <- overlapping_reads[[i]][ subjectHits( readseg_olaps ) ]
 
-    # assign corresponding values to the matrix (with possible breaks).
-    yivals [i, start( readseg_ROI ) - xvals[1] + 1 ] = log( readseg_ROI$event_length )
-  }
-
-    # Then plot a grey region between the +/- 1 std. dev. Everything after that should be "lines"
-  plot(  xvals,
-         yivals[i, ],
+  plot(  sampleROI_dat$xposn_vals,
+         dwell_dat[1, ],
          col=rgb(0, 0, 0, 0.5),
          type="l",
          lwd=1,
-         xlim = c( start(ROI),
-                   end(ROI) ),
+         xlim = c( start(sampleROI_dat$ROI),
+                   end(sampleROI_dat$ROI) ),
 
          main= paste(  SampleName, "\n",
                        chr,
@@ -265,7 +279,7 @@ plot_lt_passage_over_ROI <-  function( SampleName         = stop("Sample name mu
                        "-",
                        as.character( end(ROI)  ) ),
          xlab = "reference sequence",
-         xaxt="n",
+         xaxt = "n",
          ylab = "dwell time [s]",
          ylim = c( min_T,
                    max_T)
@@ -273,20 +287,21 @@ plot_lt_passage_over_ROI <-  function( SampleName         = stop("Sample name mu
 
   # add reference sequence, complement, and directionality.
   add_sequence_tick_marks( refgen = refgen,
-                           Locus  = ROI )
+                           Locus  = sampleROI_dat$ROI )
 
     # and plot the mean current vals over this range:
     # positions in each read without current data are left "NA"
   # plot the rows of this matrix for each read
   for (i in c(2:Nreads) )
     {
-    lines( xvals,
-         yivals[i, ],
-         col    =rgb(0,0,1,0.5),
-         type   = "l",
-         lwd    = 1
+    lines( sampleROI_dat$xposn_vals,
+           dwell_dat[i, ],
+           col    = rgb(0,0,1,0.5),
+           type   = "l",
+           lwd    = 1
          )
-    }
+  }
+
 }
 # ===============================================================
 # --- Add sequence markers to the horizontal axis.
@@ -344,12 +359,12 @@ add_sequence_tick_marks   <- function(  refgen        = stop("Reference genome m
 }
 # ===============================================================
 # --- Get the "Standard" current curve from the reference genome sequence:
-extract_poremodel_curves_from_sequence   <- function ( poremodel_ref = poremodel_ref,
-                                                      refgen        = refgen,
-                                                      ROI           = ROI,
-                                                      strandtype    = "RNA",
-                                                      k = 5
-                                                      )
+extract_poremodel_metrics_from_sequence   <- function ( poremodel_ref = poremodel_ref,
+                                                        refgen        = refgen,
+                                                        ROI           = ROI,
+                                                        strandtype    = "RNA",
+                                                        k = 5
+                                                       )
 {
   chr = as.character( unique(seqnames(ROI )) )
   if( as.character( strand(ROI)) == "+" )
@@ -392,16 +407,12 @@ extract_poremodel_curves_from_sequence   <- function ( poremodel_ref = poremodel
     std_current[,2] = rev( std_current[,2] )
     }
 
-  result =  matrix( 0,
-                    length(sequence)-k+1,
-                    3 )
+  colnames( std_current )   <- c( "mean", "stddev")
+  row.names( std_current )  <- unlist( lapply( c(1:(length(sequence)-k+1)), function(x)
+                                     as.character( substr( sequence, x, (x+k-1) ) )
+                                     ) )
 
-  # now fill in the min/mean/max values into three columns of the output respectively.
-  result[,1] = std_current[,1] - std_current[,2]
-  result[,2] = std_current[,1]
-  result[,3] = std_current[,1] + std_current[,2]
-
-  return( result )
+  return( std_current )
 }
 # ===============================================================
 # --- Get the "Standard" current curve from the reference genome sequence:
