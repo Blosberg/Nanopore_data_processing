@@ -111,15 +111,15 @@ rule all:
 rule compile_report:
     # build the final output report in html format
     input:
-        aligned_reads_bam = os.path.join( config["PATHOUT"], "{wcreport_sampleDir}", SUBDIR_SORTED_MINIMAPPED, "{wcreport_sampleName}.sorted.bam"),
-        GRLreads          = os.path.join( config["PATHOUT"], "{wcreport_sampleDir}", SUBDIR_GR, "{wcreport_sampleName}_reads_GRL.rds")
+        aligned_reads_bam = os.path.join( config["PATHOUT"], "{wc_sampleDir}", SUBDIR_SORTED_MINIMAPPED, "{wc_sampleName}.sorted.bam"),
+        GRLreads          = os.path.join( config["PATHOUT"], "{wc_sampleDir}", SUBDIR_GR, "{wc_sampleName}_reads_GRL.rds")
     output:
-        os.path.join( config["PATHOUT"], "{wcreport_sampleDir}", SUBDIR_REPORT, "{wcreport_sampleName}_report.html")
+        os.path.join( config["PATHOUT"], "{wc_sampleDir}", SUBDIR_REPORT, "{wc_sampleName}_report.html")
     params:
         " readcov_THRESH = 10;   ",
         " yplotmax = 10000; "
     log:
-        logfile = os.path.join( config["PATHOUT"], "{wcreport_sampleDir}", SUBDIR_REPORT, "final_report_{wcreport_sampleName}.log")
+        logfile = os.path.join( config["PATHOUT"], "{wc_sampleDir}", SUBDIR_REPORT, "final_report_{wc_sampleName}.log")
     message:
         fmt("Compiling final report")
     shell:
@@ -135,18 +135,18 @@ rule bin_kmer_histlist:
     # Take a read-separated list of events, and assemble a histogram of
     # current values for each unique kmer observed.
     input:
-        RDS_GRLreads       = os.path.join( config["PATHOUT"], "{wckmerhist_sampleDir}", SUBDIR_GR, "{wckmerhist_samplename}_reads_GRL.rds")
+        RDS_GRLreads       = os.path.join( config["PATHOUT"], "{wc_sampleDir}", SUBDIR_GR, "{wckmerhist_samplename}_reads_GRL.rds")
     output:
-        RDS_histlist       = os.path.join( config["PATHOUT"], "{wckmerhist_sampleDir}", SUBDIR_GR, "{wckmerhist_samplename}_kmer_histlist.rds")
+        RDS_histlist       = os.path.join( config["PATHOUT"], "{wc_sampleDir}", SUBDIR_GR, "{wckmerhist_samplename}_kmer_histlist.rds")
     params:
         current_histmin=config["execution"]["currenthist_minrange"],
         current_histmax=config["execution"]["currenthist_maxrange"],
         current_histres=config["execution"]["currenthist_res"],
-        RDS_GRLreads_in=os.path.join( config["PATHOUT"], "{wckmerhist_sampleDir}", SUBDIR_GR, "{wckmerhist_samplename}_reads_GRL.rds"),
-        RDS_histlist_out=os.path.join( config["PATHOUT"], "{wckmerhist_sampleDir}", SUBDIR_GR, "{wckmerhist_samplename}_kmer_histlist.rds"),
+        RDS_GRLreads_in=os.path.join( config["PATHOUT"], "{wc_sampleDir}", SUBDIR_GR, "{wckmerhist_samplename}_reads_GRL.rds"),
+        RDS_histlist_out=os.path.join( config["PATHOUT"], "{wc_sampleDir}", SUBDIR_GR, "{wckmerhist_samplename}_kmer_histlist.rds"),
         k=5
     log:
-        logfile=os.path.join( config["PATHOUT"], "{wckmerhist_sampleDir}", SUBDIR_GR, "{wckmerhist_samplename}_histlist.log")
+        logfile=os.path.join( config["PATHOUT"], "{wc_sampleDir}", SUBDIR_GR, "{wckmerhist_samplename}_histlist.log")
     message:
         fmt("Build list of histograms for unique kmers in dataset.")
     shell:
@@ -165,15 +165,15 @@ rule overlap_reads_w_RsoI:
     # Process the aligned reads and filter for only those
     # that overlap with the regions of interest.
     input:
-        reads_in          = os.path.join( config["PATHOUT"], "{wcReadROI_olap_sampleDir}", SUBDIR_GR, "{wcReadROI_olap_sampleName}_reads_GRL.rds"),
+        reads_in          = os.path.join( config["PATHOUT"], "{wc_sampleDir}", SUBDIR_GR, "{wc_sampleName}_reads_GRL.rds"),
         Refregion_in      = lambda wc: os.path.join( config["ref"]["RsoI_abspath"], config["ref"]["RsoI"][wc.wcReadROI_regionName])
     output:
-        readROI_olaps     = os.path.join( config["PATHOUT"],  "{wcReadROI_olap_sampleDir}",  SUBDIR_GRproc, "{wcReadROI_olap_sampleName}_read_ROIolap_{wcReadROI_regionName}.rds" )
+        readROI_olaps     = os.path.join( config["PATHOUT"],  "{wc_sampleDir}",  SUBDIR_GRproc, "{wc_sampleName}_read_ROIolap_{wcReadROI_regionName}.rds" )
     params:
-        sampleName        = "{wcReadROI_olap_sampleName}",
+        sampleName        = "{wc_sampleName}",
         regionName        = "{wcReadROI_regionName}"
     log:
-        logFile           = os.path.join( config["PATHOUT"], "{wcReadROI_olap_sampleDir}", SUBDIR_GRproc, "{wcReadROI_olap_sampleName}_{wcReadROI_regionName}_read_ROI_olap.log")
+        logFile           = os.path.join( config["PATHOUT"], "{wc_sampleDir}", SUBDIR_GRproc, "{wc_sampleName}_{wcReadROI_regionName}_read_ROI_olap.log")
     message:
         fmt("Overlap reads from {input.reads_in} with region of interest {input.Refregion_in}.")
     shell:

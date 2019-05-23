@@ -65,18 +65,18 @@ rule np_event_align:
     # The wildcard "chunk" can simply be "full", in cases
     # where there are no chunks
     input:
-        sortedbam             = os.path.join( config["PATHOUT"], "{wcEvalign_sampleDir}", SUBDIR_SORTED_MINIMAPPED, "bam_chunks", "{wcEvalign_sampleName}_{wcEvalign_chunk}.sorted.bam"),
-        NOTCALLED_indexedbam  = os.path.join( config["PATHOUT"], "{wcEvalign_sampleDir}", SUBDIR_SORTED_MINIMAPPED, "bam_chunks", "{wcEvalign_sampleName}_{wcEvalign_chunk}.sorted.bam.bai"),
-        fastq_file            = os.path.join( config["PATHOUT"], "{wcEvalign_sampleDir}", SUBDIR_SYMLINKS,  "{wcEvalign_sampleName}_{wcEvalign_chunk}" +config["fastq_suffix"]),
-        fastq_npi             = os.path.join( config["PATHOUT"], "{wcEvalign_sampleDir}", SUBDIR_SYMLINKS,  "{wcEvalign_sampleName}_{wcEvalign_chunk}" + config["fastq_suffix"] + ".index"),
+        sortedbam             = os.path.join( config["PATHOUT"], "{wc_sampleDir}", SUBDIR_SORTED_MINIMAPPED, "bam_chunks", "{wc_sampleName}_{wc_chunk}.sorted.bam"),
+        NOTCALLED_indexedbam  = os.path.join( config["PATHOUT"], "{wc_sampleDir}", SUBDIR_SORTED_MINIMAPPED, "bam_chunks", "{wc_sampleName}_{wc_chunk}.sorted.bam.bai"),
+        fastq_file            = os.path.join( config["PATHOUT"], "{wc_sampleDir}", SUBDIR_SYMLINKS,  "{wc_sampleName}_{wc_chunk}" +config["fastq_suffix"]),
+        fastq_npi             = os.path.join( config["PATHOUT"], "{wc_sampleDir}", SUBDIR_SYMLINKS,  "{wc_sampleName}_{wc_chunk}" + config["fastq_suffix"] + ".index"),
         refgenome_fasta       = os.path.join( DIR_REFGENOME, config['ref']['Genome_version']+ ".fa" ),
         NOTCALLED_bwt         = os.path.join( DIR_REFGENOME, config['ref']['Genome_version']+ ".fa.bwt"),
         NOTCALLED_pac         = os.path.join( DIR_REFGENOME, config['ref']['Genome_version']+ ".fa.pac")
     output:
-        Evaligned         = os.path.join( config["PATHOUT"], "{wcEvalign_sampleDir}", SUBDIR_EVENTALIGN, "tsv_chunks", 'Ealign_{wcEvalign_sampleName}_{wcEvalign_chunk}.tsv' )
+        Evaligned         = os.path.join( config["PATHOUT"], "{wc_sampleDir}", SUBDIR_EVENTALIGN, "tsv_chunks", 'Ealign_{wc_sampleName}_{wc_chunk}.tsv' )
     log:
-        logfile  = os.path.join( config["PATHOUT"], "{wcEvalign_sampleDir}", SUBDIR_EVENTALIGN, "tsv_chunks", 'Ealign_{wcEvalign_sampleName}_{wcEvalign_chunk}.log')
-    message: """---- Align events from sample {wildcards.wcEvalign_sampleName}, chunk {wildcards.wcEvalign_chunk} to the genome ----"""
+        logfile  = os.path.join( config["PATHOUT"], "{wc_sampleDir}", SUBDIR_EVENTALIGN, "tsv_chunks", 'Ealign_{wc_sampleName}_{wc_chunk}.log')
+    message: """---- Align events from sample {wildcards.wc_sampleName}, chunk {wildcards.wc_chunk} to the genome ----"""
     shell:
         " {nanopolish} eventalign --reads {input.fastq_file} --bam {input.sortedbam} --genome {input.refgenome_fasta} --scale-events  > {output}  2> {log.logfile} "
 
@@ -85,21 +85,21 @@ rule np_event_align:
 rule np_index:
     # Index the reads and the fast5 files for nanopolish
     input:
-        fast5_folder = os.path.join( config["PATHIN"], "{wcnpindex_sampleDir}/fast5/pass", "{wcnpindex_chunk}"),
-#        fast5_folder = lambda wc: getPathCase( os.path.join( config["PATHIN"], "{wcnpindex_sampleDir}"), 'fast5', 'pass', wc.wcnpindex_chunk, input_data_type ),
-        fastq_file   = os.path.join( config["PATHOUT"], "{wcnpindex_sampleDir}", SUBDIR_SYMLINKS, "{wcnpindex_samplename}_{wcnpindex_chunk}" + config["fastq_suffix"])
-#        fastq_file   = lambda wc: os.path.join( config["PATHOUT"], "{wcnpindex_sampleDir}", SUBDIR_SYMLINKS, wc.wcnpindex_samplename + "_{wcnpindex_chunk}." + config["fastq_suffix"] )
+        fast5_folder = os.path.join( config["PATHIN"], "{wc_sampleDir}/fast5/pass", "{wc_chunk}"),
+#        fast5_folder = lambda wc: getPathCase( os.path.join( config["PATHIN"], "{wc_sampleDir}"), 'fast5', 'pass', wc.wc_chunk, input_data_type ),
+        fastq_file   = os.path.join( config["PATHOUT"], "{wc_sampleDir}", SUBDIR_SYMLINKS, "{wc_sampleName}_{wc_chunk}" + config["fastq_suffix"])
+#        fastq_file   = lambda wc: os.path.join( config["PATHOUT"], "{wc_sampleDir}", SUBDIR_SYMLINKS, wc.wc_sampleName + "_{wc_chunk}." + config["fastq_suffix"] )
     output:
-        npi    = os.path.join( config["PATHOUT"], "{wcnpindex_sampleDir}", SUBDIR_SYMLINKS, "{wcnpindex_samplename}_{wcnpindex_chunk}"+config["fastq_suffix"]+".index"  ),
-        fai    = os.path.join( config["PATHOUT"], "{wcnpindex_sampleDir}", SUBDIR_SYMLINKS, "{wcnpindex_samplename}_{wcnpindex_chunk}"+config["fastq_suffix"]+".index.fai" ),
-        gzi    = os.path.join( config["PATHOUT"], "{wcnpindex_sampleDir}", SUBDIR_SYMLINKS, "{wcnpindex_samplename}_{wcnpindex_chunk}"+config["fastq_suffix"]+".index.gzi" ),
-        readdb = os.path.join( config["PATHOUT"], "{wcnpindex_sampleDir}", SUBDIR_SYMLINKS, "{wcnpindex_samplename}_{wcnpindex_chunk}"+config["fastq_suffix"]+".index.readdb")
+        npi    = os.path.join( config["PATHOUT"], "{wc_sampleDir}", SUBDIR_SYMLINKS, "{wc_sampleName}_{wc_chunk}"+config["fastq_suffix"]+".index"  ),
+        fai    = os.path.join( config["PATHOUT"], "{wc_sampleDir}", SUBDIR_SYMLINKS, "{wc_sampleName}_{wc_chunk}"+config["fastq_suffix"]+".index.fai" ),
+        gzi    = os.path.join( config["PATHOUT"], "{wc_sampleDir}", SUBDIR_SYMLINKS, "{wc_sampleName}_{wc_chunk}"+config["fastq_suffix"]+".index.gzi" ),
+        readdb = os.path.join( config["PATHOUT"], "{wc_sampleDir}", SUBDIR_SYMLINKS, "{wc_sampleName}_{wc_chunk}"+config["fastq_suffix"]+".index.readdb")
     params:
         options    = " index -d "
     log:
-        logfile  = os.path.join( config["PATHOUT"], "{wcnpindex_sampleDir}", SUBDIR_SYMLINKS,  "{wcnpindex_samplename}_{wcnpindex_chunk}_npi.log" )
+        logfile  = os.path.join( config["PATHOUT"], "{wc_sampleDir}", SUBDIR_SYMLINKS,  "{wc_sampleName}_{wc_chunk}_npi.log" )
     message:
-        fmt("Index the reads from chunk {wildcards.wcnpindex_chunk} against the fast5 files from the same.")
+        fmt("Index the reads from chunk {wildcards.wc_chunk} against the fast5 files from the same.")
     shell:
         " nice -19 {nanopolish} {params.options} {input.fast5_folder} {input.fastq_file} 2> {log.logfile} "
 
@@ -113,12 +113,12 @@ rule np_index:
 rule index_sortedbam:
     # Index the sorted bam file with samtools
     input:
-        sortedbam  = os.path.join( config["PATHOUT"], "{wcindexbam_sampleDir}", SUBDIR_SORTED_MINIMAPPED, "bam_chunks", "{wcindexbam_sampleName}_{wcindexbam_chunk}.sorted.bam")
+        sortedbam  = os.path.join( config["PATHOUT"], "{wc_sampleDir}", SUBDIR_SORTED_MINIMAPPED, "bam_chunks", "{wc_sampleName}_{wc_chunk}.sorted.bam")
     output:
-        indexedbam = os.path.join( config["PATHOUT"], "{wcindexbam_sampleDir}", SUBDIR_SORTED_MINIMAPPED, "bam_chunks", "{wcindexbam_sampleName}_{wcindexbam_chunk}.sorted.bam.bai")
+        indexedbam = os.path.join( config["PATHOUT"], "{wc_sampleDir}", SUBDIR_SORTED_MINIMAPPED, "bam_chunks", "{wc_sampleName}_{wc_chunk}.sorted.bam.bai")
     log:
-        logfile    = os.path.join( config["PATHOUT"], "{wcindexbam_sampleDir}", SUBDIR_SORTED_MINIMAPPED, "bam_chunks", '{wcindexbam_sampleName}_{wcindexbam_chunk}_samtoolsindex.log')
-    message: """---- index the bam files for {wildcards.wcindexbam_sampleName} chunk {wildcards.wcindexbam_chunk} ----"""
+        logfile    = os.path.join( config["PATHOUT"], "{wc_sampleDir}", SUBDIR_SORTED_MINIMAPPED, "bam_chunks", '{wc_sampleName}_{wc_chunk}_samtoolsindex.log')
+    message: """---- index the bam files for {wildcards.wc_sampleName} chunk {wildcards.wc_chunk} ----"""
     shell:
         " {SAMTOOLS} index  {input.sortedbam}  2> {log.logfile} "
 
@@ -128,11 +128,11 @@ rule merge_bam_files:
     # combine the ~4000 reads from each minimap2
     # alignment into a single bam file
     input:
-        bami      = lambda wc: get_chunkfiles( wc.wcmerge_samplename, os.path.join( config["PATHOUT"], wc.wcmerge_sampleDir, SUBDIR_SORTED_MINIMAPPED, "bam_chunks"), "" , ".sorted.bam", False )
+        bami      = lambda wc: get_chunkfiles( wc.wc_sampleName, os.path.join( config["PATHOUT"], wc.wc_sampleDir, SUBDIR_SORTED_MINIMAPPED, "bam_chunks"), "" , ".sorted.bam", False )
     output:
-        sortedbam = os.path.join( config["PATHOUT"], "{wcmerge_sampleDir}", SUBDIR_SORTED_MINIMAPPED, "{wcmerge_samplename}.sorted.bam")
+        sortedbam = os.path.join( config["PATHOUT"], "{wc_sampleDir}", SUBDIR_SORTED_MINIMAPPED, "{wc_sampleName}.sorted.bam")
     log:
-        logfile   = os.path.join( config["PATHOUT"], "{wcmerge_sampleDir}", SUBDIR_SORTED_MINIMAPPED, "{wcmerge_samplename}.mergingbam.log")
+        logfile   = os.path.join( config["PATHOUT"], "{wc_sampleDir}", SUBDIR_SORTED_MINIMAPPED, "{wc_sampleName}.mergingbam.log")
     message:
         fmt("Combining bam files from post-mapping fastq data.")
     shell:
@@ -143,13 +143,13 @@ rule convert_sort_minimap:
     # convert minimap2 alignments from sam to bam format
     # and sort by position
     input:
-        aligned     = os.path.join( config["PATHOUT"], "{wcsort_sampleDir}", SUBDIR_FILTERED_MINIMAP, "{wcsort_samplename}_{wcsort_chunk}.0filtered.sam")
+        aligned     = os.path.join( config["PATHOUT"], "{wc_sampleDir}", SUBDIR_FILTERED_MINIMAP, "{wc_sampleName}_{wc_chunk}.0filtered.sam")
     output:
-        sortedbam   = os.path.join( config["PATHOUT"], "{wcsort_sampleDir}", SUBDIR_SORTED_MINIMAPPED, "bam_chunks", "{wcsort_samplename}_{wcsort_chunk}.sorted.bam")
+        sortedbam   = os.path.join( config["PATHOUT"], "{wc_sampleDir}", SUBDIR_SORTED_MINIMAPPED, "bam_chunks", "{wc_sampleName}_{wc_chunk}.sorted.bam")
 #    params:
 #
     log:
-        logfile = os.path.join( config["PATHOUT"], "{wcsort_sampleDir}", SUBDIR_SORTED_MINIMAPPED, "bam_chunks", "{wcsort_samplename}_{wcsort_chunk}.sortingbam.log")
+        logfile = os.path.join( config["PATHOUT"], "{wc_sampleDir}", SUBDIR_SORTED_MINIMAPPED, "bam_chunks", "{wc_sampleName}_{wc_chunk}.sortingbam.log")
     message:
         fmt("Converting, sorting, and indexing input file: {input}")
     shell:
@@ -161,11 +161,11 @@ rule filter_nonaligned_minimap:
     # Check for alignment filter in minimap2s sam file:
     #  if != 4 then remove this read
     input:
-        aligned  = os.path.join( config["PATHOUT"], "{wcfilter_sampleDir}", SUBDIR_ALIGNED_MINIMAP, "{wcfilter_samplename}_{wcfilter_chunk}.sam" )
+        aligned  = os.path.join( config["PATHOUT"], "{wc_sampleDir}", SUBDIR_ALIGNED_MINIMAP, "{wc_sampleName}_{wc_chunk}.sam" )
     output:
-        filtered = os.path.join( config["PATHOUT"], "{wcfilter_sampleDir}", SUBDIR_FILTERED_MINIMAP, "{wcfilter_samplename}_{wcfilter_chunk}.0filtered.sam" )
+        filtered = os.path.join( config["PATHOUT"], "{wc_sampleDir}", SUBDIR_FILTERED_MINIMAP, "{wc_sampleName}_{wc_chunk}.0filtered.sam" )
     log:
-        log      = os.path.join( config["PATHOUT"], "{wcfilter_sampleDir}", SUBDIR_FILTERED_MINIMAP, "{wcfilter_samplename}_{wcfilter_chunk}.0filtering.log" )
+        log      = os.path.join( config["PATHOUT"], "{wc_sampleDir}", SUBDIR_FILTERED_MINIMAP, "{wc_sampleName}_{wc_chunk}.0filtering.log" )
     message:
         fmt("Filtering unaligned reads from alignment data")
     shell:
@@ -177,13 +177,13 @@ rule align_minimap:
     # genome
     input:
         mmiref   = os.path.join( DIR_REFGENOME , config['ref']['Genome_version']+ ".mmi" ),
-        fqlink   = os.path.join( config["PATHOUT"], "{wcalign_sampleDir}", SUBDIR_SYMLINKS, "{wcalign_samplename}_{wcalign_chunk}" + config["fastq_suffix"] )
+        fqlink   = os.path.join( config["PATHOUT"], "{wc_sampleDir}", SUBDIR_SYMLINKS, "{wc_sampleName}_{wc_chunk}" + config["fastq_suffix"] )
     output:
-        aligned  = os.path.join( config["PATHOUT"], "{wcalign_sampleDir}", SUBDIR_ALIGNED_MINIMAP,  "{wcalign_samplename}_{wcalign_chunk}.sam" )
+        aligned  = os.path.join( config["PATHOUT"], "{wc_sampleDir}", SUBDIR_ALIGNED_MINIMAP,  "{wc_sampleName}_{wc_chunk}.sam" )
     params:
         options  = config["execution"]["MM2_align_option"]
     log:
-        log      = os.path.join( config["PATHOUT"], "{wcalign_sampleDir}", SUBDIR_ALIGNED_MINIMAP,  "{wcalign_samplename}_{wcalign_chunk}_alignment.log" )
+        log      = os.path.join( config["PATHOUT"], "{wc_sampleDir}", SUBDIR_ALIGNED_MINIMAP,  "{wc_sampleName}_{wc_chunk}_alignment.log" )
     message:
         fmt("Aligning fastq reads from {input.fqlink} to {input.mmiref}; outputting to {output}")
     shell:
@@ -193,9 +193,9 @@ rule align_minimap:
 rule symlink_fq:
     # create symlink to data:
     input:
-        chunk_src     = lambda wc: os.path.join( config["PATHIN"], wc.wcfqlink_sampleDir, "fastq", "pass", config["samplelist"][wc.wcfqlink_samplename]["fastq_prefix"] + wc.wcfqlink_chunk + config["fastq_suffix"] )
+        chunk_src     = lambda wc: os.path.join( config["PATHIN"], wc.wc_sampleDir, "fastq", "pass", config["samplelist"][wc.wc_sampleName]["fastq_prefix"] + wc.wc_chunk + config["fastq_suffix"] )
     output:
-        chunk_linkloc = os.path.join( config["PATHOUT"], "{wcfqlink_sampleDir}", SUBDIR_SYMLINKS, "{wcfqlink_samplename}_{wcfqlink_chunk}" + config["fastq_suffix"] )
+        chunk_linkloc = os.path.join( config["PATHOUT"], "{wc_sampleDir}", SUBDIR_SYMLINKS, "{wc_sampleName}_{wc_chunk}" + config["fastq_suffix"] )
     params:
         options  = " -s "
     message:
