@@ -20,7 +20,7 @@
             },
    "scripts": {
         "script_folder":             "/home/bosberg/projects/nanopiper/scripts/",
-        "npiper_plot_funcs":         "lib/Rfuncs_nanopiper_plotting.R",
+        "npiper_histplot_funcs":     "lib/Rfuncs_nanopiper_histplotting.R",
         "Rmain_build_histlist":      "06_GRobjects/Rmain_build_currenthistlist_from_GRL_reads.R",
         "Rmain_overlap_reads_RsoI":  "07_GRprocessing/Rmain_olap_reads_w_RsOI.R",
         "Rmain_tsv2GRconv":          "06_GRobjects/Rmain_npreads_tsv2GR.R",

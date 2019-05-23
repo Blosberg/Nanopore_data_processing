@@ -13,7 +13,7 @@ GENOME_VERSION     = config["ref"]["Genome_version"]
 RmdReportScript    = os.path.join(config["scripts"]["script_folder"],"final_report","Nanopore_report.Rmd")
 
 # Rscript function defn's for general plotting:
-npiper_plot_funcs = os.path.join( config["scripts"]["script_folder"], config["scripts"]["npiper_plot_funcs"] )
+npiper_histplot_funcs = os.path.join( config["scripts"]["script_folder"], config["scripts"]["npiper_histplot_funcs"] )
 
 # Rscripts that convert table tsv's into GRL objs and then combine them:
 Rmain_tsv2GRL     = os.path.join( config["scripts"]["script_folder"], config["scripts"]["Rmain_tsv2GRconv"] )
@@ -156,7 +156,7 @@ rule bin_kmer_histlist:
         nice('Rscript', [ R_build_histlist_main,
                           "--rds_fin_readdat={params.RDS_GRLreads_in}",
                           "--rds_fout_histlist={params.RDS_histlist_out}",
-                          "--npiper_plot_funcs="+npiper_plot_funcs,
+                          "--npiper_histplot_funcs="+npiper_histplot_funcs,
                           "--logfile={log.logfile}",
                           "--k={params.k}",
                           "--current_histmin={params.current_histmin}",

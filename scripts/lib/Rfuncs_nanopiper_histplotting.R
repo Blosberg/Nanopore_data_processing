@@ -1,3 +1,4 @@
+# Function definitions related to the plotting of histograms for the nanopiper package.
 # ==================================================================
 # --- plot_traces_over_bases
 plot_background_hist <- function( xdat     = stop("xdat must be provided"),
@@ -16,6 +17,45 @@ plot_background_hist <- function( xdat     = stop("xdat must be provided"),
           c(0, hist_in, 0),
           lty  ="blank",
           col  = adjustcolor('grey43',alpha.f = 0.3) )
+}
+
+# ===============================================================
+# --- given a histogram of data, and the associated bins, plot it alongside a normal distribution
+plot_hist_against_normal <- function( xdat_in     = stop("xdat_in must be provided"),
+                                      hist_in     = stop("hist_in must be provided"),
+                                      mean_in     = 0,
+                                      stddev_in   = 1,
+                                      col_in      = rgb( 0,      0,     1,   alpha=0.5 ),
+                                      scale_HP    = 1
+                                     )
+{
+
+  xnormed = ( (xdat_in - mean_in) /stddev_in );
+  dX = xnormed[2]-xnormed[1]
+
+  if ( max( abs(diff(xnormed) -dX)/dX  ) > 0.01)
+    {stop("non-uniform spacing in histogram x-data")}
+
+  plot( xnormed,
+        dnorm( xnormed, mean=0, sd=1),
+        type="l",
+        lwd=1,
+        ylab = " probability density ",
+        xlab = "normalized deviation",
+        ylim = c(0,0.5)
+        )
+
+    polygon( c( min(xnormed),
+                xnormed,
+                max(xnormed)
+    ),
+    scale_HP * (1/dX) * c( 0,
+                           hist_in, # N.B. this need not _necessarily_ contain unknown bases (i.e. "N"'s -- but it CAN handle them.)
+                           0),
+    col  = col_in,
+    lty  = "blank"
+    )
+
 }
 # ==================================================================
 # --- return normalized histogram for a given set of breaks and GR
@@ -105,7 +145,7 @@ plot_seq_spec_comparison  <- function( seq_spec_list = stop("seq_list  must be p
   temp2 = temp2[ temp2$event_mean < maxcurrent ]
 
   # current_window = c( mincurrent, maxcurrent )
-  # par( mfrow = c(2,1) ) # === putting things into the same window now.
+  # par( mfrow = c(2,1) ) # --- putting things into the same window now.
 
   breakset = seq( from = mincurrent,
                 to   = maxcurrent,
