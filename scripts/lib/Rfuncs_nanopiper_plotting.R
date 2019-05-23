@@ -17,29 +17,32 @@ plot_background_hist <- function( xdat     = stop("xdat must be provided"),
           lty  ="blank",
           col  = adjustcolor('grey43',alpha.f = 0.3) )
 }
-
 # ==================================================================
-# --- very general (probably obsolete compared to subsequent functions)
-# --- returns normalized histogram for a given set of breaks and GR
-get_normalized_current_hist <- function( GR_input   = stop("reads must be provided"),
-                                         histmin    = 50,
-                                         histmax    = 150,
-                                         histres    = 0.5
-                                         )
-{
-  breaks_in  = seq( histmin, histmax, histres )
+# --- return normalized histogram for a given set of breaks and GR
+get_normalized_current_hist <- function( GR_kmer_in      = stop("kmer-split event GR obj must be provided"),
+                                         current_histmin = 50,
+                                         current_histmax = 150,
+                                         current_histres = 0.5
+                                        )
+   {
+     breakset = seq( current_histmin, current_histmax, current_histres)
 
-  # now select just the values within the window we've declared.
-  mincutoff  = GR_input[ GR_input$event_mean >= histmin ]
-  finite_win = mincutoff[ mincutoff$event_mean <= histmax ]
+     hist_data = GR_kmer_in$event_mean
 
-  temp <- hist( finite_win$event_mean,
-                breaks=breaks_in,
-                plot = FALSE)
-  result <- (1/sum( temp$counts )) * temp$counts
-  return(result)
-}
+    # purely for plotting purposes:
+    # counts beyond the boundary of the histogram
+    # should be registered *AT* the boundary.
+     hist_data[ hist_data < current_histmin ] <- current_histmin
+     hist_data[ hist_data > current_histmax ] <- current_histmax
 
+
+     # n.b. "normalized" includes the dx spacing (generally not 1)
+     result <- hist( hist_data,
+                     breaks  = breakset,
+                     plot    = FALSE
+                     )
+     return(result)
+   }
 # ==================================================================
 # --- very general (probably obsolete compared to subsequent functions)
 # --- returns normalized histogram for a given set of breaks and GR

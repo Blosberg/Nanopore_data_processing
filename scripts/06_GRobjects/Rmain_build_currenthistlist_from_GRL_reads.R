@@ -21,6 +21,7 @@ args <- commandArgs(trailingOnly=TRUE)
          Arguments:
          --rds_fin_readdat    = the input file with an rds object containing the read-partitioned event list.
          --rds_fout_histlist  = output file for the histogram list to be stored.
+         --npiper_plot_funcs  = File path with function definitions needed for this script.
          --logFile            = file to print the logs to
          --k                  = number of bases in sequences.
          --current_histmin    = min value considered in the current histogram,
@@ -43,33 +44,7 @@ args <- commandArgs(trailingOnly=TRUE)
 
    names(argsL) <- argsDF$V1
 
-   # ==================================================================
-   # --- return normalized histogram for a given set of breaks and GR
-   get_normalized_current_hist <- function( GR_kmer_in      = stop("kmer-split event GR obj must be provided"),
-                                            current_histmin = 50,
-                                            current_histmax = 150,
-                                            current_histres = 0.5
-                                            )
-   {
-     breakset = seq( current_histmin, current_histmax, current_histres)
-
-
-     hist_data = GR_kmer_in$event_mean
-
-    # purely for plotting purposes:
-    # counts beyond the boundary of the histogram
-    # should be registered *AT* the boundary.
-     hist_data[ hist_data < current_histmin ] <- current_histmin
-     hist_data[ hist_data > current_histmax ] <- current_histmax
-
-
-     # n.b. "normalized" includes the dx spacing (generally not 1)
-     result <- hist( hist_data,
-                     breaks  = breakset,
-                     plot    = FALSE
-                     )
-     return(result)
-   }
+   source( argsL$npiper_plot_funcs )
    # ==================================================================
 
   # read in the rds object of all experimental events split by read.

@@ -12,6 +12,9 @@ nanopolish = config["progs"]["nanopolish"]
 GENOME_VERSION     = config["ref"]["Genome_version"]
 RmdReportScript    = os.path.join(config["scripts"]["script_folder"],"final_report","Nanopore_report.Rmd")
 
+# Rscript function defn's for general plotting:
+npiper_plot_funcs = os.path.join( config["scripts"]["script_folder"], config["scripts"]["npiper_plot_funcs"] )
+
 # Rscripts that convert table tsv's into GRL objs and then combine them:
 Rmain_tsv2GRL     = os.path.join( config["scripts"]["script_folder"], config["scripts"]["Rmain_tsv2GRconv"] )
 Rmain_combine_readchunks = os.path.join( config["scripts"]["script_folder"], config["scripts"]["Rmain_combine_read_chunks"] )
@@ -151,13 +154,14 @@ rule bin_kmer_histlist:
         fmt("Build list of histograms for unique kmers in dataset.")
     shell:
         nice('Rscript', [ R_build_histlist_main,
-                          "--current_histmin={params.current_histmin}",
-                          "--current_histmax={params.current_histmax}",
-                          "--current_histres={params.current_histres}",
                           "--rds_fin_readdat={params.RDS_GRLreads_in}",
                           "--rds_fout_histlist={params.RDS_histlist_out}",
+                          "--npiper_plot_funcs="+npiper_plot_funcs,
+                          "--logfile={log.logfile}",
                           "--k={params.k}",
-                          "--logfile={log.logfile}",] )
+                          "--current_histmin={params.current_histmin}",
+                          "--current_histmax={params.current_histmax}",
+                          "--current_histres={params.current_histres}", ] )
 
 #------------------------------------------------------
 
