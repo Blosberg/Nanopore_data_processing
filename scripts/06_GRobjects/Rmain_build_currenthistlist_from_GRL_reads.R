@@ -53,7 +53,18 @@ args <- commandArgs(trailingOnly=TRUE)
    {
      breakset = seq( current_histmin, current_histmax, current_histres)
 
-     result <- hist( GR_kmer_in$event_mean,
+
+     hist_data = GR_kmer_in$event_mean
+
+    # purely for plotting purposes:
+    # counts beyond the boundary of the histogram
+    # should be registered *AT* the boundary.
+     hist_data[ hist_data < current_histmin ] <- current_histmin
+     hist_data[ hist_data > current_histmax ] <- current_histmax
+
+
+     # n.b. "normalized" includes the dx spacing (generally not 1)
+     result <- hist( hist_data,
                      breaks  = breakset,
                      plot    = FALSE
                      )
