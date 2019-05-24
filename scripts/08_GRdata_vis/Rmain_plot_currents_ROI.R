@@ -1,7 +1,5 @@
 # Plot current from reads along RsoI:
 
-BLAMAROONY
-
 ## Collect arguments
 args <- commandArgs(TRUE)
 
@@ -34,13 +32,10 @@ argsDF    <- as.data.frame(do.call("rbind", parseArgs(args)))
 argsL     <- as.list(as.character(argsDF$V2))
 
 names(argsL) <- argsDF$V1
-BiocManager::install("Biostrings")
-BiocManager::install("BSgenome.Hsapiens.UCSC.hg19")
+# BiocManager::install("Biostrings")
+# BiocManager::install("BSgenome.Hsapiens.UCSC.hg19")
 suppressPackageStartupMessages( library(GenomicRanges) )
 suppressPackageStartupMessages( library(Biostrings) )
-
-##==============================================================
-
 
 # ======= DEBUGGING: DELETE THIS: ========
 argsL=list(
@@ -53,9 +48,8 @@ argsL=list(
 "poremodel_ref"  = "/clusterhome/bosberg/projects/nanopiper/dev/ref/pore_model_table.csv",
 "sampleName"     = "HEK293_untreated_testsession",
 "mincov_in"      = 10,
-"plotrange_in"   = 10
+"plotrange_in"   = 5
 )
-group="CIMS"
 
 # ======= DEBUGGING: DOWN TO HERE: ========
 
@@ -68,7 +62,8 @@ group="CIMS"
 # ========================================
 # Read in inputs:
 ref_Genome    <- readDNAStringSet( argsL$pathin_refGen )
-readdat       <- readRDS( argsL$pathin_reads )
+readdat       <- readRDS( argsL$pathin_reads ) # these are just all the reads with at least one overlap on a ROI:
+                                               # no structural organization in place (as some reads might overlap multiple RsOI)
 putloci       <- readRDS( argsL$pathin_RsoI  )
 poremodel     <- read.table( file = argsL$poremodel_ref,
                              sep = "\t",
@@ -92,44 +87,26 @@ overlaps_by_group = lapply ( names( loci_filtered_for_coverage ), function(group
 names( overlaps_by_group ) <- names( loci_filtered_for_coverage )
 # overlaps_by_group queryHits now references the indices of COVERED loci.
 
-i=9
-sampleROI_dat <-  get_sampledat_over_ROI ( SampleName         = argsL$sampleName,
-                                           overlapping_reads  = readdat$aligned_reads[[group]][
-                                                                 subjectHits( overlaps_by_group[[group]][
-                                                                     queryHits( overlaps_by_group[[group]] ) == i ] ) ],
-                                           # Comment explaining the above lines.
-                                           # for plotting, we want to collect:
-                                           #                     ^ The subset of the reads
-                                           #                        ^ That are referenced as the subject
-                                           #                           ^ in an overlap-pair for which the query is the one we are looking at (i.e. ="i").
+sampleROI_dat_by_group <- lapply( names(loci_filtered_for_coverage),
+                                      function(group) collect_group_sample_dat_over_ROIs(
+                                                          SampleName           = argsL$sampleName,
+                                                          ref_Genome           = ref_Genome,
+                                                          aligned_group_reads  = readdat$aligned_reads[[group]],
+                                                          group_overlaps       = overlaps_by_group[[group]],
+                                                          group_loci_covered   = loci_filtered_for_coverage[[group]],
+                                                          poremodel_in         = poremodel,
+                                                          plotrange_in         = 10 )
+                                    )
+names(sampleROI_dat_by_group) <- names(loci_filtered_for_coverage)
 
-                                           refgen             = ref_Genome,
-                                           ROI_raw            = loci_filtered_for_coverage[[group]][i],
-                                           plotrange          = argsL$plotrange_in,
-                                           poremodel_ref      = poremodel
-                                         )
-
-plot_samplesignal_over_ROI( sampleROI_dat  = sampleROI_dat,
+i=12
+plot_samplesignal_over_ROI( sampleROI_dat  = sampleROI_dat_by_group$CIMS[[i]],
                             refgen         = ref_Genome)
+
 
 plot_dwelltime_over_ROI( sampleROI_dat = sampleROI_dat,
                          refgen        = ref_Genome,
-                         log           = TRUE )
+                         log           = FALSE )
 
 # =======================================
-i=0
-i=i+1; plot_lt_passage_over_ROI   ( SampleName = argsL$sampleName,
-                             overlapping_reads  = readdat$aligned_reads[[group]][
-                                                                 subjectHits( overlaps_by_group[[group]][
-                                                                     queryHits( overlaps_by_group[[group]] ) == i ] ) ],
-                                         # Comment explaining the above lines.
-                                         # for plotting, we want to collect:
-                                         #                    ^ The subset of the reads
-                                         #                       ^ That are referenced as the subject
-                                         #                          ^ in an overlap-pair for which the query is the one we are looking at (i.e. ="i").
-
-                             refgen        = ref_Genome,
-                             ROI_raw       = loci_filtered_for_coverage[[group]][i],
-                             plotrange =  10
-                           )
 

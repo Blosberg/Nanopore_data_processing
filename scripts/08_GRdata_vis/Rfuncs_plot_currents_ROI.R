@@ -25,7 +25,6 @@ extract_sequence_from_npread  <- function( read_GR_in     = stop("read_GR_in mus
   result <- paste( substr( kmer_set, 1,1), collapse = '')
   return(result)
 }
-
 # ===============================================================
 # --- return normalized histogram for the log-dwell time
 get_normalized_lt_hist <- function( GR_kmer_in      = stop("kmer-split event GR obj must be provided"),
@@ -165,25 +164,38 @@ get_sampledat_over_ROI <-  function( SampleName         = stop("Sample name must
     dwell_times[i, start( readseg_ROI ) - xposn_vals[1] + 1 ] = readseg_ROI$event_length
   }
 
+  # for each read, take the difference from the standard model mean.
+  read_diff_from_model <- sweep( read_currents,
+                               2,
+                               as.array( poremodel_metrics[,1]) )
+
+  # and then divide it by the std. dev.
+  read_normdiff  <- sweep( read_diff_from_model,
+                           2,
+                           as.array( poremodel_metrics[,2] ),
+                           FUN = "/" )
+
   # return the read-data in matrix form.
   return( list( "SampleName"         = SampleName,
                 "ROI"                = ROI,
                 "xposn_vals"         = xposn_vals,
                 "poremodel_metrics"  = poremodel_metrics,
                 "read_currents"      = read_currents,
+                "read_normdiff"      = read_normdiff,
                 "dwell_times"        = dwell_times) )
 
 }
 
 # ===============================================================
 # --- plot the current lines from all the reads of a sample over a given region:
-plot_samplesignal_over_ROI<-  function( sampleROI_dat  = stop("aligned sampledat must be provided"),
-                                        refgen         = stop("refgen must be provided"),
-                                        mincurrent     = 50,
-                                        maxcurrent     = 150 )
+plot_samplesignal_over_ROI  <- function( sampleROI_dat  = stop("aligned sampledat must be provided"),
+                                         refgen         = stop("refgen must be provided"),
+                                         mincurrent     = 50,
+                                         maxcurrent     = 150 )
 {
-  Nxpos = length( sampleROI_dat$xposn_vals)
+  Nxpos  = length( sampleROI_dat$xposn_vals)
   Nreads = dim( sampleROI_dat$read_currents )[1]
+  chr    = as.character( unique( seqnames( sampleROI_dat$ROI )))
 
   poremodel_Icurves = matrix( 0,
                               Nxpos,
@@ -204,7 +216,7 @@ plot_samplesignal_over_ROI<-  function( sampleROI_dat  = stop("aligned sampledat
          xlim = c( min(sampleROI_dat$xposn_vals),
                    max(sampleROI_dat$xposn_vals) ),
 
-         main= paste(  SampleName, "\n",
+         main= paste(  sampleROI_dat$SampleName, "\n",
                        chr,
                        ":",
                        as.character( min(sampleROI_dat$xposn_vals) ),
@@ -429,3 +441,36 @@ get_sequence   <- function ( refgen  = stop("refgenome must be provided"),
                                       as.character(range[2]),"]" )) )
   return( result )
 }
+# ===============================================================
+# --- For a given "group" of reads/RsOI, collect read data in a given range nearby
+collect_group_sample_dat_over_ROIs <- function ( SampleName           = "Unnamed",
+                                                 ref_Genome           = stop("refGenome must be supplied."),
+                                                 aligned_group_reads  = stop("reads must be supplied"),
+                                                 group_overlaps       = stop("group overlaps must be specified"),
+                                                 group_loci_covered   = stop("group loci must be provided"),
+                                                 poremodel_in         = stop("poremodel must be specified."),
+                                                 plotrange_in         = 10
+
+  )
+{
+  group_ROIread_dat = lapply( c(1:length(group_loci_covered)),
+                              function(locus_i)
+                                get_sampledat_over_ROI ( SampleName         = SampleName,
+                                                         overlapping_reads  = aligned_group_reads[
+                                                              subjectHits( group_overlaps[
+                                                                  queryHits( group_overlaps ) == locus_i ] ) ],
+                               # To understand the above lines.
+                               # for plotting, we want to collect:
+                               #                         ^ The subset of the reads
+                               #                              ^ That are referenced as the subject
+                               #                                  ^ in an overlap-pair for which the query is the ROI we are looking at (i.e. ="locus_i").
+
+                               refgen             = ref_Genome,
+                               ROI_raw            = group_loci_covered[locus_i],
+                               plotrange          = plotrange_in,
+                               poremodel_ref      = poremodel_in
+                                                       )
+                            )
+
+  return(  group_ROIread_dat )
+  }
