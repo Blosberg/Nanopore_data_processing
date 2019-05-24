@@ -99,9 +99,10 @@ sampleROI_dat_by_group <- lapply( names(loci_filtered_for_coverage),
                                     )
 names(sampleROI_dat_by_group) <- names(loci_filtered_for_coverage)
 
-i=12
+i=14
 plot_samplesignal_over_ROI( sampleROI_dat  = sampleROI_dat_by_group$CIMS[[i]],
-                            refgen         = ref_Genome)
+                            refgen         = ref_Genome,
+                            normed =  TRUE )
 
 
 plot_dwelltime_over_ROI( sampleROI_dat = sampleROI_dat,

@@ -188,14 +188,60 @@ get_sampledat_over_ROI <-  function( SampleName         = stop("Sample name must
 
 # ===============================================================
 # --- plot the current lines from all the reads of a sample over a given region:
-plot_samplesignal_over_ROI  <- function( sampleROI_dat  = stop("aligned sampledat must be provided"),
-                                         refgen         = stop("refgen must be provided"),
-                                         mincurrent     = 50,
-                                         maxcurrent     = 150 )
+plot_samplesignal_over_ROI  <- function( sampleROI_dat    = stop("aligned sampledat must be provided"),
+                                         refgen           = stop("refgen must be provided"),
+                                         mincurrent       = 50,
+                                         maxcurrent       = 150,
+                                         normed           = FALSE,
+                                         shading_darkness = 0.3,
+                                         mean_darkness    = 0.5,
+                                         line_darkness    = 0.7 )
 {
   Nxpos  = length( sampleROI_dat$xposn_vals)
   Nreads = dim( sampleROI_dat$read_currents )[1]
   chr    = as.character( unique( seqnames( sampleROI_dat$ROI )))
+
+  # =====================================================================
+  if( normed ){ # plotting deviations from normal (i.e. (signal - mean)/stddev)
+    # Plot a dashed line for the mean (==0). Everything after that should be "lines"
+    plot(  sampleROI_dat$xposn_vals,
+           rep( 0, length( sampleROI_dat$xposn_vals ) ),
+           col=rgb(0, 0, 0, mean_darkness ),
+           type="l",
+           lty = "dashed",
+           lwd=2,
+           xlim = c( min(sampleROI_dat$xposn_vals),
+                     max(sampleROI_dat$xposn_vals) ),
+
+           main= paste(  sampleROI_dat$SampleName, "; normalized \n", chr, ":",
+                         as.character( min(sampleROI_dat$xposn_vals) ), "-",
+                         as.character( max(sampleROI_dat$xposn_vals)  ) ),
+           xlab = "reference sequence",
+           xaxt="n",
+           ylab = "current [pA]",
+           ylim = c( -4, 4 )
+      )
+
+     # plot a transparent polygon around the +/-1 std.dev region of the standard (expected) current values.
+     polygon( c( sampleROI_dat$xposn_vals, rev(sampleROI_dat$xposn_vals) ),
+              c( rep(-1, Nxpos), rep(1,Nxpos)),
+              col  = rgb(0, 0, 0, shading_darkness ),
+              lty  = "blank"
+            )
+  #------  NOW PLOT THE READS THEMSELVES ------
+  # positions in each read without current data are left "NA"
+  for (i in c(1:Nreads) )
+    {
+    lines( sampleROI_dat$xposn_vals,
+           sampleROI_dat$read_normdiff[i, ],
+           col    = rgb(0, 0, 1, line_darkness),
+           type   = "l",
+           lwd    = 1
+          )
+    }
+
+  # =====================================================================
+  }else { # i.e. not the deviation from normal.
 
   poremodel_Icurves = matrix( 0,
                               Nxpos,
@@ -206,10 +252,10 @@ plot_samplesignal_over_ROI  <- function( sampleROI_dat  = stop("aligned sampleda
   poremodel_Icurves[,3] = sampleROI_dat$poremodel_metrics[,1] + sampleROI_dat$poremodel_metrics[,2]
 
 
-  # Then plot a grey region between the +/- 1 std. dev. Everything after that should be "lines"
+  # Plot a dashed line for the mean. Everything after that should be "lines"
   plot(  sampleROI_dat$xposn_vals,
          poremodel_Icurves[ , 2],
-         col=rgb(0, 0, 0, 0.5),
+         col=rgb(0, 0, 0, mean_darkness),
          type="l",
          lty = "dashed",
          lwd=2,
@@ -229,34 +275,31 @@ plot_samplesignal_over_ROI  <- function( sampleROI_dat  = stop("aligned sampleda
                    maxcurrent )
       )
 
-  # add reference sequence, complement, and directionality.
-  add_sequence_tick_marks( refgen = refgen,
-                           Locus  = sampleROI_dat$ROI )
-
   # plot a transparent polygon around the +/-1 std.dev region of the standard (expected) current values.
   polygon( c( sampleROI_dat$xposn_vals, rev(sampleROI_dat$xposn_vals) ),
            c(  (poremodel_Icurves[ , 1]),
                rev(poremodel_Icurves[ , 3]) ),
-           col  = rgb(0, 0, 0, 0.4),
+           col  = rgb(0, 0, 0, shading_darkness),
            lty  = "blank"
           )
 
-  #========  NOW PLOT THE READS THEMSELVES =========
-  # Get the particular position within each read where it overlaps with the ROI
-
-
-    # and plot the mean current vals over this range:
-    # positions in each read without current data are left "NA"
-  # plot the rows of this matrix for each read
+  #------  NOW PLOT THE READS THEMSELVES ------
+  # positions in each read without current data are left "NA"
   for (i in c(1:Nreads) )
     {
     lines( sampleROI_dat$xposn_vals,
            sampleROI_dat$read_currents[i, ],
-           col    = rgb(0,0,1,0.5),
+           col    = rgb(0, 0, 1, line_darkness),
            type   = "l",
            lwd    = 1
           )
     }
+  }# done the "if" as to whether the plot should be normed diff or not.
+
+  # add reference sequence, complement, and directionality.
+  add_sequence_tick_marks( refgen = refgen,
+                           Locus  = sampleROI_dat$ROI )
+
 
 }
 # ===============================================================
