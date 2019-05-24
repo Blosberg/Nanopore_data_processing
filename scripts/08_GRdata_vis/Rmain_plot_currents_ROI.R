@@ -87,6 +87,7 @@ overlaps_by_group = lapply ( names( loci_filtered_for_coverage ), function(group
 names( overlaps_by_group ) <- names( loci_filtered_for_coverage )
 # overlaps_by_group queryHits now references the indices of COVERED loci.
 
+# TODO: add row/col names for the output data structures.
 sampleROI_dat_by_group <- lapply( names(loci_filtered_for_coverage),
                                       function(group) collect_group_sample_dat_over_ROIs(
                                                           SampleName           = argsL$sampleName,
@@ -99,15 +100,18 @@ sampleROI_dat_by_group <- lapply( names(loci_filtered_for_coverage),
                                     )
 names(sampleROI_dat_by_group) <- names(loci_filtered_for_coverage)
 
-i=14
-plot_samplesignal_over_ROI( sampleROI_dat  = sampleROI_dat_by_group$CIMS[[i]],
+i=1
+group="CITS"
+plot_samplesignal_over_ROI( sampleROI_dat  = sampleROI_dat_by_group[[group]][[i]],
                             refgen         = ref_Genome,
                             normed =  TRUE )
 
 
-plot_dwelltime_over_ROI( sampleROI_dat = sampleROI_dat,
+plot_dwelltime_over_ROI( sampleROI_dat = sampleROI_dat_by_group[[group]][[i]],
                          refgen        = ref_Genome,
                          log           = FALSE )
 
 # =======================================
 
+i=0;
+i=i+1; pca_normdiff <- get_pca_normdiff (  sampleROI_dat_in =  sampleROI_dat_by_group[[group]][[i]]  )

@@ -146,9 +146,13 @@ get_sampledat_over_ROI <-  function( SampleName         = stop("Sample name must
 
   # populate a matrix of current values at each position.
   read_currents <- matrix( NA, Nreads, Nxpos )
+  colnames( read_currents ) <- as.character( xposn_vals )
+  row.names( read_currents ) <- as.character( paste0("read_", names( overlapping_reads ) ) )
 
   # and grab dwell times while we're at it.
   dwell_times <- matrix( NA, Nreads, Nxpos )
+  colnames( dwell_times ) <- as.character( xposn_vals )
+  row.names( dwell_times ) <- as.character( paste0("read_", names( overlapping_reads ) ) )
 
   for (i in c(1:Nreads) )
     {
@@ -168,6 +172,8 @@ get_sampledat_over_ROI <-  function( SampleName         = stop("Sample name must
   read_diff_from_model <- sweep( read_currents,
                                2,
                                as.array( poremodel_metrics[,1]) )
+  colnames( read_diff_from_model )  <- colnames( read_currents )
+  row.names( read_diff_from_model ) <- row.names( read_currents )
 
   # and then divide it by the std. dev.
   read_normdiff  <- sweep( read_diff_from_model,
@@ -327,17 +333,13 @@ plot_dwelltime_over_ROI <-  function( sampleROI_dat  = stop("aligned sampledat m
          xlim = c( start(sampleROI_dat$ROI),
                    end(sampleROI_dat$ROI) ),
 
-         main= paste(  SampleName, "\n",
-                       chr,
-                       ":",
-                       as.character( start(ROI) ),
-                       "-",
-                       as.character( end(ROI)  ) ),
+         main= paste(  sampleROI_dat$SampleName, "\n", chr, ":",
+                       as.character( start(sampleROI_dat$ROI) ), "-",
+                       as.character( end(sampleROI_dat$ROI)  ) ),
          xlab = "reference sequence",
          xaxt = "n",
          ylab = "dwell time [s]",
-         ylim = c( min_T,
-                   max_T)
+         ylim = c( min_T, max_T)
       )
 
   # add reference sequence, complement, and directionality.
