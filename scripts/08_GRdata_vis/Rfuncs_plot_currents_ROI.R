@@ -58,6 +58,8 @@ filter_loci_for_coverage <- function( loci   = stop("Loci list must be provided"
                                       reads  = stop("readlist must be provided"),
                                       mincov = 10)
 {
+  if( ! identical( names(reads), names( loci ) ) )
+   { stop ("ERROR: inconsistent names between reads and loci") }
 overlaps_by_group = lapply ( names( loci ), function(x)
                                findOverlaps(  loci[[x]],
                                reads[[x]] )
@@ -207,6 +209,8 @@ plot_samplesignal_over_ROI  <- function( sampleROI_dat    = stop("aligned sample
   Nreads = dim( sampleROI_dat$read_currents )[1]
   chr    = as.character( unique( seqnames( sampleROI_dat$ROI )))
 
+  normdev_range = 4
+
   # =====================================================================
   if( normed ){ # plotting deviations from normal (i.e. (signal - mean)/stddev)
     # Plot a dashed line for the mean (==0). Everything after that should be "lines"
@@ -225,7 +229,7 @@ plot_samplesignal_over_ROI  <- function( sampleROI_dat    = stop("aligned sample
            xlab = "reference sequence",
            xaxt="n",
            ylab = "current [pA]",
-           ylim = c( -4, 4 )
+           ylim = c( (-1*normdev_range), normdev_range )
       )
 
      # plot a transparent polygon around the +/-1 std.dev region of the standard (expected) current values.
@@ -244,7 +248,12 @@ plot_samplesignal_over_ROI  <- function( sampleROI_dat    = stop("aligned sample
            type   = "l",
            lwd    = 1
           )
-    }
+  }
+
+  # add reference sequence, complement, and directionality.
+  add_sequence_tick_marks( refgen   = refgen,
+                           Locus    = sampleROI_dat$ROI,
+                           min_ypos = (-1*normdev_range)  )
 
   # =====================================================================
   }else { # i.e. not the deviation from normal.
@@ -300,11 +309,13 @@ plot_samplesignal_over_ROI  <- function( sampleROI_dat    = stop("aligned sample
            lwd    = 1
           )
     }
+  # add reference sequence, complement, and directionality.
+  add_sequence_tick_marks( refgen   = refgen,
+                           Locus    = sampleROI_dat$ROI,
+                           min_ypos = mincurrent )
+
   }# done the "if" as to whether the plot should be normed diff or not.
 
-  # add reference sequence, complement, and directionality.
-  add_sequence_tick_marks( refgen = refgen,
-                           Locus  = sampleROI_dat$ROI )
 
 
 }
@@ -316,6 +327,7 @@ plot_dwelltime_over_ROI <-  function( sampleROI_dat  = stop("aligned sampledat m
 {
   Nxpos  = length( sampleROI_dat$xposn_vals)
   Nreads = dim( sampleROI_dat$dwell_times )[1]
+  chr    = as.character( unique( seqnames( sampleROI_dat$ROI )))
 
   dwell_dat = sampleROI_dat$dwell_times
   if( log )
@@ -343,8 +355,9 @@ plot_dwelltime_over_ROI <-  function( sampleROI_dat  = stop("aligned sampledat m
       )
 
   # add reference sequence, complement, and directionality.
-  add_sequence_tick_marks( refgen = refgen,
-                           Locus  = sampleROI_dat$ROI )
+  add_sequence_tick_marks( refgen   = refgen,
+                           Locus    = sampleROI_dat$ROI,
+                           min_ypos = min_T  )
 
     # and plot the mean current vals over this range:
     # positions in each read without current data are left "NA"
@@ -366,8 +379,8 @@ add_sequence_tick_marks   <- function(  refgen        = stop("Reference genome m
                                         Locus         = stop("Locus must be defined"),
                                         Col_sense     = rgb( 0, 0, 0, 1  ),
                                         Col_antisense = rgb( 0, 0, 0, 0.5),
-                                        mincurrent    = 50,
-                                        maxcurrent    = 150,
+                                        min_ypos      = 50,
+                                        max_ypos      = 150,
                                         strandtype    = "RNA"
                                         )
 {
@@ -408,7 +421,7 @@ add_sequence_tick_marks   <- function(  refgen        = stop("Reference genome m
   }
 
   # Finally, draw an arrow indicating direction of transcription.
-  arrows( x0, mincurrent, x1, mincurrent,
+  arrows( x0, min_ypos, x1, min_ypos,
           length = 0.25, angle = 20,
           code = 2, col = par("fg"), lty = par("lty"),
           lwd = 3 )
