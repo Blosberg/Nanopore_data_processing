@@ -74,11 +74,13 @@ rule np_event_align:
         NOTCALLED_pac         = os.path.join( DIR_REFGENOME, config['ref']['Genome_version']+ ".fa.pac")
     output:
         Evaligned         = os.path.join( config["PATHOUT"], "{wcEvalign_sampleDir}", SUBDIR_EVENTALIGN, "tsv_chunks", 'Ealign_{wcEvalign_sampleName}_{wcEvalign_chunk}.tsv' )
+    params:
+        options  = config["execution"]["Ealign_options"]
     log:
         logfile  = os.path.join( config["PATHOUT"], "{wcEvalign_sampleDir}", SUBDIR_EVENTALIGN, "tsv_chunks", 'Ealign_{wcEvalign_sampleName}_{wcEvalign_chunk}.log')
     message: """---- Align events from sample {wildcards.wcEvalign_sampleName}, chunk {wildcards.wcEvalign_chunk} to the genome ----"""
     shell:
-        " {nanopolish} eventalign --reads {input.fastq_file} --bam {input.sortedbam} --genome {input.refgenome_fasta} --scale-events  > {output}  2> {log.logfile} "
+        " {nanopolish} eventalign {params.options} --reads {input.fastq_file} --bam {input.sortedbam} --genome {input.refgenome_fasta} --scale-events  > {output}  2> {log.logfile} "
 
 # -----------------------------------------------------
 

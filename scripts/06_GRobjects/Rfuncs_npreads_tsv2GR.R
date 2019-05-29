@@ -216,22 +216,6 @@ write.table( model_dat,
 get_event_dat  <- function( Event_file_list = stop("Datin must be provided"),
                             logFile         = stop("logFile must be provided"))
   {
-    colnames <-
-      c(
-        "contig",
-        "position",
-        "reference_kmer",
-        "read_index",
-        "strand",
-        "event_index",
-        "event_level_mean",
-        "event_stdv",
-        "event_length",
-        "model_kmer",
-        "model_mean",
-        "model_stdv",
-        "standardized_level"
-      )
     dat_all = data.frame()
     readcount_offset = 0
 
@@ -250,19 +234,31 @@ get_event_dat  <- function( Event_file_list = stop("Datin must be provided"),
         header = TRUE
       ) #--- read in the current "chunk" of np data
 
-      dat_temp$read_index <- dat_temp$read_index + readcount_offset  #--- offset the read_index values to ensure uniqueness
+      # if reads are unnamed, then there will be a column called "read_index"
+      if ( "read_index" %in% names( dat_temp )){
+            # and if it exists, the entries should be offset to maintain uniqueness.
+            dat_temp$read_index <- dat_temp$read_index + readcount_offset  #--- offset the read_index values to ensure uniqueness
+            dat_all           =   rbind( dat_all, dat_temp )               #--- compile the chunks together
+            readcount_offset  =  (max(dat_all$read_index)  + 1)            #--- re-calculate the necessary offset
+      } else{
+        # else, just bind the rows and don't worry about read_indices, since the readnames will all be unique anyway.
+        dat_all           =   rbind( dat_all, dat_temp )               #--- compile the chunks together
+      }
 
-      dat_all           =   rbind( dat_all, dat_temp )               #--- compile the chunks together
-      readcount_offset  =  (max(dat_all$read_index)  + 1)            #--- re-calculate the necessary offset
 
     }
 
-    Nreads = length(unique(dat_all$read_index))
 
-    # cast the read_indices as factors (to make unique values sequentially increasing), and then
-    # cast them back into integers (since some read_indices have been removed for quality/alignment/etc. reasons
-    dat_all$read_index <- as.numeric(as.factor(dat_all$read_index))
+    if ( "read_index" %in% names( dat_all ))
+      {
+      Nreads = length( unique( dat_all$read_index ) )
 
+      # cast the read_indices as factors (to make unique values sequentially increasing), and then
+      # cast them back into integers (since some read_indices have been removed for quality/alignment/etc. reasons
+      dat_all$read_index <- as.numeric(as.factor(dat_all$read_index))
+      } else{
+      dat_all$read_index <- as.numeric(as.factor(dat_all$read_name))
+      }
 
     return(dat_all)
   }
