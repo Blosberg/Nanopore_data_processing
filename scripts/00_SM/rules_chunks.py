@@ -111,6 +111,23 @@ rule np_index:
 #
 # rule quickcheck: (TODO)
 # ======================================================
+# merge_bam has become obsolete
+#
+# rule merge_bam_files:
+#     # combine the ~4000 reads from each minimap2
+#     # alignment into a single bam file
+#     input:
+#         bami      = lambda wc: get_chunkfiles( wc.wcmerge_samplename, os.path.join( config["PATHOUT"], wc.wcmerge_sampleDir, SUBDIR_SORTED_MINIMAPPED, "bam_chunks"), "" , ".sorted.bam", False )
+#     output:
+#         sortedbam = os.path.join( config["PATHOUT"], "{wcmerge_sampleDir}", SUBDIR_SORTED_MINIMAPPED, "{wcmerge_samplename}.sorted.bam")
+#     log:
+#         logfile   = os.path.join( config["PATHOUT"], "{wcmerge_sampleDir}", SUBDIR_SORTED_MINIMAPPED, "{wcmerge_samplename}.mergingbam.log")
+#     message:
+#         fmt("Combining bam files from post-mapping fastq data.")
+#     shell:
+#         '{SAMTOOLS} merge {output} {input} '
+#
+# -----------------------------------------------------
 
 rule index_sortedbam:
     # Index the sorted bam file with samtools
@@ -123,22 +140,6 @@ rule index_sortedbam:
     message: """---- index the bam files for {wildcards.wcindexbam_sampleName} chunk {wildcards.wcindexbam_chunk} ----"""
     shell:
         " {SAMTOOLS} index  {input.sortedbam}  2> {log.logfile} "
-
-# -----------------------------------------------------
-
-rule merge_bam_files:
-    # combine the ~4000 reads from each minimap2
-    # alignment into a single bam file
-    input:
-        bami      = lambda wc: get_chunkfiles( wc.wcmerge_samplename, os.path.join( config["PATHOUT"], wc.wcmerge_sampleDir, SUBDIR_SORTED_MINIMAPPED, "bam_chunks"), "" , ".sorted.bam", False )
-    output:
-        sortedbam = os.path.join( config["PATHOUT"], "{wcmerge_sampleDir}", SUBDIR_SORTED_MINIMAPPED, "{wcmerge_samplename}.sorted.bam")
-    log:
-        logfile   = os.path.join( config["PATHOUT"], "{wcmerge_sampleDir}", SUBDIR_SORTED_MINIMAPPED, "{wcmerge_samplename}.mergingbam.log")
-    message:
-        fmt("Combining bam files from post-mapping fastq data.")
-    shell:
-        '{SAMTOOLS} merge {output} {input} '
 
 #------------------------------------------------------
 rule convert_sort_minimap:
