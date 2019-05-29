@@ -171,7 +171,7 @@ rule filter_nonaligned_minimap:
     message:
         fmt("Filtering unaligned reads from alignment data")
     shell:
-        " samtools view -F 260 {input}  >  {output}   2> {log}"
+        " samtools view -H {input} > {output} 2> {log}  &&  samtools view -F 260 {input} >> {output} 2> {log} "
 
 #------------------------------------------------------
 rule align_minimap:
