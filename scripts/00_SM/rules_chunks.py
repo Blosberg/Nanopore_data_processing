@@ -8,7 +8,7 @@
 rule combine_GRL_read_chunks:
     # Combine the chunks of GRL read objects into a single structure:
     input:
-        GRL_chunk_files     = lambda wc: get_chunkfiles( wc.wc_sampleName, os.path.join( config["PATHOUT"], wc.wc_sampleDir, SUBDIR_GR, "GRL_chunks" ), "readchunk_", ".rds", False ),
+        GRL_chunk_files     = lambda wc: get_chunkfiles( wc, config["PATHOUT"], "readchunk_", ".rds", False ),
 #        poremodel_chunks    = lambda wc: get_chunkfiles( wc.wc_sampleName, os.path.join( config["PATHOUT"], wc.wc_sampleDir, SUBDIR_GR, "GRL_chunks" ), "poremodel_", ".tsv", False )
     output:
         GRL_reads_combined  = os.path.join( config["PATHOUT"], "{wc_sampleDir}", SUBDIR_GR, "{wc_sampleName}_reads_GRL.rds")
@@ -29,7 +29,7 @@ rule combine_GRL_read_chunks:
                          "--logFile={log}",
 #                         "--poremodel_chunks={input.poremodel_chunks}",
                          "--GRL_chunk_files={input.GRL_chunk_files}"] )
-
+        # TODO:^ arrange for a single, unique poremodel output file
 # -----------------------------------------------------
 
 rule make_GRL_read_chunk_obj:
@@ -111,6 +111,7 @@ rule np_index:
 #
 # rule quickcheck: (TODO)
 # ======================================================
+# TODO: restore rule_merge_bamfiles (deleted in a previous commit)
 
 rule index_sortedbam:
     # Index the sorted bam file with samtools
