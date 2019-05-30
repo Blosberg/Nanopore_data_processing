@@ -78,10 +78,10 @@ for sampleLoopi_targets in config["samplelist"]:
                           [ os.path.join( config["PATHOUT"], config["samplelist"][sampleLoopi_targets]["sampleDirNames"][0], SUBDIR_SORTED_MINIMAPPED, sampleLoopi_targets + ".sorted.bam") ]
                          )
    elif ( config["execution"]["target_out"] == "aligned_chunks"):
-      wcstruct = Rule_wc_struct( sampleLoopi_targets, config["samplelist"][sampleLoopi_targets]["sampledirs"] ) 
+      wcstruct = Rule_wc_struct( sampleLoopi_targets, config["samplelist"][sampleLoopi_targets]["sampleDirs"] )
 
       OUTPUT_FILES.extend(
-                         get_chunkfiles( wcstruct, config["PATHOUT"],  "", ".sam", 0 )
+                         get_chunkfiles( wcstruct, config["PATHOUT"], SUBDIR_ALIGNED_MINIMAP, "", ".sam", 0 )
                          )
    else:
       print("Unrecognized target output file format: ", config["execution"]["target_out"], " ... Terminating.")
@@ -96,10 +96,9 @@ for sampleLoopi_targets in config["samplelist"]:
 # print ( len( OUTPUT_FILES) )
 # print(" OUTPUT_FILES=")
 # for x in OUTPUT_FILES:
-#   print(x)
-# print("\n finished outputting output files \n\n ")
-#
-#
+#    print(x)
+# print("---------------------------------")
+# print("Finished outputting output files \n\n ")
 # ========================================================================
 #
 #   BEGIN RULES

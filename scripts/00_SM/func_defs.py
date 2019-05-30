@@ -55,15 +55,16 @@ def getPathCase( mainpath, subd1, subd2, filename, input_data_type ):
     return( result )
 
 # --------------------------------------------------------------
-def get_chunkfiles( wcstruct, DIR, prefix_string, suffix_string, quoted):
+def get_chunkfiles( wcstruct, DIR, subDir, prefix_string, suffix_string, quoted):
 
     FILES_list = []
 
-    for sampleDirName_i in config["samplelist"][wcstruct.wc_sampleName]["sampleDirNames"]:
+    for sampleDirName_i in range( len( config["samplelist"][wcstruct.wc_sampleName]["sampleDirNames"])):
+        sampleDirName = config["samplelist"][wcstruct.wc_sampleName]["sampleDirNames"][sampleDirName_i]
 
-        Sample_indices_str     = config["samplelist"][ wcstruct.wc_sampleName ]["sampleDirs"][sampleDirName_i]["chunkdirlist"]
+        Sample_indices_str     = config["samplelist"][ wcstruct.wc_sampleName ]["sampleDirs"][sampleDirName]["chunkdirlist"]
 
-        FILES_list.extend( [ os.path.join( DIR, prefix_string + wcstruct.wc_sampleName + "_" + chunk + suffix_string ) for chunk in Sample_indices_str ] )
+        FILES_list.extend( [ os.path.join( DIR, sampleDirName, subDir, prefix_string + wcstruct.wc_sampleName + "_" + chunk + suffix_string ) for chunk in Sample_indices_str ] )
     # now we've collected the list of files across each subdirectory and all the corresponding "chunks" in each of them.
 
     if ( quoted ):
@@ -105,6 +106,7 @@ def prep_configfile( args ):
     if len(set(config["samplelist"])) != len(config["samplelist"]):
         raise Exception("sampleIDs are not unique.")
 
+    #TODO: trim possible "/" at the end of the sampleDir names
     for sample in config["samplelist"]:
        config["samplelist"][sample]["sampleDirs"] = {}
 
