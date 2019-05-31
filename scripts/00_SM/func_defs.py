@@ -106,14 +106,27 @@ def prep_configfile( args ):
     if len(set(config["samplelist"])) != len(config["samplelist"]):
         raise Exception("sampleIDs are not unique.")
 
-    #TODO: trim possible "/" at the end of the sampleDir names
     for sample in config["samplelist"]:
        config["samplelist"][sample]["sampleDirs"] = {}
 
-       for sampleDirName_i in range(0, len( config["samplelist"][sample]["sampleDirNames"])):
-       #  --------- Populate the "chunk" list of reads for each sample : ---------
-          sampleDirName = config["samplelist"][sample]["sampleDirNames"][sampleDirName_i]
+       if not type( config["samplelist"][sample][ "sampleDirNames"]) is list:
+           bail("sampleDirNames in "+sample+" Not written as a list. Check your config file")
 
+       # ---------------------------------------
+       # Go through each sampleDirName and setup
+       # corresponding config sections
+       for sampleDirName_i in range(0, len( config["samplelist"][sample]["sampleDirNames"])):
+
+          sampleDirName = config["samplelist"][sample]["sampleDirNames"][sampleDirName_i]
+          # Trim possible "/" at the end of the sampleDir names
+          # to avoid string-matching confusion in SM.
+          if( sampleDirName.endswith("/") ):
+              print("Warning: sampleDirNames should omit trailing \"/\"")
+              sampleDirName = sampleDirName[0:(len(sampleDirName)-1)]
+              config["samplelist"][sample][ "sampleDirNames"][sampleDirName_i] = sampleDirName
+
+          # check input path for that sample
+          # to see how many "chunks" there are:
           DATPATH = os.path.join( config["PATHIN"], sampleDirName, config["samplelist"][sample].get( "fast5dir", config["fast5dir_default"] ) )
 
           # i.e. the list of subdirectories within this path:
@@ -128,7 +141,8 @@ def prep_configfile( args ):
           # and create the chunkdir list for each subdir
           config["samplelist"][sample]["sampleDirs"][ sampleDirName]["chunkdirlist"] = list( map(str, intlist))
 
-          #  --------- Now get the hashID, fastq_prefix (if any) : ------------
+          # -------------------------
+          # Now get the hashID and fastq_prefix (if any)
           # locate the fastq files:
           fqdir  = os.path.join( config["PATHIN"], sampleDirName, config["samplelist"][sample].get( "fastqdir", config["fastqdir_default"] ) )
 

@@ -1,18 +1,16 @@
 {
-  "PATHIN"  : "/fast/AG_Akalin/bosberg/nanopore/data/",
-  "PATHOUT" : "/fast/AG_Akalin/bosberg/nanopore/pipeline_output/",
+   "PATHIN"  : "/fast/AG_Akalin/bosberg/nanopore/data/",
+   "PATHOUT" : "/fast/AG_Akalin/bosberg/nanopore/pipeline_output/",
 
-  "ReadType":     "ONT_Direct_RNA",
+   "ReadType":     "ONT_Direct_RNA",
 
-  "samplelist": {
-                "TESTSET0": { "sampledir": "testset/"  },
-                "HEK_untreated":   { "sampledir": "20180417_1233_HEK293_polyA_RNA/"},
-                "rps16_unmod":     { "sampledir": "20180913_1457_invitro_rps16_unmod/"},
-                "rps16_tenpc_m1A": { "sampledir": "20180920_1017_invitro_rps16_tenpcm1A/"},
-                "HEK_4SU_IAA_pt1": { "sampledir": "20190130_1420_293_4Su_IAA/"},
-                "HEK_4SU_IAA_pt2": { "sampledir": "20190130_1631_293_4Su_IAA_run2/"},
-                "HEK_4SU_pt1":{      "sampledir": "20190320_1414_4SU/"},
-                "HEK_4SU_pt2":{      "sampledir": "20190320_1728_4SU_run2/"}
+   "samplelist": {
+                "TESTSET0":        {"sampleDirNames": ["testset_0", "testset_1"]},
+                "HEK_untreated":   {"sampleDirNames": ["20180417_1233_HEK293_polyA_RNA"] },
+                "rps16_unmod":     { "sampleDirNames": ["20180913_1457_invitro_rps16_unmod"] },
+                "rps16_tenpc_m1A": { "sampleDirNames": ["20180920_1017_invitro_rps16_tenpcm1A"] },
+                "HEK_4SU_IAA":     {"sampleDirNames": ["20190130_1420_293_4Su_IAA","20190130_1631_293_4Su_IAA_run2"]},
+                "HEK_4SU":         {"sampleDirNames": [ "20190320_1414_4SU", "20190320_1728_4SU_run2" ] }
                 },
 
    "ref":{
@@ -30,7 +28,8 @@
    "execution":{
         "target_out": "ROI_olap",
         "jobs": 200,
-        "clustersub": true
+        "clustersub": false,
+        "Ealign_options": " --samples --print-read-names "
    }
 
 }
