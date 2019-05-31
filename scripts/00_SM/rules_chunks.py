@@ -8,14 +8,15 @@
 rule combine_GRL_read_chunks:
     # Combine the chunks of GRL read objects into a single structure:
     input:
-        GRL_chunk_files     = lambda wc: get_chunkfiles( wc.wc_sampleName, os.path.join( config["PATHOUT"], wc.wc_sampleDir, SUBDIR_GR, "GRL_chunks" ), "readchunk_", ".rds", False ),
+        GRL_chunk_files     = lambda wc: get_chunkfiles( wc, config["PATHOUT"], os.path.join( SUBDIR_GR, "GRL_chunks"), "readchunk_", ".rds", False ),
 #        poremodel_chunks    = lambda wc: get_chunkfiles( wc.wc_sampleName, os.path.join( config["PATHOUT"], wc.wc_sampleDir, SUBDIR_GR, "GRL_chunks" ), "poremodel_", ".tsv", False )
     output:
         GRL_reads_combined  = os.path.join( config["PATHOUT"], "{wc_sampleDir}", SUBDIR_GR, "{wc_sampleName}_reads_GRL.rds")
 #,        TODO: produce a single, unified poremodel tsv file.
 #        poremodel           = os.path.join( config["PATHOUT"], "{wc_sampleDir}", SUBDIR_GR, "{wc_sampleName}_poremodel.tsv")
     params:
-        sampleName          = "{wc_sampleName}"
+        sampleName          = "{wc_sampleName}",
+        GRL_chunk_files_q   = lambda wc: get_chunkfiles( wc, config["PATHOUT"], os.path.join( SUBDIR_GR, "GRL_chunks"), "readchunk_", ".rds", True ),
     log:
         os.path.join( config["PATHOUT"], "{wc_sampleDir}", SUBDIR_GR, "{wc_sampleName}_reads_GRL_conversion.log")
     message:
@@ -28,8 +29,8 @@ rule combine_GRL_read_chunks:
                          "--sampleName={params.sampleName}",
                          "--logFile={log}",
 #                         "--poremodel_chunks={input.poremodel_chunks}",
-                         "--GRL_chunk_files={input.GRL_chunk_files}"] )
-
+                         "--GRL_chunk_files={params.GRL_chunk_files_q}"] )
+        # TODO:^ arrange for a single, unique poremodel output file
 # -----------------------------------------------------
 
 rule make_GRL_read_chunk_obj:
@@ -111,6 +112,7 @@ rule np_index:
 #
 # rule quickcheck: (TODO)
 # ======================================================
+# TODO: restore rule_merge_bamfiles (deleted in a previous commit)
 
 rule index_sortedbam:
     # Index the sorted bam file with samtools
@@ -155,8 +157,8 @@ rule filter_nonaligned_minimap:
     message:
         fmt("Filtering out unaligned reads and secondary alignments")
     shell:
-        " samtools view -h -F 260 {input} > {output} 2> {log} "
-# Why 260?
+        " samtools view -h -F 2308 {input} > {output} 2> {log} "
+# Why 2308? We want single unique mapping
 # SAM flags explained here: https://www.samformat.info/sam-format-flag
 #------------------------------------------------------
 rule align_minimap:
@@ -180,7 +182,7 @@ rule align_minimap:
 rule symlink_fq:
     # create symlink to data:
     input:
-        chunk_src     = lambda wc: os.path.join( config["PATHIN"], wc.wcfqlink_sampleDir, "fastq", "pass", config["samplelist"][wc.wcfqlink_samplename]["fastq_prefix"] + wc.wcfqlink_chunk + config["fastq_suffix"] )
+        chunk_src     = lambda wc: os.path.join( config["PATHIN"], wc.wcfqlink_sampleDir, "fastq", "pass", config["samplelist"][wc.wcfqlink_samplename]["sampleDirs"][wc.wcfqlink_sampleDir]["fastq_prefix"] + wc.wcfqlink_chunk + config["fastq_suffix"] )
     output:
         chunk_linkloc = os.path.join( config["PATHOUT"], "{wcfqlink_sampleDir}", SUBDIR_SYMLINKS, "{wcfqlink_samplename}_{wcfqlink_chunk}" + config["fastq_suffix"] )
     params:
@@ -189,7 +191,6 @@ rule symlink_fq:
         fmt("Creating symbolic link to chunk data")
     shell:
         " ln {params} {input} {output}"
-
 
 #------------------------------------------------------
 # rule basecall:

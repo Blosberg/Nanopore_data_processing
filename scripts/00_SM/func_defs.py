@@ -1,6 +1,13 @@
 import os, sys, json, csv, yaml
 import re # regular expressions.
 from snakemake.utils import update_config
+
+# --------------------------------------------------------------
+class Rule_wc_struct(object):
+    def __init__(self, SampleName_in, SampleDirList_in):
+        self.wc_sampleName = SampleName_in
+        self.wc_sampleDirs = SampleDirList_in
+
 # --------------------------------------------------------------
 
 def bail( msg ):
@@ -48,9 +55,18 @@ def getPathCase( mainpath, subd1, subd2, filename, input_data_type ):
     return( result )
 
 # --------------------------------------------------------------
-def get_chunkfiles( samplename, DIR, prefix_string, suffix_string, quoted):
-    Sample_indices_str     = config["samplelist"][samplename]["chunkdirlist"]
-    FILES_list = [ os.path.join( DIR, prefix_string + samplename + "_" + chunk + suffix_string ) for chunk in Sample_indices_str ]
+def get_chunkfiles( wcstruct, DIR, subDir, prefix_string, suffix_string, quoted):
+
+    FILES_list = []
+
+    for sampleDirName_i in range( len( config["samplelist"][wcstruct.wc_sampleName]["sampleDirNames"])):
+        sampleDirName = config["samplelist"][wcstruct.wc_sampleName]["sampleDirNames"][sampleDirName_i]
+
+        Sample_indices_str     = config["samplelist"][ wcstruct.wc_sampleName ]["sampleDirs"][sampleDirName]["chunkdirlist"]
+
+        FILES_list.extend( [ os.path.join( DIR, sampleDirName, subDir, prefix_string + wcstruct.wc_sampleName + "_" + chunk + suffix_string ) for chunk in Sample_indices_str ] )
+    # now we've collected the list of files across each subdirectory and all the corresponding "chunks" in each of them.
+
     if ( quoted ):
        return( ",".join( FILES_list )  )
     else:
@@ -91,28 +107,54 @@ def prep_configfile( args ):
         raise Exception("sampleIDs are not unique.")
 
     for sample in config["samplelist"]:
+       config["samplelist"][sample]["sampleDirs"] = {}
 
-       #  --------- Populate the "chunk" list of reads for each sample : ---------
-       DATPATH = os.path.join( config["PATHIN"], config["samplelist"][sample]["sampledir"], config["samplelist"][sample].get( "fast5dir", config["fast5dir_default"] ) )
+       if not type( config["samplelist"][sample][ "sampleDirNames"]) is list:
+           bail("sampleDirNames in "+sample+" Not written as a list. Check your config file")
 
-       # i.e. the list of subdirectories within this path:
-       unsorted_stringlist =  [entry.name for entry in os.scandir( DATPATH ) if entry.is_dir()]
-       intlist = list( map(int, unsorted_stringlist) )
-       intlist.sort()
+       # ---------------------------------------
+       # Go through each sampleDirName and setup
+       # corresponding config sections
+       for sampleDirName_i in range(0, len( config["samplelist"][sample]["sampleDirNames"])):
 
-       # we now have a list of the "chunks" of reads:
-       config["samplelist"][sample]["chunkdirlist"] = list( map(str, intlist))
+          sampleDirName = config["samplelist"][sample]["sampleDirNames"][sampleDirName_i]
+          # Trim possible "/" at the end of the sampleDir names
+          # to avoid string-matching confusion in SM.
+          if( sampleDirName.endswith("/") ):
+              print("Warning: sampleDirNames should omit trailing \"/\"")
+              sampleDirName = sampleDirName[0:(len(sampleDirName)-1)]
+              config["samplelist"][sample][ "sampleDirNames"][sampleDirName_i] = sampleDirName
 
-       #  --------- Now get the hashID, fastq_prefix (if any) : ------------
-       # locate the files:
-       fqdir  = os.path.join( config["PATHIN"], config["samplelist"][sample]["sampledir"], config["samplelist"][sample].get( "fastqdir", config["fastqdir_default"] ) )
-       if ( os.path.isdir( fqdir )  ):
-          # determine the common prefix that preceeds _{chunk}.fastq in each of these files:
-          fastqprefix = list( set (  [ re.sub("_\d+" + config["fastq_suffix"], '_', entry.name ) for entry in  os.scandir( fqdir ) if entry.is_file() ] ) )
-          if ( len( fastqprefix ) != 1 ):
-              bail("Number of fastq prefixes for a given sample is different from 1 ")
-          else:
-              config["samplelist"][sample]["fastq_prefix"] = fastqprefix[0]
+          # check input path for that sample
+          # to see how many "chunks" there are:
+          DATPATH = os.path.join( config["PATHIN"], sampleDirName, config["samplelist"][sample].get( "fast5dir", config["fast5dir_default"] ) )
+
+          # i.e. the list of subdirectories within this path:
+          unsorted_stringlist =  [entry.name for entry in os.scandir( DATPATH ) if entry.is_dir()]
+          intlist = list( map(int, unsorted_stringlist) )
+          intlist.sort()
+          # we now have a list of the "chunks" of reads:
+
+          # create the necessary substructure in config:
+          config["samplelist"][sample]["sampleDirs"][ sampleDirName] = {}
+
+          # and create the chunkdir list for each subdir
+          config["samplelist"][sample]["sampleDirs"][ sampleDirName]["chunkdirlist"] = list( map(str, intlist))
+
+          # -------------------------
+          # Now get the hashID and fastq_prefix (if any)
+          # locate the fastq files:
+          fqdir  = os.path.join( config["PATHIN"], sampleDirName, config["samplelist"][sample].get( "fastqdir", config["fastqdir_default"] ) )
+
+          # check if the fastq directory exists
+          if ( os.path.isdir( fqdir )  ):
+             # determine the common prefix that preceeds _{chunk}.fastq in each of these files:
+             fastqprefix = list( set ( [ re.sub("_\d+" + config["fastq_suffix"], '_', entry.name ) for entry in  os.scandir( fqdir ) if entry.is_file() ] ) )
+             if ( len( fastqprefix ) == 1 ):
+                 config["samplelist"][sample][ "sampleDirs" ][sampleDirName]["fastq_prefix"] = fastqprefix[0]
+             else:
+                 bail("Number of fastq prefixes for sample" + sample +" in directory " + sampleDirName + " != 1 ")
+    # FINISHED cycling through samples and prepping configs for each
 
     # If we are currently runing a SGE cluster submission, then
     # prepare a cluster-config file (specifying mem/time/etc. for each job)
@@ -121,11 +163,9 @@ def prep_configfile( args ):
        del config["execution"]["cluster"]["rules"]
     else:
        del config["execution"]["cluster"]
-
-    # In either case, SMconfig file doesn't need these.
+    # In either case, SMconfig file doesn't need cluster configuration details.
 
     #  --------- Now dump the config dictionary to the output path : ------------
-
     with open(config_npSM, 'w') as outfile:
         dumps = json.dumps( config,
                             indent=4, sort_keys=False,
@@ -134,7 +174,6 @@ def prep_configfile( args ):
         outfile.write(dumps)
 
     return config
-
 # --------------------------------------------------------------
 
 def generate_cluster_configuration( config ):
@@ -142,7 +181,7 @@ def generate_cluster_configuration( config ):
 
     cluster_conf = {}
     for rule in rules:
-
+        # Gather necessary resource requirements for each rule in the pipeline
         cluster_conf[rule] ={
                 "nthreads": rules[rule].get( "threads", rules["__default__"]["threads"] ),
                 "MEM":      rules[rule].get( "memory",  rules["__default__"]["memory"]  ),
@@ -152,6 +191,7 @@ def generate_cluster_configuration( config ):
 
     cluster_config_file = config["execution"]["cluster"]["cluster_config_file"]
 
+    # and write them to an outfile:
     with open(cluster_config_file, 'w') as outfile:
         dumps = json.dumps(cluster_conf,
                            indent=4, sort_keys=True,

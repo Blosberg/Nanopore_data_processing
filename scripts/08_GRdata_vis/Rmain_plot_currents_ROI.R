@@ -39,14 +39,16 @@ suppressPackageStartupMessages( library(Biostrings) )
 
 # ======= DEBUGGING: DELETE THIS: ========
 argsL=list(
-"pathin_reads"   = "/scratch/AG_Akalin/bosberg/nanopore/pipeline_output/20180417_1233_HEK293_polyA_RNA/07_GRprocessing/HEK_untreated_read_ROIolap_m6A_put.rds",  # path to Granges List structure with reads aligned to reference genome
-"pathin_RsoI"    = "/fast/AG_Akalin/bosberg/nanopore/ref/Regions_of_interest/m6A_putlocs_Linder.rds",                 # path to Granges list of regions of interest in the current study
+# "pathin_reads"   = "/scratch/AG_Akalin/bosberg/nanopore/pipeline_output/20180417_1233_HEK293_polyA_RNA/07_GRprocessing/HEK_untreated_read_ROIolap_m6A_put.rds",  # path to Granges List structure with reads aligned to reference genome
+# "pathin_RsoI"    = "/fast/AG_Akalin/bosberg/nanopore/ref/Regions_of_interest/m6A_putlocs_Linder.rds",                 # path to Granges list of regions of interest in the current study
+"pathin_reads"   = "/scratch/AG_Akalin/bosberg/nanopore/pipeline_output/20180417_1233_HEK293_polyA_RNA/07_GRprocessing/HEK_untreated_read_ROIolap_MihaM_2pO.rds",  # path to Granges List structure with reads aligned to reference genome
+"pathin_RsoI"    = "/fast/AG_Akalin/bosberg/nanopore/ref/Regions_of_interest/MihaM_2po_Ill.rds",
 "pathin_refGen"  = "/fast/AG_Akalin/refGenomes/hg19_canon/hg19_canon.fa",                         # path to Granges list of regions of interest in the current study
 "pathout_plot"   = "/scratch/AG_Akalin/bosberg/nanopore/pipeline_output/20180417_1233_HEK293_polyA_RNA/08_testing/testplot",                             # where should we send the plots
 "logFile"        = "/scratch/AG_Akalin/bosberg/nanopore/pipeline_output/20180417_1233_HEK293_polyA_RNA/08_testing/test.log",                             # self-explanatory
 "assembly"       = "hg19",
 "poremodel_ref"  = "/clusterhome/bosberg/projects/nanopiper/dev/ref/pore_model_table.csv",
-"sampleName"     = "HEK293_untreated_testsession",
+"sampleName"     = "HEK293_untreated",
 "mincov_in"      = 10,
 "plotrange_in"   = 5
 )
@@ -100,16 +102,18 @@ sampleROI_dat_by_group <- lapply( names(loci_filtered_for_coverage),
                                     )
 names(sampleROI_dat_by_group) <- names(loci_filtered_for_coverage)
 
-i=1
-group="CITS"
-plot_samplesignal_over_ROI( sampleROI_dat  = sampleROI_dat_by_group[[group]][[i]],
+# group="CITS"
+group="Ill_2pO"
+i=25
+
+i=i+1; plot_samplesignal_over_ROI( sampleROI_dat  = sampleROI_dat_by_group[[group]][[i]],
                             refgen         = ref_Genome,
-                            normed =  TRUE )
+                            normed =  T )
 
 
 plot_dwelltime_over_ROI( sampleROI_dat = sampleROI_dat_by_group[[group]][[i]],
                          refgen        = ref_Genome,
-                         log           = FALSE )
+                         log           = T )
 
 # =======================================
 

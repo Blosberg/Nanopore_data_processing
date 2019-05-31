@@ -151,7 +151,7 @@ if ( not os.access(DIR_REFGENOME, os.W_OK) ):
    print("Write access to refgenome folder is denied. Checking if necessary indexing files already exist: ... ")
 
    if( not os.path.isfile( os.path.join( DIR_REFGENOME , config['ref']['Genome_version']+ ".mmi")) ):
-      bail("minimap index files not found, and cannot be created. Aborting")
+      bail("minimap index files not found for reference genome, and cannot be created. Aborting")
 
    else:
       print("Refgenome index files are present. Continuing... ")

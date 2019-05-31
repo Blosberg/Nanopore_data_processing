@@ -59,27 +59,29 @@ for sampleLoopi_targets in config["samplelist"]:
    # TODO: implement sample-dependent targets with defaults.
    if ( config["execution"]["target_out"] == "report" ):
       OUTPUT_FILES.extend(
-                          [ os.path.join( config["PATHOUT"], config["samplelist"][sampleLoopi_targets]["sampledir"], SUBDIR_REPORT, "" + sampleLoopi_targets + "_report.html") ]
+                          [ os.path.join( config["PATHOUT"], config["samplelist"][sampleLoopi_targets]["sampleDirNames"][0], SUBDIR_REPORT, "" + sampleLoopi_targets + "_report.html") ]
                           )
    elif ( config["execution"]["target_out"] == "histlist" ):
       OUTPUT_FILES.extend(
-                          [ os.path.join( config["PATHOUT"], config["samplelist"][sampleLoopi_targets]["sampledir"], SUBDIR_GR, sampleLoopi_targets + "_kmer_histlist.rds") ]
+                          [ os.path.join( config["PATHOUT"], config["samplelist"][sampleLoopi_targets]["sampleDirNames"][0], SUBDIR_GR, sampleLoopi_targets + "_kmer_histlist.rds") ]
                           )
    elif ( config["execution"]["target_out"] == "ROI_olap" ):
       OUTPUT_FILES.extend(
-                          [ os.path.join( config["PATHOUT"], config["samplelist"][sampleLoopi_targets]["sampledir"], SUBDIR_GRproc, sampleLoopi_targets + "_read_ROIolap_"+ region +".rds") for region in config["ref"]["RsoI"]  ]
+                          [ os.path.join( config["PATHOUT"], config["samplelist"][sampleLoopi_targets]["sampleDirNames"][0], SUBDIR_GRproc, sampleLoopi_targets + "_read_ROIolap_"+ region +".rds") for region in config["ref"]["RsoI"]  ]
                           )
    elif ( config["execution"]["target_out"] == "reads_GRL" ):
       OUTPUT_FILES.extend(
-                          [ os.path.join( config["PATHOUT"], config["samplelist"][sampleLoopi_targets]["sampledir"], SUBDIR_GR, sampleLoopi_targets + "_reads_GRL.rds") ]
+                          [ os.path.join( config["PATHOUT"], config["samplelist"][sampleLoopi_targets]["sampleDirNames"][0], SUBDIR_GR, sampleLoopi_targets + "_reads_GRL.rds") ]
                           )
    elif ( config["execution"]["target_out"] == "mergedbam" ):
       OUTPUT_FILES.extend(
-                          [ os.path.join( config["PATHOUT"], config["samplelist"][sampleLoopi_targets]["sampledir"], SUBDIR_SORTED_MINIMAPPED, sampleLoopi_targets + ".sorted.bam") ]
+                          [ os.path.join( config["PATHOUT"], config["samplelist"][sampleLoopi_targets]["sampleDirNames"][0], SUBDIR_SORTED_MINIMAPPED, sampleLoopi_targets + ".sorted.bam") ]
                          )
    elif ( config["execution"]["target_out"] == "aligned_chunks"):
+      wcstruct = Rule_wc_struct( sampleLoopi_targets, config["samplelist"][sampleLoopi_targets]["sampleDirs"] )
+
       OUTPUT_FILES.extend(
-                          get_chunkfiles( sampleLoopi_targets, os.path.join( config["PATHOUT"], config["samplelist"][sampleLoopi_targets]["sampledir"], SUBDIR_ALIGNED_MINIMAP) ,  "", ".sam", 0 )
+                         get_chunkfiles( wcstruct, config["PATHOUT"], SUBDIR_ALIGNED_MINIMAP, "", ".sam", 0 )
                          )
    else:
       print("Unrecognized target output file format: ", config["execution"]["target_out"], " ... Terminating.")
@@ -94,10 +96,9 @@ for sampleLoopi_targets in config["samplelist"]:
 # print ( len( OUTPUT_FILES) )
 # print(" OUTPUT_FILES=")
 # for x in OUTPUT_FILES:
-#   print(x)
-# print("\n finished outputting output files \n\n ")
-#
-#
+#    print(x)
+# print("---------------------------------")
+# print("Finished outputting output files \n\n ")
 # ========================================================================
 #
 #   BEGIN RULES

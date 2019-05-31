@@ -5,7 +5,7 @@
   "ReadType":     "ONT_Direct_RNA",
 
   "samplelist": {
-                "TESTSET0": { "sampledir": "testset/"  }
+                "TESTSET0": { "sampleDirNames": ["testset_0", "testset_1"]  }
                 },
 
    "ref":{
@@ -18,9 +18,10 @@
    },
 
    "execution":{
-        "target_out": "reads_GRL",
+        "target_out": "ROI_olap",
         "jobs": 10,
-        "clustersub": true
+        "clustersub": false,
+        "Ealign_options": " --samples --print-read-names "
    }
 
 }

@@ -77,7 +77,8 @@ if ( ! is.null( output_poremodel ))
 # =======================
 # Add strand information:
 
-table_dat = assign_strand( table_dat, perform_sanity_checks = TRUE )
+table_dat = assign_strand( Datin                 = table_dat,
+                           perform_sanity_checks = TRUE )
 
 # ================================================
 # Split by read

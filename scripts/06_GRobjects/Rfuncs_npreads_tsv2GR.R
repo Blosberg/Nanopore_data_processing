@@ -152,12 +152,12 @@ if( dim( readposn_tbl_in )[1] == 1 )
   event_mean   = sum(  readposn_tbl_in$event_level_mean * readposn_tbl_in$event_length ) /passage_time
   event_stdv   = sqrt( sum( readposn_tbl_in$event_stdv*readposn_tbl_in$event_stdv * readposn_tbl_in$event_length ) / passage_time )
 
-  output  <- readposn_tbl_in[1,]
+  result  <- readposn_tbl_in[1,]
 
-  output$event_index      <- event_index_str
-  output$event_level_mean <- event_mean
-  output$event_stdv       <- event_stdv
-  output$event_length     <- passage_time
+  result$event_index      <- event_index_str
+  result$event_level_mean <- event_mean
+  result$event_stdv       <- event_stdv
+  result$event_length     <- passage_time
 
   if ( "samples" %in% names( readposn_tbl_in ) )
   {
@@ -165,7 +165,7 @@ if( dim( readposn_tbl_in )[1] == 1 )
                             collapse="," )
   }
 
-  return(output)
+  return(result)
 }
 
 # ===============================================================
