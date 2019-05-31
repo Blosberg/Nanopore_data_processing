@@ -27,8 +27,8 @@
 
    "execution":{
         "target_out": "ROI_olap",
-        "jobs": 200,
-        "clustersub": false,
+        "jobs": 300,
+        "clustersub": true,
         "Ealign_options": " --samples --print-read-names "
    }
 
