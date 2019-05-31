@@ -69,8 +69,9 @@ sanity_check_tbl_spec_position  <- function( readposn_tbl_in        = stop("read
 # ===============================================================
 # Take a read in table format and eliminate redundancy (average overlapping positions)
 
-flatten_read_tbl  <- function( read_tbl_in         = stop("read_GR_in must be provided"),
-                               perform_sanity_checks = FALSE
+flatten_read_tbl  <- function( read_tbl_in           = stop("read_GR_in must be provided"),
+                               perform_sanity_checks = FALSE,
+                               remove_NNNNNs         = FALSE
                              )
 {
   # --- takes a specific read and combines all events associated with the same position
@@ -88,12 +89,15 @@ flatten_read_tbl  <- function( read_tbl_in         = stop("read_GR_in must be pr
     read_index  =  read_tbl_in$read_index[1]
     }
 
-  read_tbl_in_Ns_removed <- read_tbl_in[ read_tbl_in$model_kmer != "NNNNN" ,  ]
+  if( remove_NNNNNs )
+    {
+    read_tbl_in <- read_tbl_in[ read_tbl_in$model_kmer != "NNNNN" ,  ]
+    }
   # ----------
 
   # create a list, with each element containing groups of GR objects with the same start position
-  read_tbl_in_splitby_pos <- split(   read_tbl_in_Ns_removed,
-                                      read_tbl_in_Ns_removed$position )
+  read_tbl_in_splitby_pos <- split(   read_tbl_in,
+                                      read_tbl_in$position )
 
     if( perform_sanity_checks )
     {
@@ -154,6 +158,12 @@ if( dim( readposn_tbl_in )[1] == 1 )
   output$event_level_mean <- event_mean
   output$event_stdv       <- event_stdv
   output$event_length     <- passage_time
+
+  if ( "samples" %in% names( readposn_tbl_in ) )
+  {
+  result$samples <-  paste( readposn_tbl_in$samples,
+                            collapse="," )
+  }
 
   return(output)
 }
@@ -216,22 +226,6 @@ write.table( model_dat,
 get_event_dat  <- function( Event_file_list = stop("Datin must be provided"),
                             logFile         = stop("logFile must be provided"))
   {
-    colnames <-
-      c(
-        "contig",
-        "position",
-        "reference_kmer",
-        "read_index",
-        "strand",
-        "event_index",
-        "event_level_mean",
-        "event_stdv",
-        "event_length",
-        "model_kmer",
-        "model_mean",
-        "model_stdv",
-        "standardized_level"
-      )
     dat_all = data.frame()
     readcount_offset = 0
 
@@ -250,19 +244,35 @@ get_event_dat  <- function( Event_file_list = stop("Datin must be provided"),
         header = TRUE
       ) #--- read in the current "chunk" of np data
 
-      dat_temp$read_index <- dat_temp$read_index + readcount_offset  #--- offset the read_index values to ensure uniqueness
+      # if reads are unnamed, then there will be a column called "read_index"
+      if ( "read_index" %in% names( dat_temp )){
+            # and if it exists, the entries should be offset to maintain uniqueness.
+            dat_temp$read_index <- dat_temp$read_index + readcount_offset  #--- offset the read_index values to ensure uniqueness
+            dat_all           =   rbind( dat_all, dat_temp )               #--- compile the chunks together
+            readcount_offset  =  (max(dat_all$read_index)  + 1)            #--- re-calculate the necessary offset
+      } else{
+        # else, just bind the rows and don't worry about read_indices, since the readnames will all be unique anyway.
+        dat_all           =   rbind( dat_all, dat_temp )               #--- compile the chunks together
+      }
+    } # finished reading in all the Event_file_list files.
 
-      dat_all           =   rbind( dat_all, dat_temp )               #--- compile the chunks together
-      readcount_offset  =  (max(dat_all$read_index)  + 1)            #--- re-calculate the necessary offset
+    # --- Now ensure uniqueness of read_indices in the final structure.
+    if ( "read_index" %in% names( dat_all ))
+      {
+      Nreads = length( unique( dat_all$read_index ) )
 
-    }
+      # cast the read_indices as factors (to make unique values sequentially increasing), and then
+      # cast them back into integers (since some read_indices have been removed for quality/alignment/etc. reasons
+      dat_all$read_index <- as.numeric(as.factor(dat_all$read_index))
+      } else{
 
-    Nreads = length(unique(dat_all$read_index))
+        dat_all$read_index <- as.numeric( as.factor( factor( dat_all$read_name,
+                                                     levels = unique(dat_all$read_name),
+                                                     ordered = TRUE )
+                                                    )
+                                         )
 
-    # cast the read_indices as factors (to make unique values sequentially increasing), and then
-    # cast them back into integers (since some read_indices have been removed for quality/alignment/etc. reasons
-    dat_all$read_index <- as.numeric(as.factor(dat_all$read_index))
-
+      }
 
     return(dat_all)
   }
@@ -309,6 +319,12 @@ convert_tbl_readlist_to_GRL  <- function( Readlist_in   = stop("Readlist must be
         event_length = x$event_length,
         model_kmer   = x$model_kmer
       )))
+
+     if ( "samples" %in% names( Readlist_in ) )
+     {
+     result$samples <-  Readlist_in$samples
+     }
+
 
   }
 

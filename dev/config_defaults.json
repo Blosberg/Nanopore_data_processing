@@ -48,6 +48,7 @@
    "execution":{
         "jobs": 1,
         "clustersub": false,
+        "Ealign_options": " --samples --print-read-names ",
         "target_out": "report",
         "nice": 0,
         "FlattenReads": "TRUE",

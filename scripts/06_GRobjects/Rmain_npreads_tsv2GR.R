@@ -72,7 +72,7 @@ if ( ! is.null( output_poremodel ))
 # ========================================================================================
 # remove non-finite entries:
 
-table_dat = table_dat [ which (! is.na (table_dat$event_level_mean) ), ]
+# table_dat = table_dat [ which (! is.na (table_dat$event_level_mean) ), ]
 
 # =======================
 # Add strand information:

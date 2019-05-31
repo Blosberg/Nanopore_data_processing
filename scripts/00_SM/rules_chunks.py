@@ -74,11 +74,13 @@ rule np_event_align:
         NOTCALLED_pac         = os.path.join( DIR_REFGENOME, config['ref']['Genome_version']+ ".fa.pac")
     output:
         Evaligned         = os.path.join( config["PATHOUT"], "{wcEvalign_sampleDir}", SUBDIR_EVENTALIGN, "tsv_chunks", 'Ealign_{wcEvalign_sampleName}_{wcEvalign_chunk}.tsv' )
+    params:
+        options  = config["execution"]["Ealign_options"]
     log:
         logfile  = os.path.join( config["PATHOUT"], "{wcEvalign_sampleDir}", SUBDIR_EVENTALIGN, "tsv_chunks", 'Ealign_{wcEvalign_sampleName}_{wcEvalign_chunk}.log')
     message: """---- Align events from sample {wildcards.wcEvalign_sampleName}, chunk {wildcards.wcEvalign_chunk} to the genome ----"""
     shell:
-        " {nanopolish} eventalign --reads {input.fastq_file} --bam {input.sortedbam} --genome {input.refgenome_fasta} --scale-events  > {output}  2> {log.logfile} "
+        " {nanopolish} eventalign {params.options} --reads {input.fastq_file} --bam {input.sortedbam} --genome {input.refgenome_fasta} --scale-events  > {output}  2> {log.logfile} "
 
 # -----------------------------------------------------
 
@@ -122,22 +124,6 @@ rule index_sortedbam:
     shell:
         " {SAMTOOLS} index  {input.sortedbam}  2> {log.logfile} "
 
-# -----------------------------------------------------
-
-rule merge_bam_files:
-    # combine the ~4000 reads from each minimap2
-    # alignment into a single bam file
-    input:
-        bami      = lambda wc: get_chunkfiles( wc.wcmerge_samplename, os.path.join( config["PATHOUT"], wc.wcmerge_sampleDir, SUBDIR_SORTED_MINIMAPPED, "bam_chunks"), "" , ".sorted.bam", False )
-    output:
-        sortedbam = os.path.join( config["PATHOUT"], "{wcmerge_sampleDir}", SUBDIR_SORTED_MINIMAPPED, "{wcmerge_samplename}.sorted.bam")
-    log:
-        logfile   = os.path.join( config["PATHOUT"], "{wcmerge_sampleDir}", SUBDIR_SORTED_MINIMAPPED, "{wcmerge_samplename}.mergingbam.log")
-    message:
-        fmt("Combining bam files from post-mapping fastq data.")
-    shell:
-        '{SAMTOOLS} merge {output} {input} '
-
 #------------------------------------------------------
 rule convert_sort_minimap:
     # convert minimap2 alignments from sam to bam format
@@ -167,10 +153,11 @@ rule filter_nonaligned_minimap:
     log:
         log      = os.path.join( config["PATHOUT"], "{wcfilter_sampleDir}", SUBDIR_FILTERED_MINIMAP, "{wcfilter_samplename}_{wcfilter_chunk}.0filtering.log" )
     message:
-        fmt("Filtering unaligned reads from alignment data")
+        fmt("Filtering out unaligned reads and secondary alignments")
     shell:
-        " cat {input} | perl -lane 'print if $F[1] ne 4'  >  {output}   2> {log}"
-
+        " samtools view -h -F 260 {input} > {output} 2> {log} "
+# Why 260?
+# SAM flags explained here: https://www.samformat.info/sam-format-flag
 #------------------------------------------------------
 rule align_minimap:
     # use minimap2 to align the fastq reads to the reference
