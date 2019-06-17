@@ -87,3 +87,6 @@ Once the above have been completed, you should be able to navigate to the folder
 
 The `-n` flag signifies a dry-run to confirm that everything is configured in place to run correctly. If no red errors appear when you do you this, then you are ready to run the real thing. 
 
+## Credits and Thanks
+
+The most important feature of this pipeline relies heavily on nanopolish, for which I should thank Jared Simpson (see https://github.com/jts/nanopolish). 
