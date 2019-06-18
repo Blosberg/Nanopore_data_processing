@@ -6,8 +6,9 @@ import argparse
 # --- Define Dependencies:
 
 MM2        = config["progs"]["minimap"]
-SAMTOOLS   = config["progs"]["SAMTOOLS"]
 nanopolish = config["progs"]["nanopolish"]
+SAMTOOLS   = config["progs"]["SAMTOOLS"]
+BWA        = config["progs"]["BWA"]
 
 GENOME_VERSION     = config["ref"]["Genome_version"]
 RmdReportScript    = os.path.join(config["scripts"]["script_folder"],"final_report","Nanopore_report.Rmd")
@@ -207,4 +208,22 @@ rule minimizer:
         fmt("Creating minimizer index of reference genome for minimap2.")
     shell:
         "{MM2} {params.options}  {output} {input} 2> {log}"
+
+#------------------------------------------------------
+
+rule bwa_index:
+    # We don't use bwa aligner, but np_event_align needs these indexing files
+    input:
+        refgenome_fasta  = os.path.join( DIR_REFGENOME, config['ref']['Genome_version']+ ".fa" )
+    output:
+        index_bwt        = os.path.join( DIR_REFGENOME, config['ref']['Genome_version']+ ".fa.bwt"),
+        index_pac        = os.path.join( DIR_REFGENOME, config['ref']['Genome_version']+ ".fa.pac")
+    params:
+        options = " -d  "
+    log:
+        logFile          = os.path.join( DIR_REFGENOME, config['ref']['Genome_version'], "_bwa_index.log")
+    message:
+        fmt("Creating bwa index files of ref genome for eventalign.")
+    shell:
+        "{BWA} index {input} 2> {log}"
 

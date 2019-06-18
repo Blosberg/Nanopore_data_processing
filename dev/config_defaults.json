@@ -16,7 +16,8 @@
    "progs": {
         "minimap":    "minimap2",
         "nanopolish": "nanopolish",
-        "SAMTOOLS":   "samtools"
+        "SAMTOOLS":   "samtools",
+        "BWA"     :   "bwa"
             },
    "scripts": {
         "script_folder":             "/home/bosberg/projects/nanopiper/scripts/",

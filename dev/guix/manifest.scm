@@ -22,6 +22,7 @@
 "r-dplyr"
 ;; Mapping and mod-detection:
 "samtools"
+"bwa"
 "python-ont-tombo"
 "minimap2"
 "nanopolish"
