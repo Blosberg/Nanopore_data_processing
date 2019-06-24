@@ -265,13 +265,7 @@ get_event_dat  <- function( Event_file_list = stop("Datin must be provided"),
       # cast them back into integers (since some read_indices have been removed for quality/alignment/etc. reasons
       dat_all$read_index <- as.numeric(as.factor(dat_all$read_index))
       } else{
-
-        dat_all$read_index <- as.numeric( as.factor( factor( dat_all$read_name,
-                                                     levels = unique(dat_all$read_name),
-                                                     ordered = TRUE )
-                                                    )
-                                         )
-
+      stop("Error: read_index missing from final data structure.")
       }
 
     return(dat_all)
@@ -284,53 +278,54 @@ convert_tbl_readlist_to_GRL  <- function( Readlist_in   = stop("Readlist must be
 {
   if(Flatten_reads)
   {
-    # tic <- Sys.time()
+    # eliminate redundant subsequent events.
     Flatreadlist <-
       lapply( Readlist_in, function(x)
               flatten_read_tbl ( read_tbl_in   = x,
                                  perform_sanity_checks = FALSE))
-    # toc <- Sys.time()
 
-    result <- GRangesList(lapply(Flatreadlist, function(x)
-      GRanges(
-        seqnames     = x$contig,
-        strand       = x$strand,
-        range        = IRanges( start = x$position,
-                                end   = x$position),
-        read_index   = x$read_index,
-        event_index  = x$event_index,
-        event_mean   = x$event_level_mean,
-        event_stdv   = x$event_stdv,
-        event_length = x$event_length,
-        model_kmer   = x$model_kmer
-      )))
+    result <- GRangesList( lapply( Flatreadlist,
+                                   function(x) convert_read_item_to_GR( read_in = x ) ) )
+
   } else {
 
-    result <- GRangesList( lapply( Readlist_in, function(x)
-      GRanges(
-        seqnames     = x$contig,
-        strand       = x$strand,
-        range        = IRanges( start = x$position,
-                                end   = x$position),
-        read_index   = x$read_index,
-        event_index  = x$event_index,
-        event_mean   = x$event_level_mean,
-        event_stdv   = x$event_stdv,
-        event_length = x$event_length,
-        model_kmer   = x$model_kmer
-      )))
-
-     if ( "samples" %in% names( Readlist_in ) )
-     {
-     result$samples <-  Readlist_in$samples
-     }
-
-
+    result <- GRangesList( lapply( Readlist_in,
+                                   function(x) convert_read_item_to_GR( read_in = x ) ) )
   }
 
   return ( result )
 }
+# ===============================================================
+# create a single read to an entry in a list (called with lapply)
 
+convert_read_item_to_GR <- function( read_in   = stop("read must be provided")  )
+{
+  result <-  GRanges(
+             seqnames     = read_in$contig,
+             strand       = read_in$strand,
+             range        = IRanges( start = read_in$position,
+                                     end   = read_in$position),
+            read_index   = read_in$read_index,
+            event_index  = read_in$event_index,
+            event_mean   = read_in$event_level_mean,
+            event_stdv   = read_in$event_stdv,
+            event_length = read_in$event_length,
+            model_kmer   = read_in$model_kmer,
+            samples      = read_in$samples
+            )
+
+  if ( "read_name" %in% names( read_in ) )
+     {
+     result$read_name <-  read_in$read_name
+     }
+
+   if ( "samples" %in% names( read_in ) )
+     {
+     result$samples <-  read_in$samples
+     }
+
+  return(result)
+}
 # ===============================================================
 # offset read_index in GRL chunk datasets:
 

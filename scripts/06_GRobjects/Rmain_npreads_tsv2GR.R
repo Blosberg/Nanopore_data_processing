@@ -56,6 +56,9 @@ source(Rfuncs_tsv2GRconv)
 table_dat       = get_event_dat( Event_file_list = Ealign_files,
                                  logFile         = logFile )
 
+# catalogue reads by index, not by name, since
+# chimeric alignments are treated as distinct reads
+# readname preserves this info
 read_list_final = unique( table_dat$read_index  )
 Nreads          = length( read_list_final     )
 
