@@ -157,8 +157,9 @@ rule filter_nonaligned_minimap:
     message:
         fmt("Filtering out unaligned reads and secondary alignments")
     shell:
-        " samtools view -h -F 2308 {input} > {output} 2> {log} "
-# Why 2308? We want single unique mapping
+        " samtools view -h -F 258 {input} > {output} 2> {log} "
+# Why 258? We want single unique mapping
+# but we want to allow for chimeric alignments
 # SAM flags explained here: https://www.samformat.info/sam-format-flag
 #------------------------------------------------------
 rule align_minimap:

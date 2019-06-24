@@ -76,8 +76,9 @@ if ( Nchunks >= 2 )
      # offset the read index for each one of these:
      tempdat$Events_GRL_splitbyread  = lapply( tempdat$Events_GRL_splitbyread, function(x) offset_read_indices ( GRLchunk_in  = x, Nread_offset = Nreads ) )
 
-     # Likewise offset the corresponding names:
-     names( tempdat$Events_GRL_splitbyread )  <-  as.character( as.numeric( names(tempdat$Events_GRL_splitbyread) ) + Nreads )
+     # Do not offset name. We allow for chimeric alignments
+     # As such, there may be multiple possible alignments per read:
+     # names( tempdat$Events_GRL_splitbyread )  <-  as.character( as.numeric( names(tempdat$Events_GRL_splitbyread) ) + Nreads )
 
      # Now, absorb these reads into the "combined" data set
      Combined_reads$Events_GRL_splitbyread <- c( Combined_reads$Events_GRL_splitbyread, tempdat$Events_GRL_splitbyread )
