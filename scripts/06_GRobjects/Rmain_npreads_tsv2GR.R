@@ -77,7 +77,7 @@ if ( ! is.null( output_poremodel ))
 
 # table_dat = table_dat [ which (! is.na (table_dat$event_level_mean) ), ]
 
-# =======================
+# ================================================
 # Add strand information:
 
 table_dat = assign_strand( Datin                 = table_dat,

@@ -71,10 +71,15 @@ if ( Nchunks >= 2 )
 
      # sanity-check that the names are in order:
      # TODO: comment this line out for efficiency once we're convinced this works.
-     if( ! identical( as.character( unlist( lapply( tempdat$Events_GRL_splitbyread, function(x) unique( x$read_index ) ) ) ), as.character( c(1:length( tempdat$Events_GRL_splitbyread ) )  )  ) ){ stop(paste("Disordered names in reads of file: ", GRL_chunk_files[i] ) ) }
+     if( ! identical( as.character( unlist( lapply( tempdat$Events_GRL_splitbyread, function(x) unique( x$read_index ) ) ) ), as.character( c(1:length( tempdat$Events_GRL_splitbyread ) )  )  ) )
+
+       { stop(paste("Disordered names in reads of file: ", GRL_chunk_files[i] ) ) }
 
      # offset the read index for each one of these:
      tempdat$Events_GRL_splitbyread  = lapply( tempdat$Events_GRL_splitbyread, function(x) offset_read_indices ( GRLchunk_in  = x, Nread_offset = Nreads ) )
+
+     # likewise, offset the corresponding read "names"
+     names(tempdat$Events_GRL_splitbyread) <- as.character( lapply( tempdat$Events_GRL_splitbyread, function(x) unique( x$read_index ) ) )
 
      # Do not offset name. We allow for chimeric alignments
      # As such, there may be multiple possible alignments per read:
