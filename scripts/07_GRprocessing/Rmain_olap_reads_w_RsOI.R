@@ -46,7 +46,7 @@ reads                  <- Readstruct_all_in$Events_GRL_splitbyread
 # They will come in sets defined by Region_groups
 if( ! file.exists( argsL$pathin_RsoI) )
   {
-  writeLines("NO loci information found. An empty olap file will be produced and this section will be ignored.", argsL$logFile )
+  writeLines("NO loci information found. An empty olap file will be produced and this section will be ignored in the final report.", argsL$logFile )
   saveRDS( NULL, argsL$pathout_alignedreads )
   q(save="no")
 }
@@ -66,6 +66,7 @@ output$RefRegionName = argsL$regionName
 
 # ========================================================
 # count how many groupings of loci we are considering.
+# (groupings typically lump types of modifications in different regions)
 N_locus_groupings = length( length( RsoI_in$Region_groups ) )
 
 # list the indices of reads that cover at least one ROI:
