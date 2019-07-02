@@ -76,19 +76,35 @@ poremodel     <- read.table( file = argsL$poremodel_ref,
 # ========================================
 # Read in inputs:
 
+OLAP_skip_TOL = 3
+
 # reduce list of RsoI to those with sufficient coverage.
 loci_filtered_for_coverage <- filter_loci_for_coverage (  loci   = putloci$Region_groups,
                                                           reads  = readdat$aligned_reads,
-                                                          mincov = argsL$mincov_in
+                                                          mincov = argsL$mincov_in,
+                                                          OLAP_skip_TOL = OLAP_skip_TOL
                                                         )
+
+# expand loci slightly to ensure overlap is registered,
+# even if the exact base is skipped.
+loci_filtered_for_coverage_expanded <- loci_filtered_for_coverage
+for ( group in  names( loci_filtered_for_coverage )  )
+  {
+  start( loci_filtered_for_coverage_expanded[[group]] ) <-  ( start( loci_filtered_for_coverage[[group]] ) -OLAP_skip_TOL )
+  end(   loci_filtered_for_coverage_expanded[[group]] ) <-  ( end(   loci_filtered_for_coverage[[group]] ) +OLAP_skip_TOL )
+  }
 
 # NOW check overlaps of reads with only the _covered_ loci.
 #TODO: We run this overlaps more than once; if speedup is required later, eliminate this repetition.
 overlaps_by_group = lapply ( names( loci_filtered_for_coverage ), function(group)
-                               findOverlaps(  loci_filtered_for_coverage[[group]],
+                               findOverlaps(  loci_filtered_for_coverage_expanded[[group]],
                                readdat$aligned_reads[[group]] )
                                )
 names( overlaps_by_group ) <- names( loci_filtered_for_coverage )
+
+# Don't need this anymore. The loci should refer directly to the exact ROI
+rm(loci_filtered_for_coverage_expanded)
+
 # overlaps_by_group queryHits now references the indices of COVERED loci.
 
 # TODO: add row/col names for the output data structures.
@@ -110,7 +126,7 @@ i=0
 
 i=i+1; plot_samplesignal_over_ROI( sampleROI_dat  = sampleROI_dat_by_group[[group]][[i]],
                                    refgen         = ref_Genome,
-                                   full_squiggles = T,
+                                   squiggle_type  = "event",
                                    line_darkness  = 0.1,
                                    normed         =  F )
 
