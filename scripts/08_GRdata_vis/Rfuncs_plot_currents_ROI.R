@@ -219,7 +219,7 @@ get_sampledat_over_ROI <-  function( SampleName         = stop("Sample name must
     for (j in c(1:Nxpos ) )
       {
       if ( !is.na( Isamples_chars   [i,j ] ) )
-        { posn_means_xcheck[i,j] <- mean( extract_current_samples(Isamples_chars   [i,j ])) }
+        { posn_means_xcheck[i,j] <- mean( extract_numericArray_from_charlist(Isamples_chars   [i,j ])) }
       }
     }
 
@@ -463,22 +463,30 @@ plot_samplesignal_over_ROI  <- function( sampleROI_dat    = stop("aligned sample
 # --- plot the passage time of a sample over a given region:
 plot_dwelltime_over_ROI <-  function( sampleROI_dat  = stop("aligned sampledat must be provided"),
                                       refgen         = stop("Reference genome must be provided"),
-                                      log            = FALSE )
+                                      plot_logdwell  = FALSE )
 {
   Nxpos  = length( sampleROI_dat$xposn_vals)
-  Nreads = dim( sampleROI_dat$dwell_times )[1]
+  Nreads = dim( sampleROI_dat$Event_duration_chars )[1]
   chr    = as.character( unique( seqnames( sampleROI_dat$ROI )))
 
-  dwell_dat = sampleROI_dat$dwell_times
-  if( log )
-    { dwell_dat[!is.na(dwell_dat)] <- log( dwell_dat[!is.na(dwell_dat)]  ) }
+  dwell_times = matrix( NA, Nreads, Nxpos )
+  for ( i in c(1:Nreads))
+    {
+    for ( j in c(1:Nxpos ) )
+      {
+      dwell_times[i,j] = sum( extract_numericArray_from_charlist( sampleROI_dat$Event_duration_chars[i,j] ) )
+      }
+    }
 
-  min_T          = min( dwell_dat, na.rm = TRUE )
-  max_T          = max( dwell_dat, na.rm = TRUE )
+  if( plot_logdwell )
+    { dwell_times[!is.na(dwell_times)] <- log( dwell_times[!is.na(dwell_times)]  ) }
+
+  min_T          = min( dwell_times, na.rm = TRUE )
+  max_T          = max( dwell_times, na.rm = TRUE )
 
 
   plot(  sampleROI_dat$xposn_vals,
-         dwell_dat[1, ],
+         dwell_times[1, ],
          col=rgb(0, 0, 0, 0.5),
          type="l",
          lwd=1,
@@ -505,7 +513,7 @@ plot_dwelltime_over_ROI <-  function( sampleROI_dat  = stop("aligned sampledat m
   for (i in c(2:Nreads) )
     {
     lines( sampleROI_dat$xposn_vals,
-           dwell_dat[i, ],
+           dwell_times[i, ],
            col    = rgb(0,0,1,0.5),
            type   = "l",
            lwd    = 1
@@ -697,7 +705,7 @@ get_single_squiggle <- function ( sampleROI_dat = stop("sampleROI_dat required")
     {
     if (! is.na( ydat_char_in[xi] )) {
 
-      temp_y = extract_current_samples( ydat_char_in[xi]  )
+      temp_y = extract_numericArray_from_charlist( ydat_char_in[xi]  )
       temp_x = seq( from = xpos_in[xi],
                     to   = xpos_in[xi] +1,
                     by   = 1/length(temp_y) )
@@ -721,12 +729,12 @@ get_single_squiggle <- function ( sampleROI_dat = stop("sampleROI_dat required")
     if (! is.na( ydat_char_in[xi] )) {
 
       # convert character strings into floats:
-      temp_y   = extract_current_samples( ydat_vals[xi]  )
+      temp_y   = extract_numericArray_from_charlist( ydat_vals[xi]  )
       temp_y   = rep( temp_y,
                       each=2)
 
       # cumulative times of each events gives us coordinates:
-      temp_t   = cumsum( extract_current_samples( ydat_durs[xi]  ) )
+      temp_t   = cumsum( extract_numericArray_from_charlist( ydat_durs[xi]  ) )
 
       # divide the duration of events into fractions.
       position_total_duration = max( temp_t )
@@ -752,8 +760,8 @@ get_single_squiggle <- function ( sampleROI_dat = stop("sampleROI_dat required")
 }
 
 # ===============================================================
-# --- take numerica average of sample data (as ,-separated characters)
-extract_current_samples <- function ( sample_char_in  = stop("sample_char required")
+# --- take numerical array data from a string of ,-separated numbers in character format.
+extract_numericArray_from_charlist <- function ( sample_char_in  = stop("sample_char required")
                                      )
 { if ( nchar ( sample_char_in ) == 0 )
   { return( NA ) } else{

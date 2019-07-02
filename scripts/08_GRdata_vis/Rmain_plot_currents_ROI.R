@@ -122,18 +122,17 @@ names(sampleROI_dat_by_group) <- names(loci_filtered_for_coverage)
 
 group="CITS"
 # group="Ill_2pO"
-i=0
+i=1
 
-i=i+1; plot_samplesignal_over_ROI( sampleROI_dat  = sampleROI_dat_by_group[[group]][[i]],
-                                   refgen         = ref_Genome,
-                                   squiggle_type  = "event",
-                                   line_darkness  = 0.1,
-                                   normed         =  F )
-
-
+plot_samplesignal_over_ROI( sampleROI_dat  = sampleROI_dat_by_group[[group]][[i]],
+                            refgen         = ref_Genome,
+                            squiggle_type  = "event",
+                            line_darkness  = 0.1,
+                            normed         =  F )
+# =======================================
 plot_dwelltime_over_ROI( sampleROI_dat = sampleROI_dat_by_group[[group]][[i]],
                          refgen        = ref_Genome,
-                         log           = T )
+                         plot_logdwell = T )
 
 # =======================================
 
