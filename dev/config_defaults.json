@@ -52,7 +52,7 @@
         "Ealign_options": " --samples ",
         "target_out": "report",
         "nice": 0,
-        "FlattenReads": "TRUE",
+        "FlattenReads": "FALSE",
         "type": "RNA",
 
         "currenthist_minrange": 50,
