@@ -721,6 +721,7 @@ get_single_squiggle <- function ( sampleROI_dat = stop("sampleROI_dat required")
   # =============================================================
 } else if ( squiggle_type == "event" ) {
 
+  ydat_char_in = sampleROI_dat$Event_means_chars[read_i, ]
   ydat_vals = sampleROI_dat$Event_means_chars[read_i, ]
   ydat_durs = sampleROI_dat$Event_duration_chars[read_i, ]
 
@@ -767,4 +768,100 @@ extract_numericArray_from_charlist <- function ( sample_char_in  = stop("sample_
   { return( NA ) } else{
   return( as.numeric( unlist(strsplit( sample_char_in, "," ) ) ) )
   }
+}
+
+# ===============================================================
+# --- filter a GRanges object for overlap with a putative location of intererest
+# --- long-term goal: make this take sets of locations
+get_pca_normdiff  <- function( sampleROI_dat_in  = stop("GRanges must be provided"),
+                               k                 = 5,
+                               method            = "pca", # TODO: add a KL-div based method.
+                               shouldplot        = TRUE
+                              )
+{
+
+  Nxpos = dim( sampleROI_dat_in$read_normdiff )[2]
+
+  # get the subset of data points near the centre of the ROI:
+  ROI_dat_lin = sampleROI_dat_in$read_normdiff[ , c( (ceiling(Nxpos/2)-k+1) : (ceiling(Nxpos/2)+k-1) ) ]
+
+
+  ROI_dat_lin[ is.na( ROI_dat_lin ) ] <- 0
+
+  # grab the principle components
+  pca <- prcomp( (ROI_dat_lin),
+                 center = FALSE,
+                 scale  = FALSE)
+
+  # if you do pca <- prcomp ( A )
+  # A_copy <- pca$rotation %*% t(pca$x)
+  # ^ gives you back the original value "A"
+
+  # to get the matrix that performs the forward operation (i.e. rotates from original space _into_ PCA space):
+  # rot_in2_pca_mat = solve ( pca$rotation )
+  # ("solve" in R means "invert", because R is terrible.)
+
+  # pcax_copy <- t( rot_in2_pca_mat %*% t( ROI_dat_lin ) )
+  # ^ This will be equal to pca$x (within machine tolerance)
+  # synthdat_normed_rot2pca = rot_in2_pca_mat %*% synthdat_normed
+  # these are now _row_ -based vectors
+
+
+  clust_kmeans <- kmeans( x = ROI_dat_lin,
+                          centers = 2,
+                          iter.max = 10 )
+  dev = sqrt( rowSums( clust_kmeans$centers * clust_kmeans$centers  )  )
+  # the cluster labels are arbitrary. We impose that cluster 1 is the one closer to the origin
+  # and cluster 2 is the other one. If this is not satisfied, we reverse the order.
+
+  if ( dev[2] < dev[1] )
+  { # reverse the order labelling of the clusters s.t. center[1] < center[2]
+    clust_kmeans_copy = clust_kmeans
+
+    clust_kmeans_copy$cluster[ clust_kmeans$cluster == 1 ] =2
+    clust_kmeans_copy$cluster[ clust_kmeans$cluster == 2 ] =1
+
+    clust_kmeans_copy$centers  <- clust_kmeans$centers[  c(2,1),]
+    clust_kmeans_copy$withinss <- clust_kmeans$withinss[ c(2,1) ]
+    clust_kmeans_copy$size     <- clust_kmeans$size[     c(2,1) ]
+
+    clust_kmeans <- clust_kmeans_copy
+    rm( clust_kmeans_copy )
+    } # else do nothing.
+
+  if( shouldplot )
+  {
+    plot( # pca$x[,1] * (1/sqrt(Nxpos)),
+          # pca$x[,2] * (1/sqrt(Nxpos)),
+          pca$x[,1],
+          pca$x[,2],
+          col  = "red",
+          xlab = "PC 1",
+          ylab = "PC 2",
+          main = "Deviation from model" )
+
+    # draw a unit circle to represent a single std. dev.
+    pi=3.14159265358979;
+    angles = seq(0, 2*pi, 0.001);
+    xcirc  = cos(angles);
+    ycirc  = sin(angles);
+    lines( xcirc, ycirc, col="black")
+    xcirc2  = 2*xcirc
+    ycirc2  = 2*ycirc
+    lines( xcirc2, ycirc2, col="black", lty = 2)
+    xcirc3  = 3*xcirc
+    ycirc3  = 3*ycirc
+    lines( xcirc3, ycirc3, col="black", lty = 3)
+
+   points( # pca$x[,1] * (1/sqrt(Nxpos)),
+           # pca$x[,2] * (1/sqrt(Nxpos)),
+           pca$x[ clust_kmeans$cluster == 1 ,1],
+           pca$x[ clust_kmeans$cluster == 1 ,2],
+           col  = "blue",
+           lw   = 3 )
+  }
+
+  return( list("pca" = pca,
+               "clust_kmeans" = clust_kmeans )
+         )
 }

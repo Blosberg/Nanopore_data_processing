@@ -73,8 +73,11 @@ N_locus_groupings = length( length( RsoI_in$Region_groups ) )
 # the read skips a base at the exact position of interest.
 for ( group in  names( RsoI_in$Region_groups )  )
 {
-start( RsoI_in$Region_groups[[group]] ) <-  ( start( RsoI_in$Region_groups[[group]] ) - OLAP_skip_TOL )
-end(   RsoI_in$Region_groups[[group]] ) <-  ( end(   RsoI_in$Region_groups[[group]] ) + OLAP_skip_TOL )
+  if ( identical( all( width ( RsoI_in$Region_groups[[group]] )  < OLAP_skip_TOL ) , TRUE ) )
+  {
+  start( RsoI_in$Region_groups[[group]] ) <-  ( start( RsoI_in$Region_groups[[group]] ) - OLAP_skip_TOL )
+  end(   RsoI_in$Region_groups[[group]] ) <-  ( end(   RsoI_in$Region_groups[[group]] ) + OLAP_skip_TOL )
+  }
 }
 
 # list the indices of reads that cover at least one ROI:

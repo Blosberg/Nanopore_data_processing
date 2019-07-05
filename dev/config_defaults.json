@@ -27,6 +27,7 @@
         "Rmain_tsv2GRconv":          "06_GRobjects/Rmain_npreads_tsv2GR.R",
         "Rmain_combine_read_chunks": "06_GRobjects/Rmain_combine_GRL_readchunks.R",
         "Rfuncs_tsv2GRconv":         "06_GRobjects/Rfuncs_npreads_tsv2GR.R",
+        "Rfuncs_plotdat":            "scripts/08_GRdata_vis/Rfuncs_plot_currents_ROI.R",
         "pyfunc_defs":               "00_SM/func_defs.py",
         "rules_chunks":              "00_SM/rules_chunks.py",
         "rules_wholefastq":          "00_SM/rules_wholefastq.py"

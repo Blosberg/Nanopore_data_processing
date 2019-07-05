@@ -121,7 +121,7 @@ def prep_configfile( args ):
           # Trim possible "/" at the end of the sampleDir names
           # to avoid string-matching confusion in SM.
           if( sampleDirName.endswith("/") ):
-              print("Warning: sampleDirNames should omit trailing \"/\"")
+              print(" --WARNING: sampleDirNames should omit trailing \"/\"")
               sampleDirName = sampleDirName[0:(len(sampleDirName)-1)]
               config["samplelist"][sample][ "sampleDirNames"][sampleDirName_i] = sampleDirName
 

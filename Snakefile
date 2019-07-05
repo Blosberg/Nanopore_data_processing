@@ -22,6 +22,9 @@ Rmain_combine_readchunks = os.path.join( config["scripts"]["script_folder"], con
 # Rscript with func defn's for the above
 Rfuncs_tsv2GRL    = os.path.join( config["scripts"]["script_folder"], config[ "scripts"]["Rfuncs_tsv2GRconv"] )
 
+Rfuncs_plotdat   = os.path.join( config["scripts"]["script_folder"], config[ "scripts"]["Rfuncs_plotdat"] )
+
+
 # Rscript to create histograms of currents according to kmer
 R_build_histlist_main   = os.path.join( config["scripts"]["script_folder"], config["scripts"]["Rmain_build_histlist"] )
 
@@ -38,6 +41,7 @@ SUBDIR_SORTED_MINIMAPPED  = "04_MM_sortedbam/"
 SUBDIR_EVENTALIGN         = "05_eventalign/"
 SUBDIR_GR                 = "06_GRobjects/"
 SUBDIR_GRproc             = "07_GRprocessing/"
+SUBDIR_plotdat            = "08_plotdat_vis/"
 SUBDIR_REPORT             = "Final_report/"
 
 DIR_REFGENOME             = config['ref']['Genome_DIR']
@@ -65,6 +69,10 @@ for sampleLoopi_targets in config["samplelist"]:
    elif ( config["execution"]["target_out"] == "histlist" ):
       OUTPUT_FILES.extend(
                           [ os.path.join( config["PATHOUT"], config["samplelist"][sampleLoopi_targets]["sampleDirNames"][0], SUBDIR_GR, sampleLoopi_targets + "_kmer_histlist.rds") ]
+                          )
+   elif ( config["execution"]["target_out"] == "ROI_olap_plotdat" ):
+      OUTPUT_FILES.extend(
+                          [  os.path.join( config["PATHOUT"], config["samplelist"][sampleLoopi_targets]["sampleDirNames"][0],  SUBDIR_plotdat, sampleLoopi_targets + "-olap-" + region + "-plotdat.rds" )  for region in config["ref"]["RsoI"]  ]
                           )
    elif ( config["execution"]["target_out"] == "ROI_olap" ):
       OUTPUT_FILES.extend(
@@ -164,6 +172,37 @@ rule bin_kmer_histlist:
                           "--current_histmin={params.current_histmin}",
                           "--current_histmax={params.current_histmax}",
                           "--current_histres={params.current_histres}", ] )
+
+#------------------------------------------------------
+
+rule process_olaps:
+    # process the overlaps into easy-to-plot data
+    # structures that overlap with the regions of interest.
+    input:
+        pathin_reads      = os.path.join( config["PATHOUT"],  "{wc_sampleDir}",  SUBDIR_GRproc, "{wc_sampleName}_read_ROIolap_{wc_regionName}.rds" ),
+        pathin_RsoI       = lambda wc: os.path.join( config["ref"]["RsoI_abspath"], config["ref"]["RsoI"][wc.wc_regionName] ),
+        pathin_poremodel  = os.path.join( config["ref"]["RsoI_abspath"], "poremodel_RNA.csv" ), # TODO: generalize this for DNA
+        refgenome_fasta  = os.path.join(DIR_REFGENOME, config['ref']['Genome_version'] + ".fa" )
+    output:
+        ROI_plotdat      = os.path.join( config["PATHOUT"],  "{wc_sampleDir}",  SUBDIR_plotdat, "{wc_sampleName}-olap-{wc_regionName}-plotdat.rds" )
+    params:
+        mincov       = "10",
+        plotrange    = "10"
+    log:
+        logFile         = os.path.join( config["PATHOUT"],  "{wc_sampleDir}",  SUBDIR_plotdat, "{wc_sampleName}-olap-{wc_regionName}_plotdat.log" )
+    shell:
+        nice('Rscript', [ Rmain_overlap_reads_RsoI,
+                          "--pathin_reads={input.pathin_reads}",
+                          "--pathin_RsoI={input.pathin_RsoI}",
+                          "--poremodel_ref={input.pathin_poremodel}",
+                          "--path_funcdefs="+Rfuncs_plotdat,
+                          "--pathin_refGen={input.refgenome_fasta}",
+                          "--pathout_ROIplotdat={output}",
+                          "--sampleName={wc.wc_sampleName}",
+                          "--mincov_in={params.mincov}",
+                          "--plotrange_in={params.plotrange}",
+                          "--logFile={log.logFile}"] )
+
 
 #------------------------------------------------------
 
