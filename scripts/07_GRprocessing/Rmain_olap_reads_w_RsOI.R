@@ -77,6 +77,9 @@ for ( group in  names( RsoI_in$Region_groups )  )
   {
   start( RsoI_in$Region_groups[[group]] ) <-  ( start( RsoI_in$Region_groups[[group]] ) - OLAP_skip_TOL )
   end(   RsoI_in$Region_groups[[group]] ) <-  ( end(   RsoI_in$Region_groups[[group]] ) + OLAP_skip_TOL )
+
+  writeLines( paste( "Enlarged ROI region for group", group),
+              argsL$logFile )
   }
 }
 
@@ -98,6 +101,9 @@ for ( group in  names( RsoI_in$Region_groups )  )
 
   # store the length.
   output$N_g_filtered[[group]]   = length( RsoI_in$Region_groups[[group]] )
+
+  writeLines( paste( "Stored output for group", group),
+              argsL$logFile )
 }
 
 names( output$aligned_reads ) <- names( RsoI_in$Region_groups )
@@ -107,3 +113,7 @@ names( output$N_g_filtered  ) <- names( RsoI_in$Region_groups )
 # ======  SAVE OUTPUT ===========
 
 saveRDS( output, file = argsL$pathout_alignedreads )
+
+writeLines( "Saved RDS file. Program complete.",
+            argsL$logFile )
+

@@ -773,13 +773,12 @@ extract_numericArray_from_charlist <- function ( sample_char_in  = stop("sample_
 # ===============================================================
 # --- filter a GRanges object for overlap with a putative location of intererest
 # --- long-term goal: make this take sets of locations
-get_pca_normdiff  <- function( sampleROI_dat_in  = stop("GRanges must be provided"),
+get_pca_clusters  <- function( sampleROI_dat_in  = stop("GRanges must be provided"),
                                k                 = 5,
                                method            = "pca", # TODO: add a KL-div based method.
                                shouldplot        = TRUE
                               )
 {
-
   Nxpos = dim( sampleROI_dat_in$read_normdiff )[2]
 
   # get the subset of data points near the centre of the ROI:
@@ -789,7 +788,7 @@ get_pca_normdiff  <- function( sampleROI_dat_in  = stop("GRanges must be provide
   ROI_dat_lin[ is.na( ROI_dat_lin ) ] <- 0
 
   # grab the principle components
-  pca <- prcomp( (ROI_dat_lin),
+  pca <- prcomp( ROI_dat_lin,
                  center = FALSE,
                  scale  = FALSE)
 
@@ -806,10 +805,11 @@ get_pca_normdiff  <- function( sampleROI_dat_in  = stop("GRanges must be provide
   # synthdat_normed_rot2pca = rot_in2_pca_mat %*% synthdat_normed
   # these are now _row_ -based vectors
 
-
   clust_kmeans <- kmeans( x = ROI_dat_lin,
                           centers = 2,
-                          iter.max = 10 )
+                          iter.max = 100 )
+
+
   dev = sqrt( rowSums( clust_kmeans$centers * clust_kmeans$centers  )  )
   # the cluster labels are arbitrary. We impose that cluster 1 is the one closer to the origin
   # and cluster 2 is the other one. If this is not satisfied, we reverse the order.
@@ -845,13 +845,9 @@ get_pca_normdiff  <- function( sampleROI_dat_in  = stop("GRanges must be provide
     angles = seq(0, 2*pi, 0.001);
     xcirc  = cos(angles);
     ycirc  = sin(angles);
-    lines( xcirc, ycirc, col="black")
-    xcirc2  = 2*xcirc
-    ycirc2  = 2*ycirc
-    lines( xcirc2, ycirc2, col="black", lty = 2)
-    xcirc3  = 3*xcirc
-    ycirc3  = 3*ycirc
-    lines( xcirc3, ycirc3, col="black", lty = 3)
+    lines(   xcirc,    ycirc, col="black", lty = 1)
+    lines( 2*xcirc,  2*ycirc, col="black", lty = 2)
+    lines( 3*xcirc,  3*ycirc, col="black", lty = 3)
 
    points( # pca$x[,1] * (1/sqrt(Nxpos)),
            # pca$x[,2] * (1/sqrt(Nxpos)),
@@ -861,7 +857,13 @@ get_pca_normdiff  <- function( sampleROI_dat_in  = stop("GRanges must be provide
            lw   = 3 )
   }
 
-  return( list("pca" = pca,
-               "clust_kmeans" = clust_kmeans )
+  Silh <- silhouette( x = clust_kmeans$cluster,
+                      dist = dist(pca$x) )
+
+  # TODO: incorporate cluster robustness
+
+  return( list("pca"          = pca,
+               "clust_kmeans" = clust_kmeans,
+               "Silh"         = Silh )
          )
 }

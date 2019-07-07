@@ -79,6 +79,9 @@ poremodel     <- read.table( file = argsL$poremodel_ref,
 
 OLAP_skip_TOL = 3
 
+# writeLines( "Filtering loci for coverage.",
+#             argsL$logFile )
+#
 # reduce list of RsoI to those with sufficient coverage.
 loci_filtered_for_coverage <- filter_loci_for_coverage (  loci   = putloci$Region_groups,
                                                           reads  = readdat$aligned_reads,
@@ -127,6 +130,9 @@ names(sampleROI_dat_by_group) <- names(loci_filtered_for_coverage)
 saveRDS( object = sampleROI_dat_by_group,
          file   = pathout_ROIplotdat      )
 
+# writeLines( "Finished exporting RDS file for plot data.",
+#             argsL$logFile )
+#
 # Everything below here is buffer text to use as templates for function execution:
 # group="CITS"
 # group="Ill_2pO"
@@ -145,3 +151,38 @@ plot_dwelltime_over_ROI( sampleROI_dat = sampleROI_dat_by_group[[group]][[i]],
 
 i=0;
 i=i+1; pca_normdiff <- get_pca_normdiff (  sampleROI_dat_in =  sampleROI_dat_by_group[[group]][[i]]  )
+
+
+group="CITS"
+pca_clust_dat=list()
+Ngroups = length( names( sampleROI_dat_by_group ) )
+
+pca_clust_dat= lapply( c( 1: Ngroups ), function(group)
+                       lapply( c(1:length(sampleROI_dat_by_group[[group]] ) ),
+                              function(x) get_pca_clusters (  sampleROI_dat_in =  sampleROI_dat_by_group[[group]][[x]],
+                                                               shouldplot      = FALSE) )  )
+names( pca_clust_dat ) <- names( sampleROI_dat_by_group )
+
+
+c2_means   = list()
+Sil_scores = list()
+
+# extract important observables:
+c2_means <- lapply( c( 1: Ngroups ), function(group)
+                      unlist( lapply( c(1: length(sampleROI_dat_by_group[[group]] ) ), function(loci)
+                             rowSums( pca_clust_dat[[group]][[loci]]$clust_kmeans$centers^2 )[2]  ) )
+                   )
+names( c2_means ) <- names( sampleROI_dat_by_group )
+
+Sil_scores <- lapply( c( 1: Ngroups ), function(group)
+                     unlist( lapply( c(1: length(sampleROI_dat_by_group[[group]] ) ), function(loci)
+                              mean( pca_clust_dat[[group]][[loci]]$Silh[,3] )  ) )
+                     )
+names( Sil_scores ) <- names( sampleROI_dat_by_group )
+
+
+pca_dist <- dist( pca_normdiff$pca$x )
+readraw_dist <- dist( sampleROI_dat_by_group[[group]][[i]]$read_normdiff )
+
+
+rowSums( pca_normdiff$pca$x * pca_normdiff$pca$x )
