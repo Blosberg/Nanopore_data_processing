@@ -88,7 +88,7 @@ rule np_event_align:
 rule np_index:
     # Index the reads and the fast5 files for nanopolish
     input:
-        fast5_folder = lambda wc: os.path.join( config["PATHIN"], "{wcnpindex_sampleDir}",config["samplelist"][wc.wcnpindex_samplename].get( "fast5dir", config["fast5dir_default"] ) ),
+        fast5_folder = lambda wc: os.path.join( config["PATHIN"], wc.wcnpindex_sampleDir, config["samplelist"][wc.wcnpindex_samplename].get( "fast5dir", config["fast5dir_default"] ) ),
         fastq_file   = os.path.join( config["PATHOUT"], "{wcnpindex_sampleDir}", SUBDIR_SYMLINKS, "{wcnpindex_samplename}_{wcnpindex_chunk}" + config["fastq_suffix"])
 #        fastq_file   = lambda wc: os.path.join( config["PATHOUT"], "{wcnpindex_sampleDir}", SUBDIR_SYMLINKS, wc.wcnpindex_samplename + "_{wcnpindex_chunk}." + config["fastq_suffix"] )
     output:
