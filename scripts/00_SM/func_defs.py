@@ -129,10 +129,18 @@ def prep_configfile( args ):
           # to see how many "chunks" there are:
           DATPATH = os.path.join( config["PATHIN"], sampleDirName, config["samplelist"][sample].get( "fast5dir", config["fast5dir_default"] ) )
 
-          # i.e. the list of subdirectories within this path:
-          unsorted_stringlist =  [entry.name for entry in os.scandir( DATPATH ) if entry.is_dir()]
-          intlist = list( map(int, unsorted_stringlist) )
-          intlist.sort()
+          if( config["samplelist"][sample].get( "fast5dir", config["fast5dir_default"] ) == "fast5/pass/" ):
+              # in this case, we are dealing with the old fast5 format (chunks are in separate directories
+              unsorted_stringlist =  [entry.name for entry in os.scandir( DATPATH ) if entry.is_dir()]
+              intlist = list( map(int, unsorted_stringlist) )
+              intlist.sort()
+          elif( config["samplelist"][sample].get( "fast5dir", config["fast5dir_default"] ) == "fast5_pass/" ):
+              # This is the new multi-fast5 format:
+              unsorted_stringlist =  [entry.name for entry in os.scandir( DATPATH ) if entry.is_file()]
+              intlist = list( map(int, re.sub( ".*_", "", re.sub( ".fast5", "",  unsorted_stringlist[0] )  ) ) )
+              intlist.sort()
+          else :
+              bail("unexpected fast5dir format")
           # we now have a list of the "chunks" of reads:
 
           # create the necessary substructure in config:
@@ -149,7 +157,8 @@ def prep_configfile( args ):
           # check if the fastq directory exists
           if ( os.path.isdir( fqdir )  ):
              # determine the common prefix that preceeds _{chunk}.fastq in each of these files:
-             fastqprefix = list( set ( [ re.sub("_\d+" + config["fastq_suffix"], '_', entry.name ) for entry in  os.scandir( fqdir ) if entry.is_file() ] ) )
+             fastqprefix = list( set ( [ re.sub("_\d+" + config["fastq_suffix"] + ".*", '_', entry.name ) for entry in  os.scandir( fqdir ) if entry.is_file() ] ) )
+
              if ( len( fastqprefix ) == 1 ):
                  config["samplelist"][sample][ "sampleDirs" ][sampleDirName]["fastq_prefix"] = fastqprefix[0]
              else:

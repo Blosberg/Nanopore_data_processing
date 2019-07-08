@@ -88,8 +88,7 @@ rule np_event_align:
 rule np_index:
     # Index the reads and the fast5 files for nanopolish
     input:
-        fast5_folder = os.path.join( config["PATHIN"], "{wcnpindex_sampleDir}/fast5/pass", "{wcnpindex_chunk}"),
-#        fast5_folder = lambda wc: getPathCase( os.path.join( config["PATHIN"], "{wcnpindex_sampleDir}"), 'fast5', 'pass', wc.wcnpindex_chunk, input_data_type ),
+        fast5_folder = lambda wc: os.path.join( config["PATHIN"], "{wcnpindex_sampleDir}",config["samplelist"][wc.wcnpindex_samplename].get( "fast5dir", config["fast5dir_default"] ) ),
         fastq_file   = os.path.join( config["PATHOUT"], "{wcnpindex_sampleDir}", SUBDIR_SYMLINKS, "{wcnpindex_samplename}_{wcnpindex_chunk}" + config["fastq_suffix"])
 #        fastq_file   = lambda wc: os.path.join( config["PATHOUT"], "{wcnpindex_sampleDir}", SUBDIR_SYMLINKS, wc.wcnpindex_samplename + "_{wcnpindex_chunk}." + config["fastq_suffix"] )
     output:
@@ -112,7 +111,21 @@ rule np_index:
 #
 # rule quickcheck: (TODO)
 # ======================================================
-# TODO: restore rule_merge_bamfiles (deleted in a previous commit)
+rule merge_bam_files:
+    # combine the ~4000 reads from each minimap2
+    # alignment into a single bam file
+    input:
+        bami      = lambda wc: get_chunkfiles( wc, config["PATHOUT"], os.path.join( SUBDIR_SORTED_MINIMAPPED, "bam_chunks"), "" , ".sorted.bam", False )
+    output:
+        sortedbam = os.path.join( config["PATHOUT"], "{wc_sampleDir}", SUBDIR_SORTED_MINIMAPPED, "{wc_sampleName}.sorted.bam")
+    log:
+        logfile   = os.path.join( config["PATHOUT"], "{wc_sampleDir}", SUBDIR_SORTED_MINIMAPPED, "{wc_sampleName}.mergingbam.log")
+    message:
+        fmt("Combining bam files from post-mapping fastq data.")
+    shell:
+        '{SAMTOOLS} merge {output} {input} '
+
+# -----------------------------------------------------
 
 rule index_sortedbam:
     # Index the sorted bam file with samtools
@@ -183,7 +196,7 @@ rule align_minimap:
 rule symlink_fq:
     # create symlink to data:
     input:
-        chunk_src     = lambda wc: os.path.join( config["PATHIN"], wc.wcfqlink_sampleDir, "fastq", "pass", config["samplelist"][wc.wcfqlink_samplename]["sampleDirs"][wc.wcfqlink_sampleDir]["fastq_prefix"] + wc.wcfqlink_chunk + config["fastq_suffix"] )
+        chunk_src     = lambda wc: os.path.join( config["PATHIN"], wc.wcfqlink_sampleDir, config["samplelist"][wc.wcfqlink_samplename].get( "fastqdir", config["fastqdir_default"] ), config["samplelist"][wc.wcfqlink_samplename]["sampleDirs"][wc.wcfqlink_sampleDir]["fastq_prefix"] + wc.wcfqlink_chunk + config["fastq_suffix"] )
     output:
         chunk_linkloc = os.path.join( config["PATHOUT"], "{wcfqlink_sampleDir}", SUBDIR_SYMLINKS, "{wcfqlink_samplename}_{wcfqlink_chunk}" + config["fastq_suffix"] )
     params:

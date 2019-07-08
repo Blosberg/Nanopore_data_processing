@@ -1,7 +1,7 @@
 {
   "fastq_suffix": ".fastq",
-  "fast5dir_default":"fast5/pass/",
-  "fastqdir_default":"fastq/pass/",
+  "fast5dir_default":"fast5_pass/",
+  "fastqdir_default":"fastq_pass/",
 
   "ReadType":     "ONT_Direct_RNA",
 

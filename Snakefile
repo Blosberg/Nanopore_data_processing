@@ -92,6 +92,12 @@ for sampleLoopi_targets in config["samplelist"]:
       OUTPUT_FILES.extend(
                          get_chunkfiles( wcstruct, config["PATHOUT"], SUBDIR_ALIGNED_MINIMAP, "", ".sam", 0 )
                          )
+   elif ( config["execution"]["target_out"] == "fqlinks"):
+      wcstruct = Rule_wc_struct( sampleLoopi_targets, config["samplelist"][sampleLoopi_targets]["sampleDirs"] )
+
+      OUTPUT_FILES.extend(
+                         get_chunkfiles( wcstruct, config["PATHOUT"], SUBDIR_SYMLINKS, "", ".fastq", 0 )
+                         )
    else:
       print("Unrecognized target output file format: ", config["execution"]["target_out"], " ... Terminating.")
       exit(1)
