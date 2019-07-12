@@ -24,6 +24,7 @@
 "samtools"
 "bwa"
 "python-ont-tombo"
+"python-rpy2"
 "minimap2"
 "nanopolish"
 ))

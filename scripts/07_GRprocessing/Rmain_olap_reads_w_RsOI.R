@@ -58,8 +58,6 @@ if( ! file.exists( argsL$pathin_RsoI) )
 RsoI_in           <- readRDS(  argsL$pathin_RsoI )
 
 output               = list()
-output$aligned_reads = list()
-output$N_g_filtered  = list()
 output$sampleName    = argsL$sampleName
 output$RefRegionName = argsL$regionName
 
@@ -67,47 +65,40 @@ OLAP_skip_TOL = 3
 # ========================================================
 # count how many groupings of loci we are considering.
 # (groupings typically lump types of modifications in different regions)
-N_locus_groupings = length( length( RsoI_in$Region_groups ) )
 
 # expand the ROIs slightly to ensure overlap is recorded, even if
 # the read skips a base at the exact position of interest.
-for ( group in  names( RsoI_in$Region_groups )  )
-{
-  if ( identical( all( width ( RsoI_in$Region_groups[[group]] )  < OLAP_skip_TOL ) , TRUE ) )
-  {
-  start( RsoI_in$Region_groups[[group]] ) <-  ( start( RsoI_in$Region_groups[[group]] ) - OLAP_skip_TOL )
-  end(   RsoI_in$Region_groups[[group]] ) <-  ( end(   RsoI_in$Region_groups[[group]] ) + OLAP_skip_TOL )
 
-  writeLines( paste( "Enlarged ROI region for group", group),
+if ( identical( all( width ( RsoI_in$loci )  < OLAP_skip_TOL ) , TRUE ) )
+  {
+  start( RsoI_in$loci ) <-  ( start( RsoI_in$loci ) - OLAP_skip_TOL )
+  end(   RsoI_in$loci ) <-  ( end(   RsoI_in$loci ) + OLAP_skip_TOL )
+
+  writeLines( paste( "Enlarged ROI region for group", argsL$regionName ),
               argsL$logFile )
   }
-}
 
-# list the indices of reads that cover at least one ROI:
-read_indices_on_ROI = list()
 
 # Build aligned_reads list for alignment of reads to each subset of loci:
-for ( group in  names( RsoI_in$Region_groups )  )
-  {
-  read_indices_on_ROI[[group]]   = queryHits ( findOverlaps( reads,
-                                                                    RsoI_in$Region_groups[[group]]
-                                                                   )
-                                                     )
-  # collect indices of reads that hit at least one ROI:
-  read_indices_on_ROI[[ group ]] = unique( read_indices_on_ROI[[ group ]] )
+read_indices_on_ROI   = queryHits ( findOverlaps( reads,
+                                                  RsoI_in$loci
+                                                 )
+                                    )
+# collect indices of reads that hit at least one ROI:
+read_indices_on_ROI = unique( read_indices_on_ROI )
 
-  # filter for uniqueness:
-  output$aligned_reads[[group]] = reads[ read_indices_on_ROI[[ group ]] ]
+# filter for uniqueness:
+output$aligned_reads = reads[ read_indices_on_ROI ]
 
-  # store the length.
-  output$N_g_filtered[[group]]   = length( RsoI_in$Region_groups[[group]] )
+# store the length.
+output$N_g_hits  = length( RsoI_in$loci )
 
-  writeLines( paste( "Stored output for group", group),
-              argsL$logFile )
-}
+writeLines( paste( "Stored output for sample:", argsL$sampleName, ", region:", argsL$regionName ),
+            argsL$logFile )
 
-names( output$aligned_reads ) <- names( RsoI_in$Region_groups )
-names( output$N_g_filtered  ) <- names( RsoI_in$Region_groups )
+
+output$sampleName <- argsL$sampleName
+output$regionName <- argsL$regionName
 
 
 # ======  SAVE OUTPUT ===========
