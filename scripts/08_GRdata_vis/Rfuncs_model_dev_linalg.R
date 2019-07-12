@@ -14,7 +14,7 @@ get_pca_normdiff  <- function( sampleROI_dat_in  = stop("GRanges must be provide
   Nxpos = dim( sampleROI_dat_in$read_normdiff )[2]
 
   # get the subset of data points near the centre of the ROI:
-  ROI_dat_lin = sampleROI_dat_in$read_normdiff[ , c( (ceiling(Nxpos/2)-k) : (ceiling(Nxpos/2)+k) ) ]
+  ROI_dat_lin = sampleROI_dat_in$read_normdiff[ , c( (ceiling(Nxpos/2)-k+1) : (ceiling(Nxpos/2)+k-1) ) ]
 
 
   ROI_dat_lin[ is.na( ROI_dat_lin ) ] <- 0
@@ -37,6 +37,13 @@ get_pca_normdiff  <- function( sampleROI_dat_in  = stop("GRanges must be provide
   # synthdat_normed_rot2pca = rot_in2_pca_mat %*% synthdat_normed
   # these are now _row_ -based vectors
 
+
+  clust_kmeans <- kmeans( x = ROI_dat_lin,
+                          centers = 2,
+                          iter.max = 10 )
+  dev = sqrt( rowSums( clust_kmeans$centers * clust_kmeans$centers  )  )
+
+
   if( shouldplot )
   {
     plot( # pca$x[,1] * (1/sqrt(Nxpos)),
@@ -49,11 +56,28 @@ get_pca_normdiff  <- function( sampleROI_dat_in  = stop("GRanges must be provide
           main = "Deviation from model" )
 
     # draw a unit circle to represent a single std. dev.
-    pi=3.14159265358979;  angles = seq(0, 2*pi, 0.001); xcirc  = cos(angles); ycirc  = sin(angles)
+    pi=3.14159265358979;
+    angles = seq(0, 2*pi, 0.001);
+    xcirc  = cos(angles);
+    ycirc  = sin(angles);
     lines( xcirc, ycirc, col="black")
+
+   points( # pca$x[,1] * (1/sqrt(Nxpos)),
+           # pca$x[,2] * (1/sqrt(Nxpos)),
+           pca$x[ clust_kmeans$cluster == 1 ,1],
+           pca$x[ clust_kmeans$cluster == 1 ,2],
+           col  = "blue",
+           lw   = 3 )
+
   }
+
   return(pca)
 }
+
+# ===============================================================
+# Check for clustering:
+# cluster_normdiff_reads <- function ( ... )
+
 # ===============================================================
 # create a set of vectors orthonormal to an input:
 gen_orthonorm_vecs <- function(vec_in)

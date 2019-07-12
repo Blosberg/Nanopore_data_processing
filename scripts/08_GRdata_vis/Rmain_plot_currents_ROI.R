@@ -16,8 +16,8 @@ if("--help" %in% args) {
       Arguments:
       pathin_reads         --path to Granges List structure with reads aligned to reference genome,
       pathin_RsoI          --path to Granges list of regions of interest in the current study,
-      pathout_plot         --where should we send the plots
-      assembly             --genome
+      pathout_ROIdat       --where should we send the plots
+
       logFile              -- self-explanatory
 
       Example:
@@ -41,17 +41,18 @@ suppressPackageStartupMessages( library(Biostrings) )
 argsL=list(
 "pathin_reads"   = "/scratch/AG_Akalin/bosberg/nanopore/pipeline_output/testset_0/07_GRprocessing/TESTSET0_read_ROIolap_m6A_put.rds",  # path to Granges List structure with reads aligned to reference genome
 "pathin_RsoI"    = "/fast/AG_Akalin/bosberg/nanopore/ref/Regions_of_interest/m6A_putlocs_Linder.rds",                 # path to Granges list of regions of interest in the current study
+
 "path_funcdefs"  = "/clusterhome/bosberg/projects/nanopiper/scripts/08_GRdata_vis/Rfuncs_plot_currents_ROI.R",
-"pathin_reads"   = "/scratch/AG_Akalin/bosberg/nanopore/pipeline_output/testset_0/07_GRprocessing/TESTSET0_read_ROIolap_m6A_put.rds",  # path to Granges List structure with reads aligned to reference genome
-"pathin_RsoI"    = "/fast/AG_Akalin/bosberg/nanopore/ref/Regions_of_interest/m6A_putlocs_Linder.rds",
 "pathin_refGen"  = "/fast/AG_Akalin/refGenomes/hg19_canon/hg19_canon.fa",                         # path to Granges list of regions of interest in the current study
-"pathout_plot"   = "/scratch/AG_Akalin/bosberg/nanopore/pipeline_output/20180417_1233_HEK293_polyA_RNA/08_testing/testplot",                             # where should we send the plots
-"logFile"        = "/scratch/AG_Akalin/bosberg/nanopore/pipeline_output/20180417_1233_HEK293_polyA_RNA/08_testing/test.log",                             # self-explanatory
-"assembly"       = "hg19",
-"poremodel_ref"  = "/clusterhome/bosberg/projects/nanopiper/dev/ref/poremodel_RNA.csv",
+
+"pathout_ROIplotdat" = "/scratch/AG_Akalin/bosberg/nanopore/pipeline_output/20180417_1233_HEK293_polyA_RNA/08_testing/TESTSET0_m6A_plotdat.rds",                             # where should we send the plots
 "sampleName"     = "HEK293_untreated",
+"poremodel_ref"  = "/clusterhome/bosberg/projects/nanopiper/dev/ref/poremodel_RNA.csv",
+
 "mincov_in"      = 10,
-"plotrange_in"   = 5
+"plotrange_in"   = 10,
+
+"logFile"        = "/scratch/AG_Akalin/bosberg/nanopore/pipeline_output/20180417_1233_HEK293_polyA_RNA/08_testing/test.log"                             # self-explanatory
 )
 
 source( argsL$path_funcdefs )
@@ -78,6 +79,9 @@ poremodel     <- read.table( file = argsL$poremodel_ref,
 
 OLAP_skip_TOL = 3
 
+# writeLines( "Filtering loci for coverage.",
+#             argsL$logFile )
+#
 # reduce list of RsoI to those with sufficient coverage.
 loci_filtered_for_coverage <- filter_loci_for_coverage (  loci   = putloci$Region_groups,
                                                           reads  = readdat$aligned_reads,
@@ -90,8 +94,11 @@ loci_filtered_for_coverage <- filter_loci_for_coverage (  loci   = putloci$Regio
 loci_filtered_for_coverage_expanded <- loci_filtered_for_coverage
 for ( group in  names( loci_filtered_for_coverage )  )
   {
-  start( loci_filtered_for_coverage_expanded[[group]] ) <-  ( start( loci_filtered_for_coverage[[group]] ) -OLAP_skip_TOL )
-  end(   loci_filtered_for_coverage_expanded[[group]] ) <-  ( end(   loci_filtered_for_coverage[[group]] ) +OLAP_skip_TOL )
+  if ( identical( all( width ( loci_filtered_for_coverage_expanded[[group]] )  < OLAP_skip_TOL ) , TRUE ) )
+    {
+    start( loci_filtered_for_coverage_expanded[[group]] ) <-  ( start( loci_filtered_for_coverage[[group]] ) -OLAP_skip_TOL )
+    end(   loci_filtered_for_coverage_expanded[[group]] ) <-  ( end(   loci_filtered_for_coverage[[group]] ) +OLAP_skip_TOL )
+    }
   }
 
 # NOW check overlaps of reads with only the _covered_ loci.
@@ -116,14 +123,20 @@ sampleROI_dat_by_group <- lapply( names(loci_filtered_for_coverage),
                                                           group_overlaps       = overlaps_by_group[[group]],
                                                           group_loci_covered   = loci_filtered_for_coverage[[group]],
                                                           poremodel_in         = poremodel,
-                                                          plotrange_in         = 10 )
+                                                          plotrange_in         = plotrange_in )
                                     )
 names(sampleROI_dat_by_group) <- names(loci_filtered_for_coverage)
 
-group="CITS"
-# group="Ill_2pO"
-i=1
+saveRDS( object = sampleROI_dat_by_group,
+         file   = pathout_ROIplotdat      )
 
+# writeLines( "Finished exporting RDS file for plot data.",
+#             argsL$logFile )
+#
+# Everything below here is buffer text to use as templates for function execution:
+# group="CITS"
+# group="Ill_2pO"
+# i=1
 plot_samplesignal_over_ROI( sampleROI_dat  = sampleROI_dat_by_group[[group]][[i]],
                             refgen         = ref_Genome,
                             squiggle_type  = "event",
@@ -138,3 +151,38 @@ plot_dwelltime_over_ROI( sampleROI_dat = sampleROI_dat_by_group[[group]][[i]],
 
 i=0;
 i=i+1; pca_normdiff <- get_pca_normdiff (  sampleROI_dat_in =  sampleROI_dat_by_group[[group]][[i]]  )
+
+
+group="CITS"
+pca_clust_dat=list()
+Ngroups = length( names( sampleROI_dat_by_group ) )
+
+pca_clust_dat= lapply( c( 1: Ngroups ), function(group)
+                       lapply( c(1:length(sampleROI_dat_by_group[[group]] ) ),
+                              function(x) get_pca_clusters (  sampleROI_dat_in =  sampleROI_dat_by_group[[group]][[x]],
+                                                               shouldplot      = FALSE) )  )
+names( pca_clust_dat ) <- names( sampleROI_dat_by_group )
+
+
+c2_means   = list()
+Sil_scores = list()
+
+# extract important observables:
+c2_means <- lapply( c( 1: Ngroups ), function(group)
+                      unlist( lapply( c(1: length(sampleROI_dat_by_group[[group]] ) ), function(loci)
+                             rowSums( pca_clust_dat[[group]][[loci]]$clust_kmeans$centers^2 )[2]  ) )
+                   )
+names( c2_means ) <- names( sampleROI_dat_by_group )
+
+Sil_scores <- lapply( c( 1: Ngroups ), function(group)
+                     unlist( lapply( c(1: length(sampleROI_dat_by_group[[group]] ) ), function(loci)
+                              mean( pca_clust_dat[[group]][[loci]]$Silh[,3] )  ) )
+                     )
+names( Sil_scores ) <- names( sampleROI_dat_by_group )
+
+
+pca_dist <- dist( pca_normdiff$pca$x )
+readraw_dist <- dist( sampleROI_dat_by_group[[group]][[i]]$read_normdiff )
+
+
+rowSums( pca_normdiff$pca$x * pca_normdiff$pca$x )

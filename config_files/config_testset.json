@@ -1,4 +1,7 @@
 {
+  "fast5dir_default":"fast5/pass/",
+  "fastqdir_default":"fastq/pass/",
+
   "PATHIN"  : "/fast/AG_Akalin/bosberg/nanopore/data/",
   "PATHOUT" : "/fast/AG_Akalin/bosberg/nanopore/pipeline_output/",
 
@@ -21,6 +24,7 @@
         "target_out": "ROI_olap",
         "jobs": 10,
         "clustersub": false,
+        "FlattenReads": "FALSE",
         "Ealign_options": " --samples  "
    }
 
