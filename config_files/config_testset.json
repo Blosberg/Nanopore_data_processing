@@ -14,14 +14,14 @@
    "ref":{
           "Genome_DIR"     : "/fast/AG_Akalin/refGenomes/hg19_canon/",
           "Genome_version" : "hg19_canon",
-          "RsoI_abspath": "/fast/AG_Akalin/bosberg/nanopore/ref/Regions_of_interest/",
+          "RsoI_abspath": "/fast/AG_Akalin/bosberg/nanopore/ref/Regions_of_interest/hg19/",
           "RsoI": {
-             "m6A_put":  "m6A_putlocs_Linder.rds"
+                  "m6a_CITS": "ROI_m6A-CITS.rds"
           }
    },
 
    "execution":{
-        "target_out": "ROI_olap",
+        "target_out": "ROI_olap_plotdat",
         "jobs": 10,
         "clustersub": false,
         "FlattenReads": "FALSE",
