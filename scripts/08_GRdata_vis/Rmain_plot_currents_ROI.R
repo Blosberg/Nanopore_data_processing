@@ -83,8 +83,11 @@ source( argsL$path_funcdefs )
 # ========================================
 # Read in inputs:
 
-writeLines( "Reading in reads, refGenome and poremodel data.",
-            argsL$logFile )
+cat( "Reading in reads, refGenome and poremodel data.",
+     file = argsL$logFile,
+     append = TRUE,
+     sep = "\n" )
+
 ref_Genome    <- readDNAStringSet( argsL$pathin_refGen )
 readdat       <- readRDS( argsL$pathin_reads ) # these are just all the reads with at least one overlap on a ROI:
                                                # no structural organization in place (as some reads might overlap multiple RsOI)
@@ -93,60 +96,89 @@ poremodel     <- read.table( file = argsL$poremodel_ref,
                              sep = "\t",
                              header = TRUE
                              )
+
 # ========================================
-# Read in inputs:
 
-OLAP_skip_TOL = 3
+if( typeof( width( putloci$loci ) ) == "S4" )
+{ # in this case, loci are full genes and we should not attempt to produce "plotdat" over them.
+sampleROI_dat <- NULL
+  } else{
 
-writeLines( "Filtering loci for coverage.",
-            argsL$logFile )
-#
-# reduce list of RsoI to those with sufficient coverage.
-loci_filtered_for_coverage <- filter_loci_for_coverage (  loci   = putloci$loci,
-                                                          reads  = readdat$aligned_reads,
-                                                          mincov = argsL$mincov_in,
-                                                          OLAP_skip_TOL = OLAP_skip_TOL
-                                                        )
+  OLAP_skip_TOL = 3
 
-# expand loci slightly to ensure overlap is registered,
-# even if the exact base is skipped.
-loci_filtered_for_coverage_expanded <- loci_filtered_for_coverage
+  cat( "Filtering loci for coverage.",
+       file = argsL$logFile,
+       append = TRUE,
+       sep = "\n" )
 
-if ( identical( all( width ( loci_filtered_for_coverage_expanded )  < OLAP_skip_TOL ) , TRUE ) )
-  {
-  start( loci_filtered_for_coverage_expanded ) <-  ( start( loci_filtered_for_coverage ) - OLAP_skip_TOL )
-  end(   loci_filtered_for_coverage_expanded ) <-  ( end(   loci_filtered_for_coverage ) + OLAP_skip_TOL )
-  }
+  #
+  # reduce list of RsoI to those with sufficient coverage.
+  loci_filtered_for_coverage <- filter_loci_for_coverage (  loci   = putloci$loci,
+                                                            reads  = readdat$aligned_reads,
+                                                            mincov = argsL$mincov_in,
+                                                            OLAP_skip_TOL = OLAP_skip_TOL
+                                                          )
 
+  if( length( loci_filtered_for_coverage ) == 0 )
+    { sampleROI_dat <- NULL } else{
+      # expand loci slightly to ensure overlap is registered,
+      # even if the exact base is skipped.
+      loci_filtered_for_coverage_expanded <- loci_filtered_for_coverage
 
-# NOW check overlaps of reads with only the _covered_ loci.
-#TODO: We run this overlaps more than once; if speedup is required later, eliminate this repetition.
-writeLines( "Finding ROI overlaps.",
-            argsL$logFile )
-overlaps = findOverlaps(  loci_filtered_for_coverage_expanded,
-                          readdat$aligned_reads )
+      if ( identical( all( width ( loci_filtered_for_coverage_expanded )  < OLAP_skip_TOL ) , TRUE ) )
+        {
+        start( loci_filtered_for_coverage_expanded ) <-  ( start( loci_filtered_for_coverage ) - OLAP_skip_TOL )
+        end(   loci_filtered_for_coverage_expanded ) <-  ( end(   loci_filtered_for_coverage ) + OLAP_skip_TOL )
+        }
 
-# Don't need this anymore. The loci should refer directly to the exact ROI
-rm(loci_filtered_for_coverage_expanded)
+      # NOW check overlaps of reads with only the _covered_ loci.
+      #TODO: We run this overlaps more than once; if speedup is required later, eliminate this repetition.
+      cat( "Finding ROI overlaps.",
+           file = argsL$logFile,
+           append = TRUE,
+          sep = "\n" )
 
-# overlaps_by_group queryHits now references the indices of COVERED loci.
+      overlaps = findOverlaps(  loci_filtered_for_coverage_expanded,
+                            readdat$aligned_reads )
 
-# TODO: add row/col names for the output data structures.
-writeLines( "collecting sampleROI_dat.",
-            argsL$logFile )
-sampleROI_dat<- collect_sample_dat_over_ROIs(       SampleName           = argsL$sampleName,
-                                                    ref_Genome           = ref_Genome,
-                                                    aligned_reads        = readdat$aligned_reads,
-                                                    ROI_overlaps         = overlaps,
-                                                    group_loci_covered   = loci_filtered_for_coverage,
-                                                    poremodel_in         = poremodel,
-                                                    plotrange_in         = 10 )
+      # Don't need this anymore. The loci should refer directly to the exact ROI
+      rm(loci_filtered_for_coverage_expanded)
 
-writeLines( "Saving output.",
-            argsL$logFile )
+      # overlaps_by_group queryHits now references the indices of COVERED loci.
+
+      # TODO: add row/col names for the output data structures.
+      cat( "collecting sampleROI_dat.",
+           file = argsL$logFile,
+           append = TRUE,
+           sep = "\n" )
+
+      sampleROI_dat <- collect_sample_dat_over_ROIs(   SampleName      = argsL$sampleName,
+                                                       ref_Genome      = ref_Genome,
+                                                       aligned_reads   = readdat$aligned_reads,
+                                                       ROI_overlaps    = overlaps,
+                                                       loci_covered    = loci_filtered_for_coverage,
+                                                       poremodel_in    = poremodel,
+                                                       plotrange_in    = 10
+                                                      )
+
+    } # closing the if ( length( loci_filtered_for_coverage ) == 0 ) to check if none of the markers are hit.
+  } # closing the   if (typeof( width( putloci$loci ) ) == "S4") to determine if loci are extended genes
+
+    # ^ in either of the above "if" cases,  sampleROI_dat is set to be = NULL; any report will have to check for that.
+
+# ========================================
+
+# -------------------------------------------------------------------------
+cat( "Saving output.",
+     file = argsL$logFile,
+     append = TRUE,
+     sep = "\n" )
 
 saveRDS( object = sampleROI_dat,
          file   = argsL$pathout_ROIplotdat )
 
-writeLines( "Finished exporting RDS file for plot data.",
-            argsL$logFile )
+cat( "Finished exporting RDS file for plot data.",
+     file = argsL$logFile,
+     append = TRUE,
+     sep = "\n" )
+

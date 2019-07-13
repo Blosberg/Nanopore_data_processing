@@ -77,8 +77,8 @@ overlaps = findOverlaps(  loci_expanded,
 rm( loci_expanded )
 
 # collect a list of how many hits each loci accumulated:
-loci_coverage  =  collect_ROI_coverage ( group_loci     = loci,
-                                                                         ROI_overlaps = overlaps  )
+loci_coverage  =  collect_ROI_coverage ( loci         = loci,
+                                         ROI_overlaps = overlaps  )
 
 # collect a list of which loci are above threshold coverage:
 covered_loci_list <-  which( loci_coverage >= mincov )
@@ -91,33 +91,16 @@ return( loci_filtered_for_coverage )
 }
 # ===============================================================
 # --- collect coverage:
-collect_ROI_coverage <-  function( group_loci     = stop("group loci must be provided"),
-                                   ROI_overlaps   = stop("group olaps must be provided"))
+collect_ROI_coverage <-  function( loci          = stop("loci must be provided"),
+                                   ROI_overlaps  = stop("olaps must be provided"))
 {
-  result <- unlist( lapply( c(1:length( group_loci )),
+  result <- unlist( lapply( c(1:length( loci )),
                             function(x) length( which( queryHits( ROI_overlaps ) == x ) )
   )
   )
   return( result )
 }
 
-# ===============================================================
-# for efficiency, implement this function to screen overlaps and reads, as well as loci.
-# # --- Filter olaps and reads:
-# filter_olaps_and_reads <- function()
-# {
-# # find out which overlaps correspond to these loci:
-# covered_overlaps_by_group = lapply( names( loci ),
-#                                     function(group) overlaps_by_group[[group]][
-#
-#                                       which( ! is.na( match(  queryHits(  overlaps_by_group[[group]] ),
-#                                                               covered_loci_list[[group]] )
-#                                       )
-#                                       ) ]
-# )
-# names( covered_overlaps_by_group ) <- names(loci)
-#
-# }
 # ===============================================================
 # --- plot the current lines from all the reads of a sample over a given region:
 get_sampledat_over_ROI <-  function( SampleName         = stop("Sample name must be provided"),
@@ -653,16 +636,16 @@ get_sequence   <- function ( refgen  = stop("refgenome must be provided"),
 }
 # ===============================================================
 # --- For a given "group" of reads/RsOI, collect read data in a given range nearby
-collect_sample_dat_over_ROIs <- function ( SampleName           = "Unnamed",
-                                           ref_Genome           = stop("refGenome must be supplied."),
-                                           aligned_reads        = stop("reads must be supplied"),
-                                           ROI_overlaps       = stop("group overlaps must be specified"),
-                                           group_loci_covered   = stop("group loci must be provided"),
-                                           poremodel_in         = stop("poremodel must be specified."),
-                                           plotrange_in         = 10
+collect_sample_dat_over_ROIs <- function ( SampleName     = "Unnamed",
+                                           ref_Genome     = stop("refGenome must be supplied."),
+                                           aligned_reads  = stop("reads must be supplied"),
+                                           ROI_overlaps   = stop("overlaps must be specified"),
+                                           loci_covered   = stop("loci must be provided"),
+                                           poremodel_in   = stop("poremodel must be specified."),
+                                           plotrange_in   = 10
 )
 {
-  ROIread_dat = lapply( c(1:length(group_loci_covered)),
+  ROIread_dat = lapply( c(1:length( loci_covered)),
                               function(locus_i)
                                 get_sampledat_over_ROI ( SampleName         = SampleName,
                                                          overlapping_reads  = aligned_reads[
@@ -675,7 +658,7 @@ collect_sample_dat_over_ROIs <- function ( SampleName           = "Unnamed",
                                #                                  ^ in an overlap-pair for which the query is the ROI we are looking at (i.e. ="locus_i").
 
                                refgen             = ref_Genome,
-                               ROI_raw            = group_loci_covered[locus_i],
+                               ROI_raw            = loci_covered[locus_i],
                                plotrange          = plotrange_in,
                                poremodel          = poremodel_in
                                                        )
