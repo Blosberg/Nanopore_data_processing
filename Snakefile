@@ -41,7 +41,7 @@ SUBDIR_FILTERED_MINIMAP   = "03_MM_filtered_chunks/"
 SUBDIR_SORTED_MINIMAPPED  = "04_MM_sortedbam/"
 SUBDIR_EVENTALIGN         = "05_eventalign/"
 SUBDIR_GR                 = "06_GRobjects/"
-SUBDIR_GRproc             = "07_ROI_olap/"
+SUBDIR_ROIolap             = "07_ROI_olap/"
 SUBDIR_plotdat            = "08_plotdat_vis/"
 SUBDIR_REPORT             = "Final_report/"
 
@@ -77,7 +77,7 @@ for sampleLoopi_targets in config["samplelist"]:
                           )
    elif ( config["execution"]["target_out"] == "ROI_olap" ):
       OUTPUT_FILES.extend(
-                          [ os.path.join( config["PATHOUT"], config["samplelist"][sampleLoopi_targets]["sampleDirNames"][0], SUBDIR_GRproc, sampleLoopi_targets + "_read_ROIolap_"+ region +".rds") for region in config["ref"]["RsoI"]  ]
+                          [ os.path.join( config["PATHOUT"], config["samplelist"][sampleLoopi_targets]["sampleDirNames"][0], SUBDIR_ROIolap, sampleLoopi_targets + "_read_ROIolap_"+ region +".rds") for region in config["ref"]["RsoI"]  ]
                           )
    elif ( config["execution"]["target_out"] == "reads_GRL" ):
       OUTPUT_FILES.extend(
@@ -186,7 +186,7 @@ rule process_olaps:
     # process the overlaps into easy-to-plot data
     # structures that overlap with the regions of interest.
     input:
-        pathin_reads      = os.path.join( config["PATHOUT"],  "{wc_sampleDir}",  SUBDIR_GRproc, "{wc_sampleName}_read_ROIolap_{wc_regionName}.rds" ),
+        pathin_reads      = os.path.join( config["PATHOUT"],  "{wc_sampleDir}",  SUBDIR_ROIolap, "{wc_sampleName}_read_ROIolap_{wc_regionName}.rds" ),
         pathin_RsoI       = lambda wc: os.path.join( config["ref"]["RsoI_abspath"], config["ref"]["RsoI"][wc.wc_regionName] ),
         pathin_poremodel  = os.path.join( config["ref"]["model_abspath"], "poremodel_RNA.csv" ), # TODO: generalize this for DNA
         refgenome_fasta  = os.path.join(DIR_REFGENOME, config['ref']['Genome_version'] + ".fa" )
@@ -222,12 +222,12 @@ rule overlap_reads_w_RsoI:
         reads_in          = os.path.join( config["PATHOUT"], "{wcReadROI_olap_sampleDir}", SUBDIR_GR, "{wcReadROI_olap_sampleName}_reads_GRL.rds"),
         Refregion_in      = lambda wc: os.path.join( config["ref"]["RsoI_abspath"], config["ref"]["RsoI"][wc.wcReadROI_regionName])
     output:
-        readROI_olaps     = os.path.join( config["PATHOUT"],  "{wcReadROI_olap_sampleDir}",  SUBDIR_GRproc, "{wcReadROI_olap_sampleName}_read_ROIolap_{wcReadROI_regionName}.rds" )
+        readROI_olaps     = os.path.join( config["PATHOUT"],  "{wcReadROI_olap_sampleDir}",  SUBDIR_ROIolap, "{wcReadROI_olap_sampleName}_read_ROIolap_{wcReadROI_regionName}.rds" )
     params:
         sampleName        = "{wcReadROI_olap_sampleName}",
         regionName        = "{wcReadROI_regionName}"
     log:
-        logFile           = os.path.join( config["PATHOUT"], "{wcReadROI_olap_sampleDir}", SUBDIR_GRproc, "{wcReadROI_olap_sampleName}_{wcReadROI_regionName}_read_ROI_olap.log")
+        logFile           = os.path.join( config["PATHOUT"], "{wcReadROI_olap_sampleDir}", SUBDIR_ROIolap, "{wcReadROI_olap_sampleName}_{wcReadROI_regionName}_read_ROI_olap.log")
     message:
         fmt("Overlap reads from {input.reads_in} with region of interest {input.Refregion_in}.")
     shell:
