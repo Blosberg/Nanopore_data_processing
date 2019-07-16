@@ -103,15 +103,15 @@ collect_ROI_coverage <-  function( loci          = stop("loci must be provided")
 
 # ===============================================================
 # --- plot the current lines from all the reads of a sample over a given region:
-get_sampledat_over_ROI <-  function( SampleName         = stop("Sample name must be provided"),
-                                     overlapping_reads  = stop("reads must be provided"),
+get_sampledat_over_ROI <-  function( overlapping_reads  = stop("reads must be provided"),
                                      refgen             = stop("Reference genome must be provided"),
                                      ROI_raw            = stop("Region of Interest Grange must be provided"),
                                      poremodel          = stop("standard reference data must be provided."),
                                      k                  = 5,
                                      plotrange          = 10,
                                      mincurrent         = 50,
-                                     maxcurrent         = 150 )
+                                     maxcurrent         = 150,
+                                     perform_sanity_checks = FALSE )
 {
   # for these inputs, we know that the reads overlap at least once on the ROI, but we don't know where
   Nreads     = length( overlapping_reads )
@@ -122,7 +122,12 @@ get_sampledat_over_ROI <-  function( SampleName         = stop("Sample name must
   # get number of x positions in the plotting domain:
   Nxpos      = end( ROI ) - start( ROI ) + 1;
   xposn_vals = c( start( ROI):end(ROI) )
-  chr        = as.character( unique( seqnames( ROI ) ) )
+  if( perform_sanity_checks )
+    {
+    chr        = as.character( unique( seqnames( ROI ) ) ) # makes sure they're the same.
+    } else {
+     chr       = as.character( seqnames( ROI[1] )  )
+    }
 
   # Get standard plot
   # get_reference_strand # write a function here:
@@ -130,12 +135,17 @@ get_sampledat_over_ROI <-  function( SampleName         = stop("Sample name must
   poremodel_metrics <- extract_poremodel_metrics_from_sequence ( poremodel_in  = poremodel,
                                                                  refgen        = refgen,
                                                                  ROI           = ROI,
+                                                                 chr_in        = chr,
                                                                  strandtype    = "RNA"
                                                                 )
+  ## ========= 0.1 sec down to here ====================
+
   # ----- declare and allocate output.
   # populate a matrix of current values at each position (averaged over all events and samples
   posn_means <- matrix( NA, Nreads, Nxpos )
   colnames( posn_means ) <- as.character( xposn_vals )
+  if( length( overlapping_reads ) == 0 )
+    { stop("ERROR: in function get_sampledat_over_ROI: overlapping_reads has length 0.") }
   row.names( posn_means ) <- as.character( paste0("read_", names( overlapping_reads ) ) )
 
   # Also tabulate the "squiggle" current readings (keep in character format):
@@ -168,44 +178,44 @@ get_sampledat_over_ROI <-  function( SampleName         = stop("Sample name must
                                                         xposn_vals  = xposn_vals )
 
     # now pass these values over to the matrix by x-position
-    for (j in c(1: length(xposn_vals)  ) )
-      {
-      # assign corresponding values to the matrix (with possible NA breaks).
-      posn_means[ i, j ]            <- read_posn_dat$posn_means[j]
-            # numeric; single value for each position.
-      Isamples_chars[ i, j ]        <- read_posn_dat$Isamples_chars[j]
-            # string; each position has an array of sample-values, separated by ","
-      Event_means_chars [ i, j ]    <- read_posn_dat$Event_means_chars[j]
-            # string; each position as an array of means for the corresponding event.
-            # Multiple possible events per position --separated by ","
-      Event_duration_chars [ i, j ] <- read_posn_dat$Event_duration_chars[j]
-            # string; each position has an array of duration values.
-            # should be same length as above --separated by ","
-      }
+    # assign corresponding values to the matrix (with possible NA breaks).
+    posn_means[ i,  ]            <- read_posn_dat$posn_means[1: Nxpos]
+          # numeric; single value for each position.
+    Isamples_chars[ i,  ]        <- read_posn_dat$Isamples_chars[1: Nxpos]
+          # string; each position has an array of sample-values, separated by ","
+    Event_means_chars [ i,  ]    <- read_posn_dat$Event_means_chars[1: Nxpos]
+          # string; each position as an array of means for the corresponding event.
+          # Multiple possible events per position --separated by ","
+    Event_duration_chars [ i,  ] <- read_posn_dat$Event_duration_chars[1: Nxpos]
+          # string; each position has an array of duration values.
+          # should be same length as above --separated by ","
   }
 
   # ========  SANITY CHECK =======================
-  posn_means_xcheck = matrix( NA, Nreads, Nxpos )
-  xcheck_compare    = matrix( NA, Nreads, Nxpos )
-  for (i in c(1:Nreads) )
+  if( perform_sanity_checks )
     {
-    for (j in c(1:Nxpos ) )
+    posn_means_xcheck = matrix( NA, Nreads, Nxpos )
+    xcheck_compare    = matrix( NA, Nreads, Nxpos )
+    for (i in c(1:Nreads) )
       {
-      if ( !is.na( Isamples_chars   [i,j ] ) )
-        { posn_means_xcheck[i,j] <- mean( extract_numericArray_from_charlist(Isamples_chars   [i,j ])) }
+      for (j in c(1:Nxpos ) )
+        {
+        if ( !is.na( Isamples_chars   [i,j ] ) )
+          { posn_means_xcheck[i,j] <- mean( extract_numericArray_from_charlist(Isamples_chars   [i,j ])) }
+        }
       }
-    }
 
-  xcheck_compare = (posn_means_xcheck - posn_means)/posn_means
-  xcheck_compare[ is.na(posn_means)  ] <- 0
-  if( max ( xcheck_compare) > 0.01 )
-  {stop("current mean differs from sample mean by more than 1%.")}
+    xcheck_compare = (posn_means_xcheck - posn_means)/posn_means
+    xcheck_compare[ is.na(posn_means)  ] <- 0
+    if( max ( xcheck_compare) > 0.01 )
+      {stop("current mean differs from sample mean by more than 1%.")}
+  }
   # ========  SANITY CHECK COMPLETE ==============
 
   # for each read, take the difference from the standard model mean.
   read_diff_from_model <- sweep( posn_means,
-                               2,
-                               as.array( poremodel_metrics[,1]) )
+                                 2,
+                                 as.array( poremodel_metrics[,1]) )
   colnames( read_diff_from_model )  <- colnames( posn_means )
   row.names( read_diff_from_model ) <- row.names( posn_means )
 
@@ -216,8 +226,7 @@ get_sampledat_over_ROI <-  function( SampleName         = stop("Sample name must
                            FUN = "/" )
 
   # return the read-data in matrix form.
-  return( list( "SampleName"           = SampleName,
-                "ROI"                  = ROI,
+  return( list( "ROI"                  = ROI,
                 "xposn_vals"           = xposn_vals,
                 "poremodel_metrics"    = poremodel_metrics,
                 "read_normdiff"        = read_normdiff,
@@ -237,25 +246,26 @@ collect_singlebase_res_read_data <-function( readseg_ROI = stop("readseg_ROI mus
 
   # populate a matrix of current values at each position (averaged over all events and samples
   posn_means <- matrix( NA, 1, Nxpos )
-  colnames( posn_means )          <- as.character( xposn_vals )
+#  colnames( posn_means )          <- as.character( xposn_vals )
 
   # Also tabulate the "squiggle" current readings (keep in character format):
   Isamples_chars  <- matrix( NA, 1, Nxpos )
-  colnames( Isamples_chars )      <- as.character( xposn_vals )
+#  colnames( Isamples_chars )      <- as.character( xposn_vals )
 
   # Also tabulate an array of the "event-averaged" current values (multiple possible events per position)
   Event_means_chars  <- matrix( NA, 1, Nxpos )
-  colnames( Event_means_chars )   <- as.character( xposn_vals )
+#  colnames( Event_means_chars )   <- as.character( xposn_vals )
 
   # And tabulate the duration of each of these events.
   Event_duration_chars <- matrix( NA, 1, Nxpos )
-  colnames( Event_duration_chars ) <- as.character( xposn_vals )
+#  colnames( Event_duration_chars ) <- as.character( xposn_vals )
 
   for ( x in c(1:Nxpos))
     {
     readseg_at_bploci = readseg_ROI[ start( readseg_ROI ) == xposn_vals[x] ]
 
-    # @@@ TODO: maybe add 1 to x here?
+    # Depending on convention as to sequence "location", this may need to be offset by one.
+    # At latest check (July 2019), the convention below is consistent with observations:
     posn_means[x]           = sum( readseg_at_bploci$event_mean * readseg_at_bploci$event_length )/sum(readseg_at_bploci$event_length)
     Isamples_chars[x]       = paste( readseg_at_bploci$samples,
                                   collapse = "," )
@@ -275,7 +285,8 @@ return( list(
   }
 # ===============================================================
 # --- plot the current lines from all the reads of a sample over a given region:
-plot_samplesignal_over_ROI  <- function( sampleROI_dat    = stop("aligned sampledat must be provided"),
+plot_samplesignal_over_ROI  <- function( SampleName       = "unnamed",
+                                         sampleROI_dat    = stop("aligned sampledat must be provided"),
                                          refgen           = stop("refgen must be provided"),
                                          mincurrent       = 50,
                                          maxcurrent       = 150,
@@ -306,7 +317,8 @@ plot_samplesignal_over_ROI  <- function( sampleROI_dat    = stop("aligned sample
            xlim = c( min(sampleROI_dat$xposn_vals),
                      max(sampleROI_dat$xposn_vals) ),
 
-           main= paste(  sampleROI_dat$SampleName, "; normalized \n", chr, ":",
+           main= paste(  SampleName,
+                         "; normalized \n", chr, ":",
                          as.character( min(sampleROI_dat$xposn_vals) ), "-",
                          as.character( max(sampleROI_dat$xposn_vals)  ) ),
            xlab = "reference sequence",
@@ -378,7 +390,7 @@ plot_samplesignal_over_ROI  <- function( sampleROI_dat    = stop("aligned sample
          xlim = c( min(sampleROI_dat$xposn_vals),
                    max(sampleROI_dat$xposn_vals) ),
 
-         main= paste(  sampleROI_dat$SampleName, "\n",
+         main= paste(  SampleName, "\n",
                        chr,
                        ":",
                        as.character( min(sampleROI_dat$xposn_vals) ),
@@ -478,7 +490,8 @@ plot_dwelltime_over_ROI <-  function( sampleROI_dat  = stop("aligned sampledat m
          xlim = c( start(sampleROI_dat$ROI),
                    end(sampleROI_dat$ROI) ),
 
-         main= paste(  sampleROI_dat$SampleName, "\n", chr, ":",
+         main= paste(  SampleName, "\n",
+                       chr, ":",
                        as.character( start(sampleROI_dat$ROI) ), "-",
                        as.character( end(sampleROI_dat$ROI)  ) ),
          xlab = "reference sequence",
@@ -565,11 +578,12 @@ add_sequence_tick_marks   <- function(  refgen        = stop("Reference genome m
 extract_poremodel_metrics_from_sequence   <- function ( poremodel_in  = stop("poremodel data required"),
                                                         refgen        = stop("refgen data required"),
                                                         ROI           = stop("ROI data required"),
+                                                        chr_in        = stop("seqname must be provided"),
                                                         strandtype    = "RNA",
                                                         k = 5
                                                        )
 {
-  chr = as.character( unique(seqnames(ROI )) )
+  chr = chr_in
   if( as.character( strand(ROI)) == "+" )
     { RefSequence = get_sequence( refgen = refgen,
                              chr    = chr,
@@ -578,8 +592,7 @@ extract_poremodel_metrics_from_sequence   <- function ( poremodel_in  = stop("po
       RefSequence = reverseComplement( get_sequence( refgen = refgen,
                                                    chr    = chr,
                                                    range  = c( start(ROI)+1, end(ROI)+k ) )
-                                   )
-
+                                      )
     } else{
      stop("invalid strand.")
     }
@@ -599,11 +612,15 @@ extract_poremodel_metrics_from_sequence   <- function ( poremodel_in  = stop("po
                       length(RefSequence)-k+1,
                       2 )
 
+  # N.B. Refsequence is already reverse-complimented (as necessary) according to strand.
+  seq_kmers       <-  unlist( lapply( c(1:(length(RefSequence)-k+1)), function(x)
+                                     as.character( substr( RefSequence, x, (x+k-1) ) ) ) )
+
   std_current[,1] <- unlist( lapply( c(1:(length(RefSequence)-k+1)), function(x)
-                                     poremodel_ref[ as.character(substr( RefSequence, x, (x+k-1) )) , 1 ]
+                                     poremodel_ref[ seq_kmers[x] , 1 ]
                                      ) )
   std_current[,2] <- unlist( lapply( c(1:(length(RefSequence)-k+1)), function(x)
-                                     poremodel_ref[ as.character(substr( RefSequence, x, (x+k-1) )) , 2 ]
+                                     poremodel_ref[ seq_kmers[x], 2 ]
                                      ) )
 
   # reverse order of values, if we are on the reverse strand.
@@ -613,9 +630,7 @@ extract_poremodel_metrics_from_sequence   <- function ( poremodel_in  = stop("po
     }
 
   colnames( std_current )   <- c( "mean", "stddev")
-  row.names( std_current )  <- unlist( lapply( c(1:(length(RefSequence)-k+1)), function(x)
-                                     as.character( substr( RefSequence, x, (x+k-1) ) )
-                                     ) )
+  row.names( std_current )  <- seq_kmers
 
   return( std_current )
 }
@@ -636,8 +651,7 @@ get_sequence   <- function ( refgen  = stop("refgenome must be provided"),
 }
 # ===============================================================
 # --- For a given "group" of reads/RsOI, collect read data in a given range nearby
-collect_sample_dat_over_ROIs <- function ( SampleName     = "Unnamed",
-                                           ref_Genome     = stop("refGenome must be supplied."),
+collect_sample_dat_over_ROIs <- function ( ref_Genome     = stop("refGenome must be supplied."),
                                            aligned_reads  = stop("reads must be supplied"),
                                            ROI_overlaps   = stop("overlaps must be specified"),
                                            loci_covered   = stop("loci must be provided"),
@@ -647,8 +661,7 @@ collect_sample_dat_over_ROIs <- function ( SampleName     = "Unnamed",
 {
   ROIread_dat = lapply( c(1:length( loci_covered)),
                               function(locus_i)
-                                get_sampledat_over_ROI ( SampleName         = SampleName,
-                                                         overlapping_reads  = aligned_reads[
+                                get_sampledat_over_ROI ( overlapping_reads  = aligned_reads[
                                                               subjectHits( ROI_overlaps[
                                                                   queryHits( ROI_overlaps ) == locus_i ] ) ],
                                # To understand the above lines.
