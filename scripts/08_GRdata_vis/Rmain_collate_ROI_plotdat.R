@@ -53,7 +53,7 @@ suppressPackageStartupMessages( library(Biostrings) )
 # "pathin_reads"   = paste0( PATHOUT, sampleDir, "/07_GRprocessing/", sampleName, "_read_ROIolap_", ROIname, ".rds"),
 # "pathin_RsoI"    = pathin_RsoI,
 #
-# "path_funcdefs"  = "/clusterhome/bosberg/projects/nanopiper/scripts/08_GRdata_vis/Rfuncs_plot_currents_ROI.R",
+# "path_funcdefs"  = "/clusterhome/bosberg/projects/nanopiper/scripts/08_GRdata_vis/Rfuncs_collate_ROI_plotdat.R",
 # "pathin_refGen"  = "/fast/AG_Akalin/refGenomes/hg19_canon/hg19_canon.fa",                         # path to Granges list of regions of interest in the current study
 # # "pathin_refGen"  = "/scratch/AG_Akalin/refGenomes/IV_DeBRuijn_barcoded/IV_dB_Bcoded.fa",
 #
