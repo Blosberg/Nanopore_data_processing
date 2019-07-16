@@ -62,9 +62,9 @@ cat( "Obtained ROI file; processing overlaps now.",
      append = TRUE,
      sep    = "\n" )
 
-output               = list()
-output$sampleName    = argsL$sampleName
-output$RefRegionName = argsL$regionName
+output             = list()
+output$sampleName  = argsL$sampleName
+output$regionName  = argsL$regionName
 
 OLAP_skip_TOL = 3
 # ========================================================
@@ -101,9 +101,6 @@ read_indices_on_ROI = unique( read_indices_on_ROI )
 # Collect just those reads, and put them together as an output object.
 output$aligned_reads = reads[ read_indices_on_ROI ]
 
-output$sampleName <- argsL$sampleName
-output$regionName <- argsL$regionName
-
 # ======  SAVE OUTPUT ===========
 
 cat( paste( "Storing output for sample:",
@@ -114,9 +111,12 @@ cat( paste( "Storing output for sample:",
      sep    = "\n" )
 
 
-saveRDS( output, file = argsL$pathout_alignedreads )
+saveRDS( output,
+         file = argsL$pathout_alignedreads )
 
-cat( "Saved RDS file. Program complete.",
+cat( paste( "Saved RDS data to file: ",
+            argsL$pathout_alignedreads,
+            " ... Program complete.") ,
       file   = argsL$logFile,
       append = TRUE,
       sep    = "\n" )
