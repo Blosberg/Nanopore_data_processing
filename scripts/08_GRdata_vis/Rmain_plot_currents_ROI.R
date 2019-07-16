@@ -107,6 +107,9 @@ if( typeof( width( putloci$loci ) ) == "S4" )
      file = argsL$logFile,
      append = TRUE,
      sep = "\n" )
+
+  saveRDS( object = NULL,
+           file   = argsL$pathout_ROIplotdat )
   q(save="no")
 
   }
@@ -131,9 +134,12 @@ if( length( loci_filtered_for_coverage ) == 0 )
   # in this case, none of the loci had sufficient coverage, so the plotdat is empty.
   sampleROI_dat <- NULL
   cat( "length of sufficiently-covered loci = 0. With no coverage on any ROI, sampleROI_dat will be exported as NULL. Exiting.",
-     file = argsL$logFile,
-     append = TRUE,
-     sep = "\n" )
+        file = argsL$logFile,
+        append = TRUE,
+        sep = "\n" )
+  saveRDS( object = NULL,
+           file   = argsL$pathout_ROIplotdat )
+
   q(save="no")
   }
 
