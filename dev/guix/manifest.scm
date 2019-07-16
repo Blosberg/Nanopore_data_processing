@@ -27,5 +27,6 @@
 "python-rpy2"
 "minimap2"
 "nanopolish"
+"python-ont-fast5-api"
 ))
 (specifications->manifest packages)
