@@ -10,8 +10,6 @@
    "samplelist": {
                 "TESTSET0":        {"sampleDirNames": ["testset_0", "testset_1"]},
                 "HEK_untreated":   {"sampleDirNames": ["20180417_1233_HEK293_polyA_RNA"] },
-                "rps16_unmod":     { "sampleDirNames": ["20180913_1457_invitro_rps16_unmod"] },
-                "rps16_tenpc_m1A": { "sampleDirNames": ["20180920_1017_invitro_rps16_tenpcm1A"] },
                 "HEK_4SU_IAA":     {"sampleDirNames": ["20190130_1420_293_4Su_IAA","20190130_1631_293_4Su_IAA_run2"]},
                 "HEK_4SU":         {"sampleDirNames": [ "20190320_1414_4SU", "20190320_1728_4SU_run2" ] }
                 },
@@ -29,9 +27,9 @@
                   "m6a_CITS_NC_50up": "ROI_m6A-CITS-NULLcontrol50bp-upstream.rds",
                   "m6a_CITS_NC_50dn": "ROI_m6A-CITS-NULLcontrol50bp-downstream.rds",
 
-                  "MihaM_2po": "ROI_Ill-2pO.rds",
-                  "MihaM_2po_NC_50up": "ROI_Ill-2pO-NULLcontrol50bp-upstream.rds",
-                  "MihaM_2po_NC_50dn": "ROI_Ill-2pO-NULLcontrol50bp-downstream.rds",
+                  "Me2p0": "ROI_Me2p0.rds",
+                  "Me2p0_NC50up": "ROI_Me2p0-NC50up.rds",
+                  "Me2p0_NC50dn": "ROI_Me2p0-NC50dn.rds",
 
                   "stab50_shortlived": "ROI_stab50-shortlived.rds",
                   "stab50_longlived": "ROI_stab50-longlived.rds",
@@ -42,8 +40,8 @@
 
    "execution":{
         "target_out": "ROI_olap_plotdat",
-        "jobs": 150,
-        "clustersub": false,
+        "jobs": 100,
+        "clustersub": true,
         "Ealign_options": " --samples "
    }
 

@@ -1,14 +1,14 @@
 {
-  "fast5dir_default":"fast5/pass/",
-  "fastqdir_default":"fastq/pass/",
+   "fast5dir_default":"fast5/pass/",
+   "fastqdir_default":"fastq/pass/",
 
-  "PATHIN"  : "/fast/AG_Akalin/bosberg/nanopore/data/",
-  "PATHOUT" : "/fast/AG_Akalin/bosberg/nanopore/pipeline_output/",
+   "PATHIN"  : "/fast/AG_Akalin/bosberg/nanopore/data/",
+   "PATHOUT" : "/fast/AG_Akalin/bosberg/nanopore/pipeline_output/",
 
-  "ReadType":     "ONT_Direct_RNA",
+   "ReadType":     "ONT_Direct_RNA",
 
-  "samplelist": {
-                "TESTSET0": { "sampleDirNames": ["testset_0", "testset_1"]  }
+   "samplelist": {
+                "TESTSET0":        {"sampleDirNames": ["testset_0", "testset_1"]}
                 },
 
    "ref":{
@@ -22,10 +22,9 @@
 
    "execution":{
         "target_out": "ROI_olap_plotdat",
-        "jobs": 10,
-        "clustersub": false,
-        "FlattenReads": "FALSE",
-        "Ealign_options": " --samples  "
+        "jobs": 100,
+        "clustersub": true,
+        "Ealign_options": " --samples "
    }
 
 }

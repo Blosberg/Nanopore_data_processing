@@ -90,12 +90,12 @@
               "process_olaps":
                  {
                  "threads": 1,
-                 "memory": 50G
+                 "memory": 80G
                  },
               "overlap_reads_w_RsoI":
                  {
                  "threads": 1,
-                 "memory": 50G
+                 "memory": 80G
                  },
               "minimizer":
                  {

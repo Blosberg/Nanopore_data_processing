@@ -107,26 +107,27 @@ get_sampledat_over_ROI <-  function( overlapping_reads  = stop("reads must be pr
                                      refgen             = stop("Reference genome must be provided"),
                                      ROI_raw            = stop("Region of Interest Grange must be provided"),
                                      poremodel          = stop("standard reference data must be provided."),
-                                     k                  = 5,
+                                     k_in               = 5,
                                      plotrange          = 10,
                                      mincurrent         = 50,
                                      maxcurrent         = 150,
                                      perform_sanity_checks = FALSE )
 {
   # for these inputs, we know that the reads overlap at least once on the ROI, but we don't know where
-  Nreads     = length( overlapping_reads )
-  ROI        = ROI_raw
-  start(ROI) <- start(ROI_raw) - plotrange;
-  end(ROI)   <- end(ROI_raw)   + plotrange;
+  Nreads             <- length( overlapping_reads )
+  plotRegion         <- ROI_raw
+  start( plotRegion) <- start(plotRegion) - plotrange - k_in;
+  end(   plotRegion) <- end(  plotRegion) + plotrange + k_in;
 
   # get number of x positions in the plotting domain:
-  Nxpos      = end( ROI ) - start( ROI ) + 1;
-  xposn_vals = c( start( ROI):end(ROI) )
+  Nxpos      = end( plotRegion ) - start( plotRegion ) + 1;
+  xposn_vals = c( start( plotRegion):end(plotRegion) )
+  
   if( perform_sanity_checks )
     {
-    chr        = as.character( unique( seqnames( ROI ) ) ) # makes sure they're the same.
+    chr        = as.character( unique( seqnames( plotRegion ) ) ) # makes sure they're the same.
     } else {
-     chr       = as.character( seqnames( ROI[1] )  )
+     chr       = as.character( seqnames( plotRegion[1] )  )
     }
 
   # Get standard plot
@@ -134,14 +135,13 @@ get_sampledat_over_ROI <-  function( overlapping_reads  = stop("reads must be pr
   # need to take reverse-compliment of ref genome for "-" strands
   poremodel_metrics <- extract_poremodel_metrics_from_sequence ( poremodel_in  = poremodel,
                                                                  refgen        = refgen,
-                                                                 ROI           = ROI,
+                                                                 ROI           = plotRegion,
                                                                  chr_in        = chr,
                                                                  strandtype    = "RNA"
                                                                 )
-  ## ========= 0.1 sec down to here ====================
-
-  # ----- declare and allocate output.
+  # ----- declare and allocate output.----------
   # populate a matrix of current values at each position (averaged over all events and samples
+  
   posn_means <- matrix( NA, Nreads, Nxpos )
   colnames( posn_means ) <- as.character( xposn_vals )
   if( length( overlapping_reads ) == 0 )
@@ -149,8 +149,8 @@ get_sampledat_over_ROI <-  function( overlapping_reads  = stop("reads must be pr
   row.names( posn_means ) <- as.character( paste0("read_", names( overlapping_reads ) ) )
 
   # Also tabulate the "squiggle" current readings (keep in character format):
-  Isamples_chars  <- matrix( NA, Nreads, Nxpos )
-  colnames( Isamples_chars ) <- as.character( xposn_vals )
+  Isamples_chars              <- matrix( NA, Nreads, Nxpos )
+  colnames( Isamples_chars )  <- as.character( xposn_vals )
   row.names( Isamples_chars ) <- as.character( paste0("read_", names( overlapping_reads ) ) )
 
   # Also tabulate an array of the "event-averaged" current values (multiple possible events per position)
@@ -162,19 +162,21 @@ get_sampledat_over_ROI <-  function( overlapping_reads  = stop("reads must be pr
   Event_duration_chars <- matrix( NA, Nreads, Nxpos )
   colnames( Event_duration_chars ) <- as.character( xposn_vals )
   row.names( Event_duration_chars ) <- as.character( paste0("read_", names( overlapping_reads ) ) )
-  # -----------------------------------------------
 
+  # -----------------------------------------------
+  # scan through each read overlapping this ROI
+  
   for (i in c(1:Nreads) )
     {
     # get just the segment of the read that overlaps
-    readseg_olaps <- findOverlaps( ROI,
+    readseg_olaps <- findOverlaps( plotRegion,
                                    overlapping_reads[[i]] );
-    # and then take just the segment of the read that overlaps with the ROI:
-    readseg_ROI   <- overlapping_reads[[i]][ subjectHits( readseg_olaps ) ]
+    # and then take just the segment of the read that overlaps with the plotRegion:
+    readseg_plotRegion   <- overlapping_reads[[i]][ subjectHits( readseg_olaps ) ]
 
     # re-initialize:
     read_posn_dat <- list()
-    read_posn_dat <- collect_singlebase_res_read_data ( readseg_ROI = readseg_ROI,
+    read_posn_dat <- collect_singlebase_res_read_data ( readseg_plotRegion = readseg_plotRegion,
                                                         xposn_vals  = xposn_vals )
 
     # now pass these values over to the matrix by x-position
@@ -226,7 +228,8 @@ get_sampledat_over_ROI <-  function( overlapping_reads  = stop("reads must be pr
                            FUN = "/" )
 
   # return the read-data in matrix form.
-  return( list( "ROI"                  = ROI,
+  return( list( "ROI"                  = ROI_raw,
+                "plotRegion"           = plotRegion,
                 "xposn_vals"           = xposn_vals,
                 "poremodel_metrics"    = poremodel_metrics,
                 "read_normdiff"        = read_normdiff,
@@ -238,7 +241,7 @@ get_sampledat_over_ROI <-  function( overlapping_reads  = stop("reads must be pr
 }
 # ===============================================================
 # --- gather a list of matrices (of fixed size) that tabulate base-position specific data for each read.
-collect_singlebase_res_read_data <-function( readseg_ROI = stop("readseg_ROI must be provided"),
+collect_singlebase_res_read_data <-function( readseg_plotRegion = stop("readseg_plotRegion must be provided"),
                                              xposn_vals  = stop("xposn_vals must be provided"))
 {
   Nxpos  <- length( xposn_vals )
@@ -262,7 +265,7 @@ collect_singlebase_res_read_data <-function( readseg_ROI = stop("readseg_ROI mus
 
   for ( x in c(1:Nxpos))
     {
-    readseg_at_bploci = readseg_ROI[ start( readseg_ROI ) == xposn_vals[x] ]
+    readseg_at_bploci = readseg_plotRegion[ start( readseg_plotRegion ) == xposn_vals[x] ]
 
     # Depending on convention as to sequence "location", this may need to be offset by one.
     # At latest check (July 2019), the convention below is consistent with observations:
@@ -367,7 +370,8 @@ collect_sample_dat_over_ROIs <- function ( ref_Genome     = stop("refGenome must
                                            ROI_overlaps   = stop("overlaps must be specified"),
                                            loci_covered   = stop("loci must be provided"),
                                            poremodel_in   = stop("poremodel must be specified."),
-                                           plotrange_in   = 10
+                                           plotrange_in   = 10,
+                                           k_in           = 5
 )
 {
   ROIread_dat = lapply( c(1:length( loci_covered)),
@@ -384,7 +388,8 @@ collect_sample_dat_over_ROIs <- function ( ref_Genome     = stop("refGenome must
                                refgen             = ref_Genome,
                                ROI_raw            = loci_covered[locus_i],
                                plotrange          = plotrange_in,
-                               poremodel          = poremodel_in
+                               poremodel          = poremodel_in,
+                               k_in               = k_in
                                                        )
                             )
 

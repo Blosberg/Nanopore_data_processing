@@ -41,7 +41,7 @@ SUBDIR_FILTERED_MINIMAP   = "03_MM_filtered_chunks/"
 SUBDIR_SORTED_MINIMAPPED  = "04_MM_sortedbam/"
 SUBDIR_EVENTALIGN         = "05_eventalign/"
 SUBDIR_GR                 = "06_GRobjects/"
-SUBDIR_ROIolap             = "07_ROI_olap/"
+SUBDIR_ROIolap            = "07_ROI_olap/"
 SUBDIR_plotdat            = "08_plotdat_vis/"
 SUBDIR_REPORT             = "Final_report/"
 
@@ -194,6 +194,7 @@ rule process_olaps:
         ROI_plotdat      = os.path.join( config["PATHOUT"],  "{wc_sampleDir}",  SUBDIR_plotdat, "{wc_sampleName}-olap-{wc_regionName}-plotdat.rds" )
     params:
         sampleName   = "{wc_sampleName}",
+        regionName   = "{wc_regionName}",
         mincov       = "10",
         plotrange    = "10"
     log:
@@ -209,6 +210,7 @@ rule process_olaps:
                           "--pathin_refGen={input.refgenome_fasta}",
                           "--pathout_ROIplotdat={output}",
                           "--sampleName={params.sampleName}",
+                          "--regionName={params.regionName}",
                           "--mincov_in={params.mincov}",
                           "--plotrange_in={params.plotrange}",
                           "--logFile={log.logFile}"] )

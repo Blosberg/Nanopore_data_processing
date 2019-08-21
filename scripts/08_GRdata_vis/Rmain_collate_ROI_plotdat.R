@@ -34,42 +34,16 @@ argsL     <- as.list(as.character(argsDF$V2))
 names(argsL) <- argsDF$V1
 # BiocManager::install("Biostrings")
 # BiocManager::install("BSgenome.Hsapiens.UCSC.hg19")
+
+# ============== argsL is now defined. Script can be manually input from here: ===================
+
 suppressPackageStartupMessages( library(GenomicRanges) )
 suppressPackageStartupMessages( library(Biostrings) )
 
-# ======= DEBUGGING: DELETE THIS: ========
-# PATHOUT="/scratch/AG_Akalin/bosberg/nanopore/pipeline_output/"
-# sampleDir = "20180417_1233_HEK293_polyA_RNA/"
-# # sampleDir = "20190702_1647_IVdBm6A_FAK57816_38717116/"
-# sampleName="HEK_untreated"
-# #sampleName = "IVdBm6A"
-# ROIname="MihaM_2pO"
-# # "barcodes", "homoP"
-# pathin_RsoI = paste0( "/scratch/AG_Akalin/bosberg/nanopore/ref/Regions_of_interest/", "MihaM_2po_Ill", ".rds" )
-# #pathin_RsoI = paste0( "scratch/AG_Akalin/bosberg/nanopore/ref/Regions_of_interest/IV_dB/", choose one: [IVdB_ROI_barcodes.rds, IV_dB/IVdB_ROI_homoP.rds] )
-#
-# argsL=list(
-#
-# "pathin_reads"   = paste0( PATHOUT, sampleDir, "/07_GRprocessing/", sampleName, "_read_ROIolap_", ROIname, ".rds"),
-# "pathin_RsoI"    = pathin_RsoI,
-#
-# "path_funcdefs"  = "/clusterhome/bosberg/projects/nanopiper/scripts/08_GRdata_vis/Rfuncs_collate_ROI_plotdat.R",
-# "pathin_refGen"  = "/fast/AG_Akalin/refGenomes/hg19_canon/hg19_canon.fa",                         # path to Granges list of regions of interest in the current study
-# # "pathin_refGen"  = "/scratch/AG_Akalin/refGenomes/IV_DeBRuijn_barcoded/IV_dB_Bcoded.fa",
-#
-# "pathout_ROIplotdat" = paste0( PATHOUT, sampleDir, "08_plotdat_vis/", sampleName, "_olap_", ROIname, "_plotdat.rds"),
-#
-# "sampleName"     = sampleName,
-# "poremodel_ref"  = "/clusterhome/bosberg/projects/nanopiper/dev/ref/poremodel_RNA.csv",
-#
+argsL$mincov_in    = as.numeric( argsL$mincov_in)
+argsL$plotrange_in = as.numeric( argsL$plotrange_in )
 # "mincov_in"      = 10,
 # "plotrange_in"   = 10,
-#
-# "logFile"        = paste0( PATHOUT, "20190702_1647_IVdBm6A_FAK57816_38717116/08_plotdat_vis/homoP.log")
-# #"logFile"        = paste0( PATHOUT, "20180417_1233_HEK293_polyA_RNA/08_testing/test.log"                             # self-explanatory
-# )
-#
-# ======= DEBUGGING: DOWN TO HERE: ========
 
 source( argsL$path_funcdefs )
 
@@ -128,6 +102,9 @@ loci_filtered_for_coverage <- filter_loci_for_coverage (  loci   = putloci$loci,
                                                           mincov = argsL$mincov_in,
                                                           OLAP_skip_TOL = OLAP_skip_TOL
                                                        )
+rm( putloci )
+invisible( gc() )
+# Consider only the covered loci from here on.
 
 if( length( loci_filtered_for_coverage ) == 0 )
   {
@@ -162,10 +139,11 @@ cat( "Finding ROI overlaps.",
     sep = "\n" )
 
 overlaps = findOverlaps(  loci_filtered_for_coverage_expanded,
-                      readdat$aligned_reads )
+                          readdat$aligned_reads )
 
 # Don't need this anymore. The loci should refer directly to the exact ROI
 rm(loci_filtered_for_coverage_expanded)
+invisible( gc() )
 
 # overlaps_by_group queryHits now references the indices of COVERED loci.
 
@@ -180,8 +158,10 @@ sampleROI_dat <- collect_sample_dat_over_ROIs(   ref_Genome      = ref_Genome,
                                                  ROI_overlaps    = overlaps,
                                                  loci_covered    = loci_filtered_for_coverage,
                                                  poremodel_in    = poremodel,
-                                                 plotrange_in    = 10
-                                                )
+                                                 plotrange_in    = argsL$plotrange_in
+                                              )
+rm( readdat )
+invisible( gc() ) 
 
 coverage   <- unlist( lapply( c(1:length(sampleROI_dat)),
                             function(ROI_index) dim( sampleROI_dat[[ROI_index]]$read_normdiff )[1] ))
@@ -189,28 +169,26 @@ coverage_order_list <- order( coverage,
                               decreasing = TRUE )
 
 sampleROI_dat_sorted_by_coverage = sampleROI_dat[ coverage_order_list ]
-
-
-plotdat_out = list( "sampleName" = argsL$sampleName,
-                    "regionName" = argsL$regionName,
-                    "ROIdat"     = sampleROI_dat_sorted_by_coverage
-                    )
-
-# ========================================
+rm( sampleROI_dat )
+invisible( gc() )
 
 # -------------------------------------------------------------------------
+
 cat( "Saving output.",
      file = argsL$logFile,
      append = TRUE,
      sep = "\n" )
 
-saveRDS( object = plotdat_out,
+saveRDS( object = list( "sampleName"  = argsL$sampleName,
+                         "regionName" = argsL$regionName,
+                         "ROIdat"     = sampleROI_dat_sorted_by_coverage
+                        ),
          file   = argsL$pathout_ROIplotdat )
 
 cat( paste( "Finished exporting RDS to output file:",
              argsL$pathout_ROIplotdat,
              " ... Exiting." ),
-     file = argsL$logFile,
+     file   = argsL$logFile,
      append = TRUE,
-     sep = "\n" )
+     sep    = "\n" )
 
