@@ -23,9 +23,12 @@ The motivation for this type of analysis, of course, is to detect possible modif
 The pipeline also collects various other statistics, for example on the distribution of currents for various motifs and kmers, as illustrated below:
 
 <table><tr>
+<td> <img src="dev/figs/homopolymer_current_dist.png" alt="Homopolymer sequence current distribution profiles compared to full spectrum range." width="250"/>
 <td> <img src="dev/figs/homopolymer_current_hist_15N.png" alt="Quasi-homopolymer sequence current distribution profiles with N-substitutions at 1,5." width="250"/>
 <td> <img src="dev/figs/NAGTN_NGTAN_NTAGN.png" alt="Quasi-homopolymer sequence current distribution profiles with conserved bases, showing order-dependence." width="250"/>
 </tr></table>
+
+Here, the first two figures show current distributions of k=5 homopolymers in the context of the sum over all possible sequences (grey background), emphasizing the importance of the central three bases. The latter figure shows current distribution profiles with conserved bases, showing order-dependence.
 
 Such plots can have an important pedagogical significance in understanding and working with raw current data from nanopore devices.
 A consolidated final report (the contents of which are under continuing
