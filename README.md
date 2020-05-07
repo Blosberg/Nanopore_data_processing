@@ -10,7 +10,7 @@
 
 ---
 
-This pipeline processes raw nanopore data (e.g. from the minION device) and runs parallel processing pipelines for base-called data, as well as raw current. It aligns reads in bam and GRangeslist format, and profiles current data along regions of interest.
+This package processes raw nanopore data (e.g. from the minION device) in parallel tracks for base-called sequences, as well as raw current. It aligns reads in bam and GRangeslist format, and profiles current data along regions of interest.
 
 Two examples of figures output by the pipeline are provided below. The first figure shows current profile over a genomic region of interest, while the second shows systematic deviation of such currents from the expected normal distribution of current profiles predicted by sequence alone.
 
@@ -28,11 +28,16 @@ The pipeline also collects various other statistics, for example on the distribu
 <td> <img src="dev/figs/NAGTN_NGTAN_NTAGN.png" alt="Quasi-homopolymer sequence current distribution profiles with conserved bases, showing order-dependence." width="250"/>
 </tr></table>
 
-Here, the first two figures show current distributions of k=5 homopolymers in the context of the sum over all possible sequences (grey background), emphasizing the importance of the central three bases. The latter figure shows current distribution profiles with conserved bases, showing order-dependence.
+Here, the first two figures show current distributions of k=5 homopolymers in
+the context of the sum over all possible sequences (grey background),
+emphasizing the importance of the central three bases.  The latter figure shows
+current distribution profiles with conserved bases, showing order-dependence.
 
-Such plots can have an important pedagogical significance in understanding and working with raw current data from nanopore devices.
-A consolidated final report (the contents of which are under continuing
-development) Contains numerous other figures and reports tailored to the users input and regions of interest.
+Such plots can play a useful pedagogical role in understanding and
+working with raw current data from nanopore devices.  A consolidated final
+report (the contents of which are under continuing development) output by the
+software  contains numerous other figures and reports tailored to the users
+input and regions of interest.
 
 ## How to use this package
 
