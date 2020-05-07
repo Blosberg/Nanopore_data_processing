@@ -20,8 +20,7 @@ Two examples of figures output by the pipeline are provided below. The first fig
 </tr></table>
 
 The motivation for this type of analysis, of course, is to detect possible modifications, as, indeed, the latter figure is drawn from a putative modification site.
-
-the pipeline also collects various other statistics, for example on the distribution of currents for various motifs and kmers, as illustrated below:
+The pipeline also collects various other statistics, for example on the distribution of currents for various motifs and kmers, as illustrated below:
 
 <table><tr>
 <td> <img src="dev/figs/homopolymer_current_hist_15N.png" alt="Quasi-homopolymer sequence current distribution profiles with N-substitutions at 1,5." width="250"/>
