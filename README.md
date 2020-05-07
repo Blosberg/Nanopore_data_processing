@@ -37,18 +37,11 @@ development) Contains numerous other figures and reports tailored to the users i
 ## How to use this package
 
 To run the program, first edit the config file `config.json`, as described
-below, and supply a reference file (with full path) populated with regions of
-interest against which you wish to analyse the current of the reads (if none is
-supplied, this section is simply skipped). You must also provide  the genome
-location, genome version and path to input and output folders.
+below. You will need to supply a reference file populated with regions of interest against which you wish to analyse the current of the reads (if none is supplied, this section is simply skipped). You must also provide  the location of a reference genome, the genome version and paths to input and output folders.
 
-Before running the pipeline, you will need to configure your executables. The
-assumption here is that you will be using guix; if you are working from the MDC
-in Berlin then everything is already setup for this purpose --otherwise, you
-may have to adapt the following steps to your system.  
+Before running the pipeline, you will need to configure your executables. The pipeline was initially built using guix, and if you are working from the MDC in Berlin, then everything is already setup for this purpose --otherwise, adapting the manifest .scm file to a requirements file will be necessary (please get in touch if you require assistance with this.)
 
-Navigate to the repository's subfolder `dev/guix` and create your environment from
-the manifest file that is provided using the following command:
+Assuming you are using guix, navigate to the repository's subfolder `dev/guix` and create your environment from the manifest file that is provided using the following command:
 
 `{guix} package -p $PWD/.guix-profile -m manifest.scm`
 
@@ -56,7 +49,7 @@ or, alternatively, just use:
 
 `source generate_env_from_manifest.sh`
 
-Since this file simply contains the above command. Guix will then go about
+(Since this file simply contains the above command). Guix will then go about
 preparing the dependencies that you will need to run the pipeline in a
 bespoke environment which can then be used whenever you want. This will take
 some time, but only needs to be done once; go for lunch while it's running.
@@ -72,9 +65,9 @@ should then  be able to run the pipeline (see below).
 This pipeline is a work in progress, (note the version number) and feedback is
 welcome; if you encounter any problems, please post an issue.
 
-## config file
+## Config file
 
-=====
+You will want to specify the following variables before runtime.
 
 | Variable name | description |
 | ------------- |:-----------:|
