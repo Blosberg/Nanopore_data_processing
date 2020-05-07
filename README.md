@@ -78,19 +78,20 @@ You will want to specify the following variables before runtime.
 | ref           | data regarding the reference --e.g. "Genome_Dir": Path to the reference genome; "Genome_version": name thereof, "RsoI_abspath": path to the directory containing regions of interest. And finally, "RsoI": RDS file containing regions of interest (in a specialized format).
 | Execution     | target_out Desired output of the pipeline; e.g. a "bam"; the read data with alignment, in Granges List format "reads_GRL", among various other possibilities. "jobs": max number of rule executions to be run simultaneously. "clustersub": should this task be submitted to an SGE cluster (true/false).
 
-The remaining options can generally be left to their default values in `dev/config_defaults.json`
+The remaining options can generally be left to their default values, defined  in
+`dev/config_defaults.json`
 
-## Temporary interpreter solution
-One last preparatory step must be taken before running the pipeline --it's an unfortunate, kludge solution that will hopefully be removed soon.
+## Interpreter
 
-The first line in the file `nanopiper.py` reads `#!...` and what follows  must be replaced by your python interpreter. To find out what that is, type `which python`, and paste the result into the first line in nanopiper.py in place of what is currently there.
-
-This is an ugly and temporary solution for which I apologize, and it will be removed soon.
-
+You may also need to add a specific path to the interpreter on your machine
+at the first line of the file nanopiper.py to your instance of python3.
+This is a temporary solution until a more standard installation process is
+established.
 
 ## Execution
 
-Once the above have been completed, you should be able to navigate to the folder in which you've saved this repository, and enter:
+Once the above have been completed, you should be able to navigate to the folder
+in which you've saved this repository, and enter:
 
 `./nanopiper.py -c config_batch_all.json -n`
 

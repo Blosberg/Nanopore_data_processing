@@ -1,4 +1,3 @@
-#!/home/bosberg/projects/nanopiper/dev/guix/.guix-profile/bin/python3
 # -*- python -*-
 # nanopiper Pipeline.
 #
