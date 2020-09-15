@@ -276,4 +276,3 @@ rule bwa_index:
         fmt("Creating bwa index files of ref genome for eventalign.")
     shell:
         "{BWA} index {input} 2> {log}"
-

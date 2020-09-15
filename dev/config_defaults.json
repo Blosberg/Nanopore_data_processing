@@ -6,9 +6,9 @@
   "ReadType":     "ONT_Direct_RNA",
 
   "ref": {
-          "Genome_DIR"     : "/scratch/AG_Akalin/refGenomes/hg19_canon/",
-          "Genome_version" : "hg19_canon",
-          "RsoI_abspath": "/scratch/AG_Akalin/bosberg/Stability/",
+          "Genome_DIR"     : "/project/bioinf_meissner/references/hg19",
+          "Genome_version" : "hg19",
+          "RsoI_abspath": "/project/bioinf_meissner/Bren_isoform_tmp/",
           "model_abspath": "/home/bosberg/projects/nanopiper/dev/ref/",
           "RsoI": {   }
 

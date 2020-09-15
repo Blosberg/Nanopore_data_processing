@@ -34,7 +34,7 @@ PATH_NANOPIPER_EXEC="/home/bosberg/projects/nanopiper/"
 # ^ execution path from which pipeline executables (+repo) are stored.
 NANOPIPER_UGLY= False
 snakefilename = PATH_NANOPIPER_EXEC+"Snakefile"
-GUIX_PROFILE  = PATH_NANOPIPER_EXEC+"dev/guix/"
+# CONDA_PROFILE  = PATH_NANOPIPER_EXEC+"dev/guix/"
 
 sys.path.append(PATH_NANOPIPER_EXEC+"scripts/00_SM/")
 from func_defs import *
@@ -168,7 +168,8 @@ if not NANOPIPER_UGLY:
 # --- DEFINE SNAKEMAKE COMMAND  ---------
 
 command = [
-    os.path.join(GUIX_PROFILE, ".guix-profile", "bin", "snakemake"),
+#    os.path.join(GUIX_PROFILE, ".guix-profile", "bin", "snakemake"),
+    os.path.join("/usr/local/package/bin/", "snakemake"),
     "--snakefile={}".format(snakefilename),
     "--configfile={}".format(args.config_npSM),
     "--jobs={}".format( str(config['execution']['jobs']) ),
