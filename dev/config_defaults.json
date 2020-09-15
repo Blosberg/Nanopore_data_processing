@@ -9,6 +9,7 @@
           "Genome_DIR"     : "/scratch/AG_Akalin/refGenomes/hg19_canon/",
           "Genome_version" : "hg19_canon",
           "RsoI_abspath": "/scratch/AG_Akalin/bosberg/Stability/",
+          "model_abspath": "/home/bosberg/projects/nanopiper/dev/ref/",
           "RsoI": {   }
 
           },
@@ -27,7 +28,8 @@
         "Rmain_tsv2GRconv":          "06_GRobjects/Rmain_npreads_tsv2GR.R",
         "Rmain_combine_read_chunks": "06_GRobjects/Rmain_combine_GRL_readchunks.R",
         "Rfuncs_tsv2GRconv":         "06_GRobjects/Rfuncs_npreads_tsv2GR.R",
-        "Rfuncs_plotdat":            "scripts/08_GRdata_vis/Rfuncs_plot_currents_ROI.R",
+        "Rmain_plotdat":             "08_GRdata_vis/Rmain_collate_ROI_plotdat.R",
+        "Rfuncs_plotdat":            "08_GRdata_vis/Rfuncs_collate_ROI_plotdat.R",
         "pyfunc_defs":               "00_SM/func_defs.py",
         "rules_chunks":              "00_SM/rules_chunks.py",
         "rules_wholefastq":          "00_SM/rules_wholefastq.py"
@@ -85,10 +87,15 @@
                  "threads": 1,
                  "memory": 30G
                  },
-               "overlap_reads_w_RsoI":
+              "process_olaps":
                  {
                  "threads": 1,
-                 "memory": 50G
+                 "memory": 80G
+                 },
+              "overlap_reads_w_RsoI":
+                 {
+                 "threads": 1,
+                 "memory": 80G
                  },
               "minimizer":
                  {

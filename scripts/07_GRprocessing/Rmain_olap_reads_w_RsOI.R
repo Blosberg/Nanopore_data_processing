@@ -46,74 +46,77 @@ reads                  <- Readstruct_all_in$Events_GRL_splitbyread
 # They will come in sets defined by Region_groups
 if( ! file.exists( argsL$pathin_RsoI) )
   {
-  writeLines("NO loci information found. An empty olap file will be produced and this section will be ignored in the final report.", argsL$logFile )
+  cat( "NO loci information found. An empty olap file will be produced and this section will be ignored in the final report.",
+       file = argsL$logFile,
+       append = TRUE,
+       sep = "\n" )
+
   saveRDS( NULL, argsL$pathout_alignedreads )
   q(save="no")
+}else{
+  RsoI_in           <- readRDS( argsL$pathin_RsoI )
 }
 
-  writeLines( "Obtained ROI file; processing overlaps now.",
-              argsL$logFile )
+cat( "Obtained ROI file; processing overlaps now.",
+     file   = argsL$logFile,
+     append = TRUE,
+     sep    = "\n" )
 
-
-RsoI_in           <- readRDS(  argsL$pathin_RsoI )
-
-output               = list()
-output$aligned_reads = list()
-output$N_g_filtered  = list()
-output$sampleName    = argsL$sampleName
-output$RefRegionName = argsL$regionName
+output             = list()
+output$sampleName  = argsL$sampleName
+output$regionName  = argsL$regionName
 
 OLAP_skip_TOL = 3
 # ========================================================
 # count how many groupings of loci we are considering.
 # (groupings typically lump types of modifications in different regions)
-N_locus_groupings = length( length( RsoI_in$Region_groups ) )
 
 # expand the ROIs slightly to ensure overlap is recorded, even if
 # the read skips a base at the exact position of interest.
-for ( group in  names( RsoI_in$Region_groups )  )
-{
-  if ( identical( all( width ( RsoI_in$Region_groups[[group]] )  < OLAP_skip_TOL ) , TRUE ) )
+
+# This oddly-constructed boolean is in case one of the RsoI is actually a whole gene,
+# and the list is a set exons. the width will then return a set of names.
+# (in this case, we don't want to bother with expanding)
+if ( identical( all( width ( RsoI_in$loci )  < OLAP_skip_TOL ) , TRUE ) )
   {
-  start( RsoI_in$Region_groups[[group]] ) <-  ( start( RsoI_in$Region_groups[[group]] ) - OLAP_skip_TOL )
-  end(   RsoI_in$Region_groups[[group]] ) <-  ( end(   RsoI_in$Region_groups[[group]] ) + OLAP_skip_TOL )
+  start( RsoI_in$loci ) <-  ( start( RsoI_in$loci ) - OLAP_skip_TOL )
+  end(   RsoI_in$loci ) <-  ( end(   RsoI_in$loci ) + OLAP_skip_TOL )
 
-  writeLines( paste( "Enlarged ROI region for group", group),
-              argsL$logFile )
+  cat( paste( "Enlarged ROI region for group", argsL$regionName ),
+       file   = argsL$logFile,
+       append = TRUE,
+       sep    = "\n" )
   }
-}
 
-# list the indices of reads that cover at least one ROI:
-read_indices_on_ROI = list()
 
 # Build aligned_reads list for alignment of reads to each subset of loci:
-for ( group in  names( RsoI_in$Region_groups )  )
-  {
-  read_indices_on_ROI[[group]]   = queryHits ( findOverlaps( reads,
-                                                                    RsoI_in$Region_groups[[group]]
-                                                                   )
-                                                     )
-  # collect indices of reads that hit at least one ROI:
-  read_indices_on_ROI[[ group ]] = unique( read_indices_on_ROI[[ group ]] )
+# and collect indices of reads that hit at least one ROI
+read_indices_on_ROI   = queryHits ( findOverlaps( reads,
+                                                  RsoI_in$loci
+                                                 )
+                                    )
+# filter for uniqueness (we don't care how many ROIs the read overlaps with):
+read_indices_on_ROI = unique( read_indices_on_ROI )
 
-  # filter for uniqueness:
-  output$aligned_reads[[group]] = reads[ read_indices_on_ROI[[ group ]] ]
-
-  # store the length.
-  output$N_g_filtered[[group]]   = length( RsoI_in$Region_groups[[group]] )
-
-  writeLines( paste( "Stored output for group", group),
-              argsL$logFile )
-}
-
-names( output$aligned_reads ) <- names( RsoI_in$Region_groups )
-names( output$N_g_filtered  ) <- names( RsoI_in$Region_groups )
-
+# Collect just those reads, and put them together as an output object.
+output$aligned_reads = reads[ read_indices_on_ROI ]
 
 # ======  SAVE OUTPUT ===========
 
-saveRDS( output, file = argsL$pathout_alignedreads )
+cat( paste( "Storing output for sample:",
+                   argsL$sampleName,
+                   ", region:", argsL$regionName ),
+     file   = argsL$logFile,
+     append = TRUE,
+     sep    = "\n" )
 
-writeLines( "Saved RDS file. Program complete.",
-            argsL$logFile )
 
+saveRDS( output,
+         file = argsL$pathout_alignedreads )
+
+cat( paste( "Saved RDS data to file: ",
+            argsL$pathout_alignedreads,
+            " ... Program complete.") ,
+      file   = argsL$logFile,
+      append = TRUE,
+      sep    = "\n" )

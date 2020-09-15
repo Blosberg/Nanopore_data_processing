@@ -1,1 +1,1 @@
-/gnu/remote/bin/guixr package -p ./.guix-profile -m manifest.scm
+/gnu/remote/bin/guix pull && /gnu/remote/bin/guixr package -p ./.guix-profile -m manifest.scm

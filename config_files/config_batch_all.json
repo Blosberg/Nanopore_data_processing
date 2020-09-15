@@ -10,8 +10,6 @@
    "samplelist": {
                 "TESTSET0":        {"sampleDirNames": ["testset_0", "testset_1"]},
                 "HEK_untreated":   {"sampleDirNames": ["20180417_1233_HEK293_polyA_RNA"] },
-                "rps16_unmod":     { "sampleDirNames": ["20180913_1457_invitro_rps16_unmod"] },
-                "rps16_tenpc_m1A": { "sampleDirNames": ["20180920_1017_invitro_rps16_tenpcm1A"] },
                 "HEK_4SU_IAA":     {"sampleDirNames": ["20190130_1420_293_4Su_IAA","20190130_1631_293_4Su_IAA_run2"]},
                 "HEK_4SU":         {"sampleDirNames": [ "20190320_1414_4SU", "20190320_1728_4SU_run2" ] }
                 },
@@ -19,19 +17,31 @@
    "ref":{
           "Genome_DIR"     : "/fast/AG_Akalin/refGenomes/hg19_canon/",
           "Genome_version" : "hg19_canon",
-          "RsoI_abspath": "/fast/AG_Akalin/bosberg/nanopore/ref/Regions_of_interest/",
+          "RsoI_abspath": "/fast/AG_Akalin/bosberg/nanopore/ref/Regions_of_interest/hg19/",
           "RsoI": {
-              "stab_100": "stabilityseg_hg19_M100.rds",
-              "stab_50":  "stabilityseg_hg19_M50.rds",
-              "MihaM_2pO":"MihaM_2po_Ill.rds",
-              "m6A_put":  "m6A_putlocs_Linder.rds"
+                  "m6a_CIMS": "ROI_m6A-CIMS.rds",
+                  "m6a_CITS": "ROI_m6A-CITS.rds",
+
+                  "m6a_CIMS_NC_50up": "ROI_m6A-CIMS-NULLcontrol50bp-upstream.rds",
+                  "m6a_CIMS_NC_50dn": "ROI_m6A-CIMS-NULLcontrol50bp-downstream.rds",
+                  "m6a_CITS_NC_50up": "ROI_m6A-CITS-NULLcontrol50bp-upstream.rds",
+                  "m6a_CITS_NC_50dn": "ROI_m6A-CITS-NULLcontrol50bp-downstream.rds",
+
+                  "Me2p0": "ROI_Me2p0.rds",
+                  "Me2p0_NC50up": "ROI_Me2p0-NC50up.rds",
+                  "Me2p0_NC50dn": "ROI_Me2p0-NC50dn.rds",
+
+                  "stab50_shortlived": "ROI_stab50-shortlived.rds",
+                  "stab50_longlived": "ROI_stab50-longlived.rds",
+                  "stab100_shortlived": "ROI_stab100-shortlived.rds",
+                  "stab100_longlived": "ROI_stab100-longlived.rds"
           }
    },
 
    "execution":{
-        "target_out": "ROI_olap",
-        "jobs": 150,
-        "clustersub": false,
+        "target_out": "ROI_olap_plotdat",
+        "jobs": 100,
+        "clustersub": true,
         "Ealign_options": " --samples "
    }
 

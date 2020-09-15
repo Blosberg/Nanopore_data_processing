@@ -1,6 +1,7 @@
 (define packages
  (list
 ;; Internal development packages:
+"gcc-toolchain@6"
 "vim"
 "nss-certs"
 "git"
@@ -24,7 +25,10 @@
 "samtools"
 "bwa"
 "python-ont-tombo"
+"python-rpy2"
 "minimap2"
 "nanopolish"
+"python-ont-fast5-api"
+"r-cluster"
 ))
 (specifications->manifest packages)
